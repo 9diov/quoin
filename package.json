@@ -1,0 +1,16 @@
+{
+  "name": "markdown-type-system",
+  "version": "0.1.0",
+  "description": "A type system for Markdown files that validates frontmatter properties against Markdown-defined schemas.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.15"
+  }
+}
