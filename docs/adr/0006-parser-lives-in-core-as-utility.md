@@ -1,0 +1,3 @@
+# Markdown parser lives in Core as a shared utility, separate from Validation and Scaffolding
+
+The Core exposes a Parser utility that strictly extracts the fenced `## Schema` YAML block and optional fenced `## Template` Markdown block from a Type Definition Document. Integrations call it once upfront with Integration-supplied identity, handle the structured ParseResult, cache successful parsed Type Definition Documents, and pass them into Validation, Scaffolding, and Templating. This avoids duplicating Markdown parsing across Integrations while keeping the Validation, Scaffolding, and Templating pipelines pure data transformers. Alternative considered: each Integration parses independently (rejected — duplication with no benefit given the shared TypeScript codebase).
