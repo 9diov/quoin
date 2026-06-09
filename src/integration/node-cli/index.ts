@@ -30,11 +30,12 @@ program
   .option('--no-referential-validation', 'disable referential validation');
 
 program
-  .command('validate')
+  .command('validate [files...]')
   .description('Validate Markdown files against their type schemas')
-  .action(async (_opts, cmd) => {
+  .action(async (files: string[], _opts, cmd) => {
     const effective = await loadAndResolveConfig(cmd);
-    handleValidate(effective);
+    const intent = await handleValidate(effective, files);
+    process.exit(intent.exitCode);
   });
 
 program

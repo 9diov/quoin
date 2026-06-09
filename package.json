@@ -11,6 +11,7 @@
     "cli": "tsx src/integration/node-cli/index.ts"
   },
   "devDependencies": {
+    "@types/micromatch": "^4.0.10",
     "@types/node": "^25.9.2",
     "tsx": "^4.22.4",
     "typescript": "^5.9.3",
@@ -21,6 +22,7 @@
     "fast-glob": "^3.3.3",
     "jsonc-parser": "^3.3.1",
     "mdast-util-from-markdown": "^2.0.3",
+    "micromatch": "^4.0.8",
     "remark-parse": "^11.0.0",
     "unified": "^11.0.5",
     "yaml": "^2.9.0"

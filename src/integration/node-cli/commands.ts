@@ -1,28 +1,29 @@
 import type { EffectiveConfig } from './config.js';
-import { printHuman, printJson } from './output.js';
+import { printHuman, printJson, printError } from './output.js';
+import {
+  runValidate,
+  formatValidateHuman,
+  formatValidateJson,
+} from './validate.js';
 
 export type CommandIntent =
-  | { kind: 'validate'; config: EffectiveConfig }
+  | { kind: 'validate'; config: EffectiveConfig; exitCode: number }
   | { kind: 'create'; type: string; output: string; config: EffectiveConfig }
   | { kind: 'types'; config: EffectiveConfig };
 
-export function handleValidate(config: EffectiveConfig): CommandIntent {
-  printHuman(`validate: not yet implemented (root: ${config.root})`);
-  printJson({
-    command: 'validate',
-    config: {
-      root: config.root,
-      include: config.include,
-      exclude: config.exclude,
-      typeDeclarationKey: config.typeDeclarationKey,
-      allowedUrlSchemes: config.allowedUrlSchemes,
-      untypedDocumentBehavior: config.untypedDocumentBehavior,
-      referentialValidation: config.referentialValidation,
-      resolverStrategy: config.resolverStrategy,
-      outputFormat: config.outputFormat,
-    },
-  });
-  return { kind: 'validate', config };
+export async function handleValidate(
+  config: EffectiveConfig,
+  targets: string[],
+): Promise<Extract<CommandIntent, { kind: 'validate' }>> {
+  const result = await runValidate(config, targets);
+
+  if (config.outputFormat === 'json') {
+    formatValidateJson(result, config);
+  } else {
+    formatValidateHuman(result);
+  }
+
+  return { kind: 'validate', config, exitCode: result.exitCode };
 }
 
 export function handleCreate(
