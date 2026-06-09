@@ -53,6 +53,7 @@ describe('V052 missing required Section is warning', () => {
       name: 'concept',
       schema: { properties: {} },
       templateBlock: {
+        body: '## Definitions\n\n## References\n',
         sections: [
           { level: 2, heading: 'Definitions', required: true, defaultContent: '' },
           { level: 2, heading: 'References', required: false, defaultContent: '' },

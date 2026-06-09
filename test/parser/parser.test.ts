@@ -99,6 +99,9 @@ properties:
       type: 'text',
       required: true,
     });
+    expect(result.typeDef.templateBlock?.body).toBe(
+      '## Definitions <!-- required -->\n\n## References',
+    );
     expect(result.typeDef.templateBlock?.sections).toEqual([
       { level: 2, heading: 'Definitions', required: true, defaultContent: '' },
       { level: 2, heading: 'References', required: false, defaultContent: '' },

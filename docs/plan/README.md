@@ -10,3 +10,5 @@ Current plans:
 - [P3 — Parser](P3-parser.md)
 - [P4 — Link and Section grammar helpers](P4-link-and-section-grammar.md)
 - [P5 — Validation](P5-validation.md)
+- [P6 — Scaffolding](P6-scaffolding.md)
+- [P7 — Templating](P7-templating.md)

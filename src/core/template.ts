@@ -4,6 +4,9 @@ export type TemplatingResult = {
   body: string;
 };
 
-export function template(_typeDef: ParsedTypeDefinitionDocument): TemplatingResult {
-  throw new Error('not implemented');
+export function template(typeDef: ParsedTypeDefinitionDocument): TemplatingResult {
+  if (!typeDef.templateBlock) {
+    return { body: '' };
+  }
+  return { body: typeDef.templateBlock.body };
 }

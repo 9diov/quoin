@@ -39,6 +39,7 @@ export type Section = {
 };
 
 export type TemplateBlock = {
+  body: string;
   sections: Section[];
 };
 
@@ -132,7 +133,7 @@ export function parseTypeDefinitionDocument(
   if (blocks.templateMarkdown !== undefined) {
     const sectionResult = parseTemplateSections(blocks.templateMarkdown);
     errors.push(...sectionResult.errors);
-    templateBlock = { sections: sectionResult.sections };
+    templateBlock = { body: blocks.templateMarkdown, sections: sectionResult.sections };
   }
 
   if (errors.length > 0 || !schemaResult.schema) {

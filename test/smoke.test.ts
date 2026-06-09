@@ -52,7 +52,7 @@ describe('Core types', () => {
       required: true,
       defaultContent: '',
     };
-    const templateBlock: TemplateBlock = { sections: [section] };
+    const templateBlock: TemplateBlock = { body: '## Definitions\n', sections: [section] };
     const identity: TypeDefinitionDocumentIdentity = { id: 'types/Skill.md', name: 'skill' };
     const parserConfig: ParserConfig = { allowedUrlSchemes: ['https'] };
     const typeDef: ParsedTypeDefinitionDocument = {
@@ -147,10 +147,6 @@ describe('Core types', () => {
 });
 
 describe('Core behavior', () => {
-  // Parser landed in P3. Scaffolding in P6. Templating in P7.
-  it.todo('scaffold returns missing defaults — P6');
-  it.todo('template renders the Template Block body — P7');
-
   it('validate produces a ValidationResult', () => {
     const typeDef: ParsedTypeDefinitionDocument = {
       id: 'types/Concept.md',
@@ -171,6 +167,49 @@ describe('Core behavior', () => {
     const result = validate(doc, typeDef, {});
     expect(result.passed).toBe(true);
     expect(result.errors).toEqual([]);
+  });
+
+  it('scaffold returns missing defaults', () => {
+    const typeDef: ParsedTypeDefinitionDocument = {
+      id: 'types/Concept.md',
+      name: 'concept',
+      schema: {
+        properties: {
+          title: { type: 'text' as const, default: 'Untitled' },
+          description: { type: 'text' as const },
+        },
+      },
+    };
+
+    const result = scaffold({}, typeDef);
+    expect(result.properties).toEqual({ title: 'Untitled' });
+  });
+
+  it('template returns the template block body', () => {
+    const typeDef: ParsedTypeDefinitionDocument = {
+      id: 'types/Concept.md',
+      name: 'concept',
+      schema: { properties: {} },
+      templateBlock: {
+        body: '## Definitions\n\n## References\n',
+        sections: [
+          { level: 2, heading: 'Definitions', required: true, defaultContent: '' },
+          { level: 2, heading: 'References', required: false, defaultContent: '' },
+        ],
+      },
+    };
+
+    expect(template(typeDef)).toEqual({ body: '## Definitions\n\n## References\n' });
+  });
+
+  it('template returns empty body when no template block', () => {
+    const typeDef: ParsedTypeDefinitionDocument = {
+      id: 'types/Concept.md',
+      name: 'concept',
+      schema: { properties: {} },
+    };
+
+    expect(template(typeDef)).toEqual({ body: '' });
   });
 
   it('imports the stub functions without crashing at module load', () => {

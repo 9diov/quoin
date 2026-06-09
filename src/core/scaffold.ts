@@ -5,8 +5,31 @@ export type ScaffoldingResult = {
 };
 
 export function scaffold(
-  _frontmatter: Record<string, unknown>,
-  _typeDef: ParsedTypeDefinitionDocument,
+  frontmatter: Record<string, unknown>,
+  typeDef: ParsedTypeDefinitionDocument,
 ): ScaffoldingResult {
-  throw new Error('not implemented');
+  const properties: Record<string, unknown> = {};
+
+  for (const [key, propertySchema] of Object.entries(
+    typeDef.schema.properties,
+  )) {
+    if (!propertySchema) continue;
+
+    if (Object.hasOwn(frontmatter, key)) continue;
+
+    if (!('default' in propertySchema)) continue;
+
+    const value = propertySchema.default;
+    if (
+      typeof propertySchema.type === 'object' &&
+      propertySchema.type.kind === 'list' &&
+      Array.isArray(value)
+    ) {
+      properties[key] = [...value];
+    } else {
+      properties[key] = value;
+    }
+  }
+
+  return { properties };
 }
