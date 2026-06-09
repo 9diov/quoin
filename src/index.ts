@@ -45,5 +45,3 @@ export type {
   TypeRegistry,
 } from './core/integration.js';
 
-export { linkGrammarModule } from './core/link-grammar.js';
-export { sectionParserModule } from './core/section-parser.js';

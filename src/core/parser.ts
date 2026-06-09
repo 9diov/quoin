@@ -1,3 +1,10 @@
+import { extractBlocks } from './parser/blocks.js';
+import { validateDefault } from './parser/defaults.js';
+import { extractAndValidateFrontmatter } from './parser/frontmatter.js';
+import { validateIdentity } from './parser/identity.js';
+import { parseSchemaYaml } from './parser/schema-yaml.js';
+import { parseTemplateSections } from './section-parser.js';
+
 export type PrimitiveTypeName =
   | 'text'
   | 'number'
@@ -89,9 +96,56 @@ export type ParseResult =
   | { kind: 'error'; errors: ParseError[] };
 
 export function parseTypeDefinitionDocument(
-  _raw: string,
-  _identity: TypeDefinitionDocumentIdentity,
-  _config?: ParserConfig,
+  raw: string,
+  identity: TypeDefinitionDocumentIdentity,
+  config: ParserConfig = {},
 ): ParseResult {
-  throw new Error('not implemented');
+  const errors: ParseError[] = [];
+  errors.push(...validateIdentity(identity));
+
+  const typeDeclarationKey = config.typeDeclarationKey ?? '_type';
+  const fm = extractAndValidateFrontmatter(raw, typeDeclarationKey);
+  if (fm.kind === 'error') {
+    errors.push(...fm.errors);
+    return { kind: 'error', errors };
+  }
+
+  const blocks = extractBlocks(fm.body);
+  errors.push(...blocks.errors);
+
+  if (blocks.schemaYaml === undefined) {
+    return { kind: 'error', errors };
+  }
+
+  const schemaResult = parseSchemaYaml(blocks.schemaYaml);
+  errors.push(...schemaResult.errors);
+
+  if (schemaResult.schema) {
+    for (const [propertyKey, propertySchema] of Object.entries(
+      schemaResult.schema.properties,
+    )) {
+      errors.push(...validateDefault(propertyKey, propertySchema, config));
+    }
+  }
+
+  let templateBlock: TemplateBlock | undefined;
+  if (blocks.templateMarkdown !== undefined) {
+    const sectionResult = parseTemplateSections(blocks.templateMarkdown);
+    errors.push(...sectionResult.errors);
+    templateBlock = { sections: sectionResult.sections };
+  }
+
+  if (errors.length > 0 || !schemaResult.schema) {
+    return { kind: 'error', errors };
+  }
+
+  const typeDef: ParsedTypeDefinitionDocument = {
+    id: identity.id,
+    name: identity.name,
+    schema: schemaResult.schema,
+  };
+  if (templateBlock !== undefined) {
+    typeDef.templateBlock = templateBlock;
+  }
+  return { kind: 'ok', typeDef };
 }

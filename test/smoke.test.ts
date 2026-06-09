@@ -147,10 +147,8 @@ describe('Core types', () => {
 });
 
 describe('Core behavior (filled in later phases)', () => {
-  // P2 declares types and stubs only. Behavior lands in P3 (Parser), P5
-  // (Validation), P6 (Scaffolding), and P7 (Templating). These todos signal
-  // unfinished work in vitest output so CI never reads green as "API works."
-  it.todo('parseTypeDefinitionDocument parses a Type Definition Document — P3');
+  // Parser landed in P3. Behavior for the others lands in P5 (Validation),
+  // P6 (Scaffolding), P7 (Templating).
   it.todo('validate produces a ValidationResult — P5');
   it.todo('scaffold returns missing defaults — P6');
   it.todo('template renders the Template Block body — P7');
