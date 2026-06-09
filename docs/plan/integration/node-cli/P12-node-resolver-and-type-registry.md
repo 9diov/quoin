@@ -29,6 +29,13 @@ After this phase, the CLI should be able to:
 - basename-based Node `Resolver`
 - ambiguity/unavailability handling for both lookup layers
 
+Recommended dependencies for this phase:
+
+- existing `yaml` dependency remains the parser input source from ingestion
+- `node:path` for basename extraction and path normalization
+
+No new third-party dependency should be required beyond the libraries already introduced in P10 and P11.
+
 ## Steps
 
 1. Derive Node parser identity for each discovered type candidate.
@@ -52,4 +59,3 @@ After this phase, the CLI should be able to:
 - Duplicate canonical names produce `ambiguous`, not last-write-wins.
 - Resolver ambiguity is conservative when multiple basename matches exist.
 - `npm run typecheck` succeeds.
-

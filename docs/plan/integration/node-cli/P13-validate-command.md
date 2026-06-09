@@ -33,6 +33,11 @@ After this phase, the CLI should be able to:
 - human and JSON result emission
 - exit-status computation
 
+Recommended dependencies for this phase:
+
+- `commander` for command argument plumbing
+- no additional third-party runtime dependencies beyond P10 and P11
+
 ## Steps
 
 1. Implement explicit target expansion and de-duplication.
@@ -57,4 +62,3 @@ After this phase, the CLI should be able to:
 - Any discovery-universe ingest failure or type parse failure fails the command globally.
 - Warnings alone do not fail exit status.
 - `npm run typecheck` succeeds.
-

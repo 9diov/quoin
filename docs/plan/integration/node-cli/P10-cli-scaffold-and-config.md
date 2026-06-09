@@ -30,6 +30,18 @@ This phase does not yet need to scan Markdown files or call Core.
   - `create`
   - `types`
 
+Recommended dependencies for this phase:
+
+- `commander`
+- `jsonc-parser`
+- `node:path`
+- `node:fs/promises`
+
+License constraint for this phase:
+
+- keep direct dependencies permissively licensed only
+- record the chosen package license in the implementation PR or issue
+
 Recommended layout:
 
 ```text
@@ -47,14 +59,15 @@ Exact filenames may vary. The public package API should remain separate from the
 ## Steps
 
 1. Choose a Node entrypoint strategy that works with the current TypeScript package layout.
-2. Add JSONC config loading.
-3. Implement config search precedence:
+2. Add argument parsing with `commander`.
+3. Add JSONC config loading with `jsonc-parser`.
+4. Implement config search precedence:
    - explicit `--config`
    - upward search
    - zero-config fallback
-4. Implement effective root precedence with `--root` override.
-5. Normalize include/exclude, resolver strategy, output format, and referential-validation defaults.
-6. Add a tiny command dispatcher that returns structured command-intent data for later phases.
+5. Implement effective root precedence with `--root` override.
+6. Normalize include/exclude, resolver strategy, output format, and referential-validation defaults.
+7. Add a tiny command dispatcher that returns structured command-intent data for later phases.
 
 ## Acceptance Criteria
 
@@ -63,4 +76,3 @@ Exact filenames may vary. The public package API should remain separate from the
 - `--root` overrides config-derived root.
 - No filesystem discovery or Core calls are required yet.
 - `npm run typecheck` succeeds.
-

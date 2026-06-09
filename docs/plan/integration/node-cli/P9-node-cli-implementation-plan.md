@@ -15,6 +15,51 @@ The Core surface is already implemented through:
 
 - [P8 — Minimal Integration harness](../../core/P8-minimal-integration-harness.md)
 
+## Recommended External Dependencies
+
+The Node CLI should prefer a small number of focused libraries over a framework-heavy stack.
+
+Recommended runtime dependency set:
+
+- [`commander`](https://github.com/tj/commander.js) for subcommands, flags, help text, and usage errors — MIT
+- [`fast-glob`](https://github.com/mrmlnc/fast-glob) for root-scoped Markdown discovery with include/exclude patterns — MIT
+- [`jsonc-parser`](https://www.npmjs.com/package/jsonc-parser) for `markdown-type-system.config.jsonc` — MIT
+- existing [`yaml`](https://eemeli.org/yaml/) dependency for frontmatter parsing and deterministic YAML emission — ISC
+
+Recommended standard-library usage:
+
+- `node:fs/promises` for file I/O
+- `node:path` for root resolution and normalization
+- manual top-of-file frontmatter splitting rather than adding a separate frontmatter package
+
+Why this set:
+
+- it keeps command parsing, globbing, and JSONC parsing explicit
+- it reuses the repo's existing YAML dependency
+- it avoids a framework-heavy CLI runtime and avoids redundant frontmatter libraries
+
+## License Constraint
+
+The Node CLI must remain usable in commercial settings.
+
+Dependency policy:
+
+- direct runtime dependencies must use permissive licenses only
+- acceptable default classes: MIT, ISC, BSD, Apache-2.0
+- no GPL, AGPL, LGPL, SSPL, or other copyleft runtime dependencies
+
+Current direct-license check for the recommended set:
+
+- `commander` — MIT
+- `fast-glob` — MIT
+- `jsonc-parser` — MIT
+- `yaml` — ISC
+
+Implementation note:
+
+- re-check the full transitive dependency closure before adding packages to `package.json`
+- if a recommended library changes license, replace it rather than carving out an exception
+
 ## Implementation Order
 
 ### Phase 9 — CLI scaffold and config loading
@@ -113,5 +158,7 @@ This milestone completes the narrow Node CLI reference integration described in 
 - Keep Core unchanged unless D5 reveals a concrete missing seam.
 - Keep Node-specific I/O and path behavior out of `src/core/`.
 - Prefer shared runtime helpers for discovery, ingestion, resolver, registry, and reporting.
+- Prefer focused libraries over framework-heavy abstractions.
+- Prefer permissive-license dependencies only.
 - Preserve deterministic output and path normalization across all commands.
 - Treat expected failures as data, not thrown control flow.

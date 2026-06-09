@@ -36,6 +36,11 @@ After this phase, the Node CLI reference integration described by D5 is complete
 - ambiguity reporting
 - command-specific exit-status behavior
 
+Recommended dependencies for this phase:
+
+- existing `yaml` dependency for deterministic YAML emission during `create`
+- no new third-party runtime dependencies beyond P10 and P11 unless implementation reveals a concrete gap
+
 ## Steps
 
 1. Implement `create --type <name> --output <path>`.
@@ -56,4 +61,3 @@ After this phase, the Node CLI reference integration described by D5 is complete
 - `types` surfaces discovered broken type candidates rather than hiding them.
 - Command results remain structured and deterministic.
 - `npm run typecheck` succeeds.
-

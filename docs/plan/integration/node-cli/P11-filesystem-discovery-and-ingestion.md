@@ -29,6 +29,17 @@ This phase still does not need the final Node Resolver or TypeRegistry behavior.
 - ingestion diagnostics for read/frontmatter failures
 - Type Definition Document candidate discovery by sentinel frontmatter
 
+Recommended dependencies for this phase:
+
+- `fast-glob`
+- existing `yaml`
+- `node:fs/promises`
+- `node:path`
+
+License constraint for this phase:
+
+- do not add a separate frontmatter package unless it is permissively licensed and fills a concrete gap
+
 Recommended runtime outputs:
 
 ```typescript
@@ -39,12 +50,12 @@ type IngestedMarkdown =
 
 ## Steps
 
-1. Enumerate Markdown files under the effective root using resolved discovery scope.
+1. Enumerate Markdown files under the effective root using `fast-glob` and the resolved discovery scope.
 2. Ignore symlinks.
 3. Normalize every discovered path to root-relative POSIX form.
 4. Read raw file contents.
 5. Split top-of-file frontmatter when present.
-6. Parse frontmatter with YAML.
+6. Parse frontmatter with the existing `yaml` dependency.
 7. Require frontmatter, when present, to parse to a mapping/object.
 8. Preserve the body text exactly after the frontmatter split.
 9. Classify successful `Document` artifacts and ingestion failures.
@@ -57,4 +68,3 @@ type IngestedMarkdown =
 - Type Definition Document discovery remains sentinel-based, not directory-based.
 - Discovery order is deterministic.
 - `npm run typecheck` succeeds.
-
