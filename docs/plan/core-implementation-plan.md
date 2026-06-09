@@ -96,6 +96,8 @@ Acceptance:
 
 Goal: parse Type Definition Documents strictly.
 
+Detailed plan: [P3 — Parser](P3-parser.md).
+
 Implement:
 
 - exact level-2 `## Schema` detection

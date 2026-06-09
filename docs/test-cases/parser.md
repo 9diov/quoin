@@ -11,6 +11,95 @@ Unless a case says otherwise, Parser is called with:
 }
 ```
 
+Unless a case says otherwise, each Type Definition Document begins with the system Type Declaration in its frontmatter:
+
+```markdown
+---
+_type: type
+---
+```
+
+For brevity, the frontmatter block is omitted from the fixture body in cases that do not exercise frontmatter handling.
+
+## Frontmatter
+
+### P000a missing Type Declaration
+
+Type Definition Document (no frontmatter):
+
+````markdown
+# Concept
+
+## Schema
+
+```yaml
+properties: {}
+```
+````
+
+Expected error:
+
+```ts
+{
+  kind: 'parser:missing-type-declaration',
+  location: { scope: 'document' }
+}
+```
+
+### P000b Type Declaration value is not the literal `type`
+
+Type Definition Document:
+
+````markdown
+---
+_type: "[[Concept]]"
+---
+
+## Schema
+
+```yaml
+properties: {}
+```
+````
+
+Expected error:
+
+```ts
+{
+  kind: 'parser:invalid-type-declaration',
+  location: { scope: 'document' },
+  details: { value: '[[Concept]]' }
+}
+```
+
+### P000c custom typeDeclarationKey honored
+
+Parser is called with:
+
+```ts
+parseTypeDefinitionDocument(raw, identity, { typeDeclarationKey: '_kind' })
+```
+
+Type Definition Document:
+
+````markdown
+---
+_kind: type
+---
+
+## Schema
+
+```yaml
+properties: {}
+```
+````
+
+Expected:
+
+```ts
+{ kind: 'ok' }
+```
+
 ## Blocks
 
 ### P001 valid Schema and Template fences

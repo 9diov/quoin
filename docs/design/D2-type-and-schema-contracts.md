@@ -58,6 +58,7 @@ type TypeDefinitionDocumentIdentity = {
 
 type ParserConfig = {
   allowedUrlSchemes?: string[]  // default: ['http', 'https', 'mailto']
+  typeDeclarationKey?: string   // default: '_type'
 }
 
 type ParsedTypeDefinitionDocument = {
@@ -71,6 +72,8 @@ type ParsedTypeDefinitionDocument = {
 // ── Parser Result ────────────────────────────────────────────────────
 
 type ParseErrorKind =
+  | 'parser:missing-type-declaration'      // frontmatter has no Type Declaration key
+  | 'parser:invalid-type-declaration'      // Type Declaration value is not the literal `type`
   | 'parser:missing-schema-block'
   | 'parser:duplicate-schema-block'
   | 'parser:invalid-schema-block'
@@ -185,6 +188,35 @@ In priority order — do not implement until the need arises:
 2. **Dot-notation namespacing** — allow `og.title`, `twitter.card` for OpenGraph/meta schemas in static-site contexts.
 3. **Broader leading-underscore allowance** — allow any `_`-prefixed key (not just `_type`) as a vault-owner convention for private/system fields.
 4. **Quoted keys with spaces** — YAML supports `"my field": value` but almost no tool handles it well. Unlikely to ever be needed.
+
+---
+
+## Type Definition Document self-identification
+
+A Type Definition Document declares itself via the system Type Declaration in its frontmatter (ADR-0008):
+
+```markdown
+---
+_type: type
+---
+
+## Schema
+...
+```
+
+Parser rules:
+
+1. Parser reads the Type Definition Document's frontmatter and looks up the key named by `ParserConfig.typeDeclarationKey` (default `_type`).
+2. If the key is absent or the frontmatter block itself is missing, Parser returns `parser:missing-type-declaration` with `location: { scope: 'document' }`.
+3. If the key is present but its value is not the literal string `type`, Parser returns `parser:invalid-type-declaration` with `location: { scope: 'document' }` and `details.value`.
+4. Wiki Link values such as `"[[Something]]"` under the Type Declaration key produce `parser:invalid-type-declaration` — Type Definition Documents do not conform to another type; they identify themselves with the bare `type` sentinel.
+5. `parser:missing-type-declaration` is a structural failure. Parser does not attempt Schema or Template parsing after it.
+
+The bare literal `type` is reserved as a *value* under the Type Declaration key — regular Documents cannot use it as a Type Declaration; their `_type` value is a Wiki Link.
+
+The name `type` is **not** reserved as a Type Reference name. A user may author a Type Definition Document whose `TypeDefinitionDocumentIdentity.name === 'type'`; by convention this is the **user-extensible meta-Type Definition Document** (ADR-0008). The Parser does not treat it specially. When an Integration loads such a Document, it may validate other Type Definition Documents against it through ordinary Validation to enforce extra Properties or required Sections on every Type Definition Document in the vault. The Parser's baseline contract (`_type: type` + `## Schema`) is the entire requirement when no meta-Type Definition Document is present.
+
+Integrations discover Type Definition Documents by scanning frontmatter for the sentinel; path conventions are not part of the Core contract.
 
 ---
 

@@ -87,6 +87,7 @@ type TypeDefinitionDocumentIdentity = {
 
 type ParserConfig = {
   allowedUrlSchemes?: string[]
+  typeDeclarationKey?: string
 }
 ```
 
@@ -94,4 +95,28 @@ type ParserConfig = {
 
 Raw Markdown alone is not enough to derive stable identity because path, URI, host-specific aliases, and matching behavior belong to the Integration.
 
-ParserConfig lets Parser validate URL defaults against the same URL scheme policy the Integration will later use during Validation. If omitted, `allowedUrlSchemes` defaults to `['http', 'https', 'mailto']`.
+ParserConfig lets Parser validate URL defaults against the same URL scheme policy the Integration will later use during Validation. If omitted, `allowedUrlSchemes` defaults to `['http', 'https', 'mailto']`. `typeDeclarationKey` defaults to `'_type'` and should match the value passed in ValidationConfig so Parser and Validation agree on which frontmatter key carries the Type Declaration.
+
+---
+
+## Type Definition Document discovery
+
+Integrations discover Type Definition Documents by scanning frontmatter for the system Type Declaration `_type: type` (ADR-0008, D2). The Core does not specify a directory layout — `types/`, `_types/`, `schema/`, or scattered files are all valid as long as the sentinel is present.
+
+A typical Obsidian integration walks the vault once at startup:
+
+1. For each Markdown file, read its frontmatter.
+2. If `frontmatter[typeDeclarationKey] === 'type'`, treat the file as a Type Definition Document candidate and pass its raw contents to `parseTypeDefinitionDocument` with Integration-supplied identity.
+3. Cache the resulting `ParsedTypeDefinitionDocument` in the Integration's TypeRegistry.
+
+A regular Document's `_type` is a Wiki Link (`"[[Skill]]"`) and is resolved through TypeRegistry, not used for discovery. The discovery sentinel (the bare literal `type`) and the conformance value space (Wiki Links) share the same frontmatter key but are syntactically disjoint — Parser dispatches on shape alone.
+
+---
+
+## Meta-Type Definition Document (optional)
+
+If exactly one discovered Type Definition Document has `TypeDefinitionDocumentIdentity.name === 'type'`, the Integration MAY register it as the meta-Type Definition Document and validate every other Type Definition Document against it via ordinary `validate(typeDefDocument, metaTypeDef, ...)` calls. This is how vault-wide constraints on Type Definition Documents are expressed — extra required Properties (e.g., `category`, `owner`) or extra required Sections (e.g., `## Rationale`) — without inventing a parallel schema-of-schemas mechanism (ADR-0008).
+
+The Core has no concept of the meta-Type Definition Document; this is purely an Integration convention. When the Integration calls `typeRegistry.getByDeclaration('type')` during Referential Validation, it should resolve to the meta-Type Definition Document if one is registered.
+
+The meta-Type Definition Document validates against itself like any other Type Definition Document — its own frontmatter must satisfy its own schema, and its own body must contain its own required Sections.

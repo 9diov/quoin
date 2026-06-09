@@ -19,7 +19,7 @@ A single Markdown file that can declare a type and conform to a schema.
 _Avoid_: Note, file, page
 
 **Type Definition Document**:
-A normal Document with `_type: type` in its frontmatter, located in `types/`. It declares the schema for a type via a `## Schema` block containing exactly one fenced YAML block.
+A normal Document that self-identifies via the system Type Declaration `_type: type` in its frontmatter. It declares the schema for a type via a `## Schema` block containing exactly one fenced YAML block. Integrations discover Type Definition Documents by scanning frontmatter for the sentinel, not by directory layout — `types/` is a convention, not a Core requirement. See ADR-0008.
 _Avoid_: Type file, schema file, type definition
 
 **Conforms to**:
@@ -80,6 +80,10 @@ _Avoid_: Type parameter, type argument, linked type
 A Document with no Type Declaration. Validation skips or warns on Untyped Documents depending on the active Validation Config.
 _Avoid_: Unvalidated document, unschemed document
 
+**Meta-Type Definition Document**:
+A user-authored Type Definition Document whose `TypeDefinitionDocumentIdentity.name === 'type'`. Optional. When present, Integrations validate every other Type Definition Document against it through ordinary Validation — extra required Properties on the frontmatter of all Type Definition Documents, extra required Sections in their bodies. Absent any user-authored meta-Type Definition Document, the Parser's hardcoded baseline (`_type: type` + `## Schema`) is the entire contract for what counts as a Type Definition Document. See ADR-0008.
+_Avoid_: Schema of schemas, root type, type-of-types
+
 **Link Resolution**:
 The standard Validation stage after Wiki Link shape validation — resolving a Wiki Link to a Document, or returning a precise reason resolution failed. Runs for present, non-empty `wiki-link`, `list<X>`, and `choice<Y>` values that pass shape validation.
 _Avoid_: Link checking, link validation
@@ -93,7 +97,12 @@ The configuration that controls Validation behaviour across an Integration. Incl
 _Avoid_: Settings, options, configuration
 
 **Type Declaration**:
-The frontmatter entry (`_type: "[[TypeName]]"`) that binds a Document to a Type Definition Document. A system-level key, not a user-defined Property — it belongs to the type system itself.
+The frontmatter entry under the configured Type Declaration key (default `_type`) that identifies a Document to the type system. Two value forms:
+
+- `_type: "[[TypeName]]"` — a Wiki Link binding a regular Document to a Type Definition Document named `TypeName`.
+- `_type: type` — the reserved literal that marks a Type Definition Document itself (ADR-0008).
+
+A system-level key, not a user-defined Property — it belongs to the type system. The bare literal `type` is reserved as a *value* under this key; it is not reserved as a Type Reference name. A user-authored Type Definition Document whose `name` is `type` is the optional Meta-Type Definition Document.
 _Avoid_: Type annotation, type tag, type marker
 
 **Core**:

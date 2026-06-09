@@ -29,7 +29,7 @@ Target Integrations:
 
 ## Schema syntax
 
-Type Definition Documents defines the schema of a type. It is a normal Document, but with a `_type: type` in its frontmatter.
+A Type Definition Document defines the schema of a type. It is a normal Document that self-identifies via `_type: type` in its frontmatter — integrations discover Type Definition Documents by scanning frontmatter, not by directory layout.
 
 The schema declares Properties in a fenced YAML block under `## Schema`:
 

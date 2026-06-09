@@ -205,6 +205,8 @@ Type Declaration lookup mapping:
 
 When both lookups resolve but their `id` values differ, Validation returns `type:referential-mismatch` with details such as expected type id, actual type id, Wiki Link, and target path.
 
+`typeRegistry.getByDeclaration` may receive the bare literal `type` when the target is itself a Type Definition Document (ADR-0008). If the Integration registers a user-extensible meta-Type Definition Document under the name `type`, the lookup should resolve to it; otherwise the Integration returns `not-found` and Validation surfaces `type:unknown-declaration`. The bare literal is the only non-Wiki-Link value `getByDeclaration` is expected to handle.
+
 ---
 
 ## Section validation

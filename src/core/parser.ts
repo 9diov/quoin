@@ -42,6 +42,7 @@ export type TypeDefinitionDocumentIdentity = {
 
 export type ParserConfig = {
   allowedUrlSchemes?: string[];
+  typeDeclarationKey?: string;
 };
 
 export type ParsedTypeDefinitionDocument = {
@@ -52,6 +53,8 @@ export type ParsedTypeDefinitionDocument = {
 };
 
 export type ParseErrorKind =
+  | 'parser:missing-type-declaration'
+  | 'parser:invalid-type-declaration'
   | 'parser:missing-schema-block'
   | 'parser:duplicate-schema-block'
   | 'parser:invalid-schema-block'
