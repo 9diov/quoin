@@ -59,6 +59,14 @@ Pure function. Takes a parsed Template Block. Returns a Templating Result with t
 
 Detailed contracts: [D2 — Type and Schema Contracts](D2-type-and-schema-contracts.md).
 
+### Repairing (future)
+
+Not in scope for the Core's v1 phases. Described in [ADR-0009](../adr/0009-scaffolding-is-creation-not-repair.md).
+
+Repairing is the operation that consumes a `ValidationResult` plus a `ParsedTypeDefinitionDocument` and computes patches for specific Validation error kinds — `property:missing-required` and `property:empty-not-allowed` for frontmatter, `section:missing-required` for body — applying defaults or Template Block Sections to an existing Document. Unlike Scaffolding and Templating (which are creation-only), Repairing intentionally mutates existing content.
+
+Repairing is a distinct Concern from Scaffolding and Templating with its own semantics, scope boundary, and name. No detailed design doc exists yet.
+
 ---
 
 ## Integration responsibilities
@@ -70,6 +78,7 @@ Detailed contracts: [D2 — Type and Schema Contracts](D2-type-and-schema-contra
 | Validate a Document | `validate()` | supplies Resolver + TypeRegistry + Config |
 | Scaffold frontmatter | `scaffold()` | writes ScaffoldingResult back |
 | Template a new Document body | `template()` | writes TemplatingResult to new file |
+| Repair Validation failures (future) | `repair()` | consumes ValidationResult, writes patches back |
 | Resolve Wiki Links | — | implements `Resolver` |
 | Resolve Type References and Type Declarations | — | implements `TypeRegistry` |
 | Detect Reserved Property conflicts | — | passes `integration` in Config |
