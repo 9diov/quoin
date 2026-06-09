@@ -8,8 +8,8 @@ This phase is mostly **refactor + tests**, not new behavior. The Parser does not
 
 ## Inputs
 
-- [D2 — Type and Schema Contracts](../design/D2-type-and-schema-contracts.md) — Wiki Link / External Link / Section parsing rules
-- [D3 — Validation Semantics](../design/D3-validation-semantics.md) — Section validation consumer
+- [D2 — Type and Schema Contracts](../../design/D2-type-and-schema-contracts.md) — Wiki Link / External Link / Section parsing rules
+- [D3 — Validation Semantics](../../design/D3-validation-semantics.md) — Section validation consumer
 - [Core implementation plan](core-implementation-plan.md)
 - [P3 — Parser](P3-parser.md) — what's already built
 

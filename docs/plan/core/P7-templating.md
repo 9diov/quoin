@@ -6,10 +6,10 @@ Implement `template` so the Core can return the Markdown body for a new Document
 
 ## Inputs
 
-- [D1 — Architecture](../design/D1-architecture.md) — Templating is a pure Core function used only for new Documents
-- [D2 — Type and Schema Contracts](../design/D2-type-and-schema-contracts.md) — `TemplatingResult`, `Template Block`, and `template(typeDef)` API
-- [ADR-0005 — Functional Core / Imperative Shell](../adr/0005-functional-core-imperative-shell.md)
-- [ADR-0009 — Scaffolding and Templating are creation, not repair](../adr/0009-scaffolding-is-creation-not-repair.md)
+- [D1 — Architecture](../../design/D1-architecture.md) — Templating is a pure Core function used only for new Documents
+- [D2 — Type and Schema Contracts](../../design/D2-type-and-schema-contracts.md) — `TemplatingResult`, `Template Block`, and `template(typeDef)` API
+- [ADR-0005 — Functional Core / Imperative Shell](../../adr/0005-functional-core-imperative-shell.md)
+- [ADR-0009 — Scaffolding and Templating are creation, not repair](../../adr/0009-scaffolding-is-creation-not-repair.md)
 - [P2 — Shared Core Types](P2-shared-core-types.md) — current exported `TemplateBlock` and `TemplatingResult` surface
 - [P3 — Parser](P3-parser.md) — parser already extracts the Template fenced block and parses Sections
 - [P5 — Validation](P5-validation.md) — Validation consumes parsed Sections, not rendered body output

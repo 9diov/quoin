@@ -6,15 +6,15 @@ The design is ready for implementation.
 
 The Core contracts are specified across:
 
-- [D1 — Architecture](../design/D1-architecture.md)
-- [D2 — Type and Schema Contracts](../design/D2-type-and-schema-contracts.md)
-- [D3 — Validation Semantics](../design/D3-validation-semantics.md)
-- [D4 — Integration Contracts](../design/D4-integration-contracts.md)
+- [D1 — Architecture](../../design/D1-architecture.md)
+- [D2 — Type and Schema Contracts](../../design/D2-type-and-schema-contracts.md)
+- [D3 — Validation Semantics](../../design/D3-validation-semantics.md)
+- [D4 — Integration Contracts](../../design/D4-integration-contracts.md)
 
 Specification fixtures are in:
 
-- [Parser test cases](../test-cases/parser.md)
-- [Validation test cases](../test-cases/validation.md)
+- [Parser test cases](../../test-cases/parser.md)
+- [Validation test cases](../../test-cases/validation.md)
 
 Non-blocking choices to make during implementation:
 
@@ -116,7 +116,7 @@ Implement:
 
 Acceptance:
 
-- All parser test cases in [parser.md](../test-cases/parser.md) pass.
+- All parser test cases in [parser.md](../../test-cases/parser.md) pass.
 - Parser collects multiple independent authoring errors where cheap.
 - Parser does not perform I/O, Resolver calls, or TypeRegistry calls.
 
@@ -168,7 +168,7 @@ Implement:
 
 Acceptance:
 
-- All validation test cases in [validation.md](../test-cases/validation.md) pass.
+- All validation test cases in [validation.md](../../test-cases/validation.md) pass.
 - Downstream stages do not run for a value after an upstream failure.
 - Sibling list items continue validating after one item fails.
 - Validation never mutates inputs.

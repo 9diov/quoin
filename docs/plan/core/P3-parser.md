@@ -2,13 +2,13 @@
 
 ## Goal
 
-Implement `parseTypeDefinitionDocument` so that every test case in [parser.md](../test-cases/parser.md) passes. After this phase, the Core can turn a Type Definition Document and Integration-supplied identity into a `ParsedTypeDefinitionDocument` or a list of `ParseError`s — no I/O, no Resolver, no TypeRegistry.
+Implement `parseTypeDefinitionDocument` so that every test case in [parser.md](../../test-cases/parser.md) passes. After this phase, the Core can turn a Type Definition Document and Integration-supplied identity into a `ParsedTypeDefinitionDocument` or a list of `ParseError`s — no I/O, no Resolver, no TypeRegistry.
 
 ## Inputs
 
-- [D2 — Type and Schema Contracts](../design/D2-type-and-schema-contracts.md) — full Parser contract
-- [Parser test cases](../test-cases/parser.md) — acceptance fixtures
-- [ADR-0006 — Parser lives in Core](../adr/0006-parser-lives-in-core-as-utility.md)
+- [D2 — Type and Schema Contracts](../../design/D2-type-and-schema-contracts.md) — full Parser contract
+- [Parser test cases](../../test-cases/parser.md) — acceptance fixtures
+- [ADR-0006 — Parser lives in Core](../../adr/0006-parser-lives-in-core-as-utility.md)
 - [P2 — Shared Core Types](P2-shared-core-types.md) — types this phase fills in
 
 ## Relationship to P4
@@ -156,13 +156,13 @@ The `parser/` subdirectory is an internal split. Only `parseTypeDefinitionDocume
 8. Implement default validation in `parser/defaults.ts`. Cover P020–P022.
 9. Build the section parser in `section-parser.ts` (ATX heading walk, fenced-code awareness, required marker). Cover P040, P041.
 10. Wire everything together in `parser.ts` with error accumulation semantics.
-11. Port every case in [parser.md](../test-cases/parser.md) to a vitest suite under `test/parser/`.
+11. Port every case in [parser.md](../../test-cases/parser.md) to a vitest suite under `test/parser/`.
 12. Remove the P2 `it.todo('parseTypeDefinitionDocument ...')` marker from `test/smoke.test.ts`.
 13. Run `npm run typecheck` and `npm test`.
 
 ## Acceptance Criteria
 
-- Every case in [parser.md](../test-cases/parser.md) passes — both `ok` outcomes and every `parser:*` error kind listed in D2.
+- Every case in [parser.md](../../test-cases/parser.md) passes — both `ok` outcomes and every `parser:*` error kind listed in D2.
 - Parser collects multiple independent errors per Document where cheap. At minimum: multiple invalid Property schemas in one Document produce multiple errors; identity errors and Schema-block errors can coexist.
 - Parser stops after a structural failure: missing Schema block does not produce YAML errors; invalid YAML does not produce per-Property errors.
 - Parser never throws for any authoring error covered by the test cases.
@@ -181,7 +181,7 @@ The `parser/` subdirectory is an internal split. Only `parseTypeDefinitionDocume
 - Expose any Markdown or YAML library types in the public API. Helpers are internal.
 - Support `## schema`, `## SCHEMA`, or any case-insensitive matching. Strictness is the feature.
 - Coerce user-authored values (`"true"` → `true`, numeric strings → numbers).
-- Implement parser test cases not present in [parser.md](../test-cases/parser.md). Add new fixtures there first.
+- Implement parser test cases not present in [parser.md](../../test-cases/parser.md). Add new fixtures there first.
 
 ## Follow-up
 

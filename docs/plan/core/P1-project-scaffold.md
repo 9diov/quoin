@@ -8,10 +8,10 @@ This phase should not implement Parser, Validation, Scaffolding, or Templating b
 
 ## Inputs
 
-- [D1 — Architecture](../design/D1-architecture.md)
-- [D2 — Type and Schema Contracts](../design/D2-type-and-schema-contracts.md)
-- [D3 — Validation Semantics](../design/D3-validation-semantics.md)
-- [D4 — Integration Contracts](../design/D4-integration-contracts.md)
+- [D1 — Architecture](../../design/D1-architecture.md)
+- [D2 — Type and Schema Contracts](../../design/D2-type-and-schema-contracts.md)
+- [D3 — Validation Semantics](../../design/D3-validation-semantics.md)
+- [D4 — Integration Contracts](../../design/D4-integration-contracts.md)
 - [Core implementation plan](core-implementation-plan.md)
 
 ## Deliverables

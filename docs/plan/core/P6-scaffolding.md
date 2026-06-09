@@ -6,11 +6,11 @@ Implement `scaffold` so the Core can compute missing Property defaults from a pa
 
 ## Inputs
 
-- [D1 — Architecture](../design/D1-architecture.md) — Core/Integration boundary for Scaffolding
-- [D2 — Type and Schema Contracts](../design/D2-type-and-schema-contracts.md) — `PropertySchema.default`, `ScaffoldingResult`, and local default validity rules
-- [ADR-0004 — `default` belongs to Scaffolding, not Validation](../adr/0004-default-is-scaffolding-not-validation.md)
-- [ADR-0009 — Scaffolding and Templating are creation, not repair](../adr/0009-scaffolding-is-creation-not-repair.md)
-- [ADR-0005 — Functional Core / Imperative Shell](../adr/0005-functional-core-imperative-shell.md)
+- [D1 — Architecture](../../design/D1-architecture.md) — Core/Integration boundary for Scaffolding
+- [D2 — Type and Schema Contracts](../../design/D2-type-and-schema-contracts.md) — `PropertySchema.default`, `ScaffoldingResult`, and local default validity rules
+- [ADR-0004 — `default` belongs to Scaffolding, not Validation](../../adr/0004-default-is-scaffolding-not-validation.md)
+- [ADR-0009 — Scaffolding and Templating are creation, not repair](../../adr/0009-scaffolding-is-creation-not-repair.md)
+- [ADR-0005 — Functional Core / Imperative Shell](../../adr/0005-functional-core-imperative-shell.md)
 - [P2 — Shared Core Types](P2-shared-core-types.md) — exported `ScaffoldingResult` and `ParsedTypeDefinitionDocument`
 - [P3 — Parser](P3-parser.md) — parsed schemas already reject invalid defaults
 - [P5 — Validation](P5-validation.md) — presence semantics to stay aligned with Validation while keeping Scaffolding read-only

@@ -131,4 +131,5 @@ Required Sections are marked with `<!-- required -->`. Section matching is exact
 - [Type and schema contracts](docs/design/D2-type-and-schema-contracts.md)
 - [Validation semantics](docs/design/D3-validation-semantics.md)
 - [Integration contracts](docs/design/D4-integration-contracts.md)
+- [Node CLI integration](docs/design/D5-node-cli-integration.md)
 - [ADRs](docs/adr/)

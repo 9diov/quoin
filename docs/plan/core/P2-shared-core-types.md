@@ -8,9 +8,9 @@ This phase is type-only. Parser, Validation, Scaffolding, and Templating remain 
 
 ## Inputs
 
-- [D2 — Type and Schema Contracts](../design/D2-type-and-schema-contracts.md)
-- [D3 — Validation Semantics](../design/D3-validation-semantics.md)
-- [D4 — Integration Contracts](../design/D4-integration-contracts.md)
+- [D2 — Type and Schema Contracts](../../design/D2-type-and-schema-contracts.md)
+- [D3 — Validation Semantics](../../design/D3-validation-semantics.md)
+- [D4 — Integration Contracts](../../design/D4-integration-contracts.md)
 - [Core implementation plan](core-implementation-plan.md)
 - [P1 — Project Scaffold](P1-project-scaffold.md)
 
@@ -147,4 +147,4 @@ If a future contributor finds this split causes circular imports, collapsing eve
 
 ## Follow-up
 
-After this phase, continue with Phase 3: Parser. P3 fills in `parseTypeDefinitionDocument` against the test cases in [parser.md](../test-cases/parser.md), using only the types declared here.
+After this phase, continue with Phase 3: Parser. P3 fills in `parseTypeDefinitionDocument` against the test cases in [parser.md](../../test-cases/parser.md), using only the types declared here.

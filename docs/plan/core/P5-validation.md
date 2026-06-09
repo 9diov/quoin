@@ -2,18 +2,18 @@
 
 ## Goal
 
-Implement `validate` so that every test case in [validation.md](../test-cases/validation.md) passes. After this phase, the Core can check whether a Document conforms to a parsed Type Definition Document, producing a `ValidationResult` with zero or more errors and warnings — pure, no I/O, Resolver and TypeRegistry wired through Integration-supplied seams.
+Implement `validate` so that every test case in [validation.md](../../test-cases/validation.md) passes. After this phase, the Core can check whether a Document conforms to a parsed Type Definition Document, producing a `ValidationResult` with zero or more errors and warnings — pure, no I/O, Resolver and TypeRegistry wired through Integration-supplied seams.
 
 ## Inputs
 
-- [D3 — Validation Semantics](../design/D3-validation-semantics.md) — full Validation contract
-- [D4 — Integration Contracts](../design/D4-integration-contracts.md) — Resolver, TypeRegistry, and Type Declaration dispatch
-- [Validation test cases](../test-cases/validation.md) — acceptance fixtures
-- [ADR-0001 — Reserved property collision is a warning](../adr/0001-reserved-property-collision-is-a-warning.md)
-- [ADR-0003 — No transitive referential validation](../adr/0003-no-transitive-referential-validation.md)
-- [ADR-0004 — Default is scaffolding not validation](../adr/0004-default-is-scaffolding-not-validation.md)
-- [ADR-0007 — TypeRegistry for referential validation](../adr/0007-type-registry-for-referential-validation.md)
-- [ADR-0008 — Type Definition Document self-identifies via frontmatter](../adr/0008-type-definition-document-self-identifies-via-frontmatter.md)
+- [D3 — Validation Semantics](../../design/D3-validation-semantics.md) — full Validation contract
+- [D4 — Integration Contracts](../../design/D4-integration-contracts.md) — Resolver, TypeRegistry, and Type Declaration dispatch
+- [Validation test cases](../../test-cases/validation.md) — acceptance fixtures
+- [ADR-0001 — Reserved property collision is a warning](../../adr/0001-reserved-property-collision-is-a-warning.md)
+- [ADR-0003 — No transitive referential validation](../../adr/0003-no-transitive-referential-validation.md)
+- [ADR-0004 — Default is scaffolding not validation](../../adr/0004-default-is-scaffolding-not-validation.md)
+- [ADR-0007 — TypeRegistry for referential validation](../../adr/0007-type-registry-for-referential-validation.md)
+- [ADR-0008 — Type Definition Document self-identifies via frontmatter](../../adr/0008-type-definition-document-self-identifies-via-frontmatter.md)
 - [P2 — Shared Core Types](P2-shared-core-types.md) — types already landed in `validation.ts`
 - [P3 — Parser](P3-parser.md) — `ParsedTypeDefinitionDocument` and helpers this phase consumes
 - [P4 — Link and Section grammar helpers](P4-link-and-section-grammar.md) — `isValidWikiLinkShape`, `parseExternalLink`, `extractAtxHeadings`
@@ -177,7 +177,7 @@ Detection runs against declared schema Properties, not document frontmatter valu
 
 ### Untyped Document handling
 
-Integrations own root Type Declaration dispatch (D3). The Integration resolves a Document's `_type` to a `ParsedTypeDefinitionDocument` before calling `validate`. Untyped Documents — those with no Type Declaration in their frontmatter — are filtered during dispatch, not inside `validate`. If `config.untypedDocumentBehavior` is `'warn'`, the Integration produces the `document:untyped` warning itself before calling `validate`; if `'skip'`, it omits the warning. The Core's `validate` function does not inspect `document.frontmatter[config.typeDeclarationKey]` and does not produce `document:untyped`. No test fixture exists for this warning in [validation.md](../test-cases/validation.md) — it is covered by Integration-level tests in a later phase (P8).
+Integrations own root Type Declaration dispatch (D3). The Integration resolves a Document's `_type` to a `ParsedTypeDefinitionDocument` before calling `validate`. Untyped Documents — those with no Type Declaration in their frontmatter — are filtered during dispatch, not inside `validate`. If `config.untypedDocumentBehavior` is `'warn'`, the Integration produces the `document:untyped` warning itself before calling `validate`; if `'skip'`, it omits the warning. The Core's `validate` function does not inspect `document.frontmatter[config.typeDeclarationKey]` and does not produce `document:untyped`. No test fixture exists for this warning in [validation.md](../../test-cases/validation.md) — it is covered by Integration-level tests in a later phase (P8).
 
 ### Error and warning collection
 
@@ -246,13 +246,13 @@ The `validation/` subdirectory is an internal split. Only `validate` (in `valida
 9. Add `validation/reserved.ts` — `validateReservedCollisions(schema, integration)`. Returns `ValidationWarning[]`. Hardcoded table of reserved properties per integration.
 10. Add `validation/errors.ts` — constructor functions for each `ValidationErrorKind` and `ValidationWarningKind`. Keeps message construction and location shaping consistent.
 11. Wire the `validate` function in `src/core/validation.ts`. Imports and delegates to each pipeline stage. Aggregates all errors and warnings into a single `ValidationResult`. The function body replaces the current `throw new Error('not implemented')` stub.
-12. Port every case in [validation.md](../test-cases/validation.md) to a Vitest suite under `test/validation/`. Organise by pipeline stage: `presence-emptiness.test.ts`, `primitives.test.ts`, `wiki-links.test.ts`, `collections.test.ts`, `referential.test.ts`, `sections.test.ts`, `warnings.test.ts`.
+12. Port every case in [validation.md](../../test-cases/validation.md) to a Vitest suite under `test/validation/`. Organise by pipeline stage: `presence-emptiness.test.ts`, `primitives.test.ts`, `wiki-links.test.ts`, `collections.test.ts`, `referential.test.ts`, `sections.test.ts`, `warnings.test.ts`.
 13. Remove the P2 `it.todo('validate produces a ValidationResult — P5')` marker from `test/smoke.test.ts`.
 14. Run `npm run typecheck` and `npm test`.
 
 ## Acceptance Criteria
 
-- Every case in [validation.md](../test-cases/validation.md) passes — V001 through V052, plus any cases added during implementation.
+- Every case in [validation.md](../../test-cases/validation.md) passes — V001 through V052, plus any cases added during implementation.
 - All `ValidationErrorKind` variants are exercised by at least one test case.
 - All `ValidationWarningKind` variants produced by `validate` (`property:reserved-collision`, `section:missing-required`) are exercised by at least one test case.
 - Errors accumulate across independent Properties. A missing required Property does not stop checking other Properties.
@@ -279,7 +279,7 @@ The `validation/` subdirectory is an internal split. Only `validate` (in `valida
 - Coerce user-authored values (`"true"` → `true`, numeric strings → numbers).
 - Transitive Referential Validation (ADR-0003). Only one level deep.
 - Warn on the `_type` Property itself appearing in a schema. Integration handles this.
-- Implement validation test cases not present in [validation.md](../test-cases/validation.md). Add new fixtures there first.
+- Implement validation test cases not present in [validation.md](../../test-cases/validation.md). Add new fixtures there first.
 
 ## Follow-up
 
