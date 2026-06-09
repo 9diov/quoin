@@ -189,6 +189,12 @@ In priority order — do not implement until the need arises:
 3. **Broader leading-underscore allowance** — allow any `_`-prefixed key (not just `_type`) as a vault-owner convention for private/system fields.
 4. **Quoted keys with spaces** — YAML supports `"my field": value` but almost no tool handles it well. Unlikely to ever be needed.
 
+### Possible future constraints
+
+In priority order — do not implement until the need arises:
+
+1. **Vault-wide required-on-declared lint** — a lint rule, optionally enforced via a meta-Type Definition Document (ADR-0008), that flags every Property declared in a Type Definition Document that omits `required: true`. This gives teams that want "every declared Property must be present" the safety net without changing the default that `required` is opt-in.
+
 ---
 
 ## Type Definition Document self-identification
