@@ -1,13 +1,20 @@
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
-import type { Heading, Html, PhrasingContent, Root, RootContent } from 'mdast';
+import type { Heading, Html, PhrasingContent, Root } from 'mdast';
 
 import type { ParseError, Section } from './parser.js';
 import { sectionError } from './parser/errors.js';
 
-const REQUIRED_COMMENT = /^<!--\s*required\s*-->$/;
+const REQUIRED_MARKER = /<!--\s*required\s*-->/;
 
 const processor = unified().use(remarkParse);
+
+export type AtxHeading = {
+  level: number;
+  heading: string;
+  startOffset: number;
+  endOffset: number;
+};
 
 function isHtmlNode(node: PhrasingContent): node is Html {
   return node.type === 'html';
@@ -16,7 +23,7 @@ function isHtmlNode(node: PhrasingContent): node is Html {
 function isAtxHeading(node: Heading, source: string): boolean {
   const offset = node.position?.start?.offset;
   if (typeof offset !== 'number') return false;
-  // ATX headings start with `#` (possibly preceded by up to 3 spaces per CommonMark).
+  // ATX headings start with `#` (allowing up to 3 leading spaces per CommonMark).
   // Setext headings start with the heading text on the first line.
   for (let i = offset; i < source.length; i++) {
     const ch = source[i];
@@ -42,11 +49,23 @@ function extractHeadingText(node: Heading): string {
   return parts.join('').trim();
 }
 
-function hasRequiredMarker(node: Heading): boolean {
-  for (const child of node.children) {
-    if (isHtmlNode(child) && REQUIRED_COMMENT.test(child.value.trim())) return true;
+export function extractAtxHeadings(markdown: string): AtxHeading[] {
+  const tree = processor.parse(markdown) as Root;
+  const headings: AtxHeading[] = [];
+  for (const node of tree.children) {
+    if (node.type !== 'heading') continue;
+    if (!isAtxHeading(node, markdown)) continue;
+    const startOffset = node.position?.start?.offset;
+    const endOffset = node.position?.end?.offset;
+    if (typeof startOffset !== 'number' || typeof endOffset !== 'number') continue;
+    headings.push({
+      level: node.depth,
+      heading: extractHeadingText(node),
+      startOffset,
+      endOffset,
+    });
   }
-  return false;
+  return headings;
 }
 
 export type SectionParseResult = {
@@ -55,56 +74,39 @@ export type SectionParseResult = {
 };
 
 export function parseTemplateSections(markdown: string): SectionParseResult {
-  const tree = processor.parse(markdown) as Root;
-  const headings: { node: Heading; index: number }[] = [];
-  tree.children.forEach((node: RootContent, index: number) => {
-    if (node.type === 'heading' && isAtxHeading(node, markdown)) {
-      headings.push({ node, index });
-    }
-  });
-
+  const atx = extractAtxHeadings(markdown);
   const sections: Section[] = [];
   const errors: ParseError[] = [];
   const seenRequired = new Set<string>();
 
-  for (let i = 0; i < headings.length; i++) {
-    const current = headings[i];
+  for (let i = 0; i < atx.length; i++) {
+    const current = atx[i];
     if (!current) continue;
-    const { node, index } = current;
+    const next = atx[i + 1];
 
-    const heading = extractHeadingText(node);
-    const required = hasRequiredMarker(node);
-    const level = node.depth;
+    const headingSource = markdown.slice(current.startOffset, current.endOffset);
+    const required = REQUIRED_MARKER.test(headingSource);
 
-    const nextHeading = headings[i + 1];
-    let defaultContent = '';
-    if (
-      node.position?.end &&
-      typeof node.position.end.offset === 'number'
-    ) {
-      const startOffset = node.position.end.offset;
-      let endOffset = markdown.length;
-      if (
-        nextHeading?.node.position?.start &&
-        typeof nextHeading.node.position.start.offset === 'number'
-      ) {
-        endOffset = nextHeading.node.position.start.offset;
-      }
-      defaultContent = markdown.slice(startOffset, endOffset).replace(/^\n+|\n+$/g, '');
-    }
-    void index;
+    const bodyStart = current.endOffset;
+    const bodyEnd = next ? next.startOffset : markdown.length;
+    const defaultContent = markdown.slice(bodyStart, bodyEnd).replace(/^\n+|\n+$/g, '');
 
-    const section: Section = { level, heading, required, defaultContent };
+    const section: Section = {
+      level: current.level,
+      heading: current.heading,
+      required,
+      defaultContent,
+    };
 
     if (required) {
-      const identity = `${level} ${heading}`;
+      const identity = `${current.level} ${current.heading}`;
       if (seenRequired.has(identity)) {
         errors.push(
           sectionError(
             'parser:duplicate-required-section',
-            heading,
-            level,
-            `Duplicate required Section \`${heading}\` at level ${level}.`,
+            current.heading,
+            current.level,
+            `Duplicate required Section \`${current.heading}\` at level ${current.level}.`,
           ),
         );
         continue;

@@ -124,6 +124,8 @@ Acceptance:
 
 Goal: isolate string grammar before full Validation.
 
+Detailed plan: [P4 — Link and Section grammar helpers](P4-link-and-section-grammar.md).
+
 Implement:
 
 - Wiki Link shape validation
