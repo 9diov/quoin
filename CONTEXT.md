@@ -19,7 +19,7 @@ A single Markdown file that can declare a type and conform to a schema.
 _Avoid_: Note, file, page
 
 **Type Definition Document**:
-A Markdown file (in `types/`) that declares the schema for a type via a `## Schema` block containing exactly one fenced YAML block.
+A normal Document with `_type: type` in its frontmatter, located in `types/`. It declares the schema for a type via a `## Schema` block containing exactly one fenced YAML block.
 _Avoid_: Type file, schema file, type definition
 
 **Conforms to**:

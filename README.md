@@ -29,7 +29,9 @@ Target Integrations:
 
 ## Schema syntax
 
-Type Definition Documents declare Properties in a fenced YAML block under `## Schema`:
+Type Definition Documents defines the schema of a type. It is a normal Document, but with a `_type: type` in its frontmatter.
+
+The schema declares Properties in a fenced YAML block under `## Schema`:
 
 ````markdown
 ## Schema
