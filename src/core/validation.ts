@@ -2,6 +2,11 @@ import type { Document } from './types.js';
 import type { ParsedTypeDefinitionDocument } from './parser.js';
 import type { Resolver, TypeRegistry } from './integration.js';
 
+import { resolveConfig } from './validation/config.js';
+import { validateProperty } from './validation/property.js';
+import { validateReservedCollisions } from './validation/reserved.js';
+import { validateSections } from './validation/sections.js';
+
 export type IntegrationName =
   | 'obsidian'
   | 'hugo'
@@ -69,11 +74,44 @@ export type ValidationResult = {
 };
 
 export function validate(
-  _document: Document,
-  _typeDef: ParsedTypeDefinitionDocument,
-  _config: ValidationConfig,
-  _resolver?: Resolver,
-  _typeRegistry?: TypeRegistry,
+  document: Document,
+  typeDef: ParsedTypeDefinitionDocument,
+  config: ValidationConfig,
+  resolver?: Resolver,
+  typeRegistry?: TypeRegistry,
 ): ValidationResult {
-  throw new Error('not implemented');
+  const resolvedConfig = resolveConfig(config);
+
+  const errors: ValidationError[] = [];
+  const warnings: ValidationWarning[] = [];
+
+  for (const [propertyName, propertySchema] of Object.entries(
+    typeDef.schema.properties,
+  )) {
+    if (!propertySchema) continue;
+    errors.push(
+      ...validateProperty(
+        propertyName,
+        propertySchema,
+        document.frontmatter,
+        resolvedConfig,
+        resolver,
+        typeRegistry,
+      ),
+    );
+  }
+
+  warnings.push(
+    ...validateReservedCollisions(typeDef.schema, resolvedConfig.integration),
+  );
+
+  warnings.push(
+    ...validateSections(document.body, typeDef.templateBlock),
+  );
+
+  return {
+    passed: errors.length === 0,
+    errors,
+    warnings,
+  };
 }

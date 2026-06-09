@@ -146,12 +146,32 @@ describe('Core types', () => {
   });
 });
 
-describe('Core behavior (filled in later phases)', () => {
-  // Parser landed in P3. Behavior for the others lands in P5 (Validation),
-  // P6 (Scaffolding), P7 (Templating).
-  it.todo('validate produces a ValidationResult — P5');
+describe('Core behavior', () => {
+  // Parser landed in P3. Scaffolding in P6. Templating in P7.
   it.todo('scaffold returns missing defaults — P6');
   it.todo('template renders the Template Block body — P7');
+
+  it('validate produces a ValidationResult', () => {
+    const typeDef: ParsedTypeDefinitionDocument = {
+      id: 'types/Concept.md',
+      name: 'concept',
+      schema: {
+        properties: {
+          description: { type: 'text', required: true },
+        },
+      },
+    };
+
+    const doc: Document = {
+      path: 'notes/example.md',
+      frontmatter: { description: 'hello' },
+      body: '',
+    };
+
+    const result = validate(doc, typeDef, {});
+    expect(result.passed).toBe(true);
+    expect(result.errors).toEqual([]);
+  });
 
   it('imports the stub functions without crashing at module load', () => {
     expect(typeof parseTypeDefinitionDocument).toBe('function');
