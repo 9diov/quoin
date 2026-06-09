@@ -7,8 +7,7 @@ A type system for Markdown files that validates YAML frontmatter Properties agai
 - **Type Definition Documents** live in `types/*.md` and declare schemas under `## Schema`
 - **Documents** declare their type with a Type Declaration in frontmatter, defaulting to `_type: "[[Concept]]"`
 - **Validation** checks frontmatter Properties and required body Sections
-- **Scaffolding** computes missing frontmatter Properties from schema defaults
-- **Templating** generates the initial Markdown body for new Documents from `## Template`
+- **Document initialization** — Scaffolding fills missing frontmatter Properties from schema defaults; Templating generates the initial Markdown body for new Documents from `## Template`. Both are creation-only — they never overwrite existing content.
 
 ## Tech stack
 
