@@ -1,1 +1,5 @@
-export const coreTypesModule = 'core/types';
+export type Document = {
+  path: string;
+  frontmatter: Record<string, unknown>;
+  body: string;
+};

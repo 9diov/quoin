@@ -63,6 +63,8 @@ Acceptance:
 
 Goal: encode D2, D3, and D4 TypeScript contracts.
 
+Detailed plan: [P2 — Shared Core Types](P2-shared-core-types.md).
+
 Deliverables:
 
 - `PrimitiveTypeName`
