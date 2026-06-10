@@ -1,0 +1,4 @@
+{
+  // Surface plain, untyped notes as warnings instead of silently skipping.
+  "untypedDocumentBehavior": "warn"
+}

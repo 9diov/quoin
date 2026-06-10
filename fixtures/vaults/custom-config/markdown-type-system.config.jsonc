@@ -1,0 +1,6 @@
+{
+  // Non-default declaration key and a restricted URL scheme allow-list.
+  "typeDeclarationKey": "kind",
+  "allowedUrlSchemes": ["https"],
+  "exclude": [".git/**", "node_modules/**", "drafts/**"]
+}

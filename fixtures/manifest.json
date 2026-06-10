@@ -1,0 +1,138 @@
+{
+  "description": "Fixture vaults exercised end-to-end by test/integration/node-cli/fixtures.test.ts and runnable by hand with `npm run cli`. `expectKinds` lists discriminant kinds (validation target outcomes, error/warning kinds, or create result kinds) that must appear in the run's structured result.",
+  "scenarios": [
+    {
+      "dir": "scenarios/valid-minimal",
+      "command": "validate",
+      "exitCode": 0,
+      "expectKinds": ["validated"]
+    },
+    {
+      "dir": "scenarios/missing-required",
+      "command": "validate",
+      "exitCode": 1,
+      "expectKinds": ["property:missing-required"]
+    },
+    {
+      "dir": "scenarios/wrong-type",
+      "command": "validate",
+      "exitCode": 1,
+      "expectKinds": ["property:wrong-type"]
+    },
+    {
+      "dir": "scenarios/empty-not-allowed",
+      "command": "validate",
+      "exitCode": 1,
+      "expectKinds": ["property:empty-not-allowed"]
+    },
+    {
+      "dir": "scenarios/broken-wiki-link",
+      "command": "validate",
+      "exitCode": 1,
+      "expectKinds": ["resolve:broken-wiki-link"]
+    },
+    {
+      "dir": "scenarios/ambiguous-link",
+      "command": "validate",
+      "exitCode": 1,
+      "expectKinds": ["resolve:ambiguous-wiki-link"]
+    },
+    {
+      "dir": "scenarios/type-not-found",
+      "command": "validate",
+      "exitCode": 1,
+      "expectKinds": ["type-not-found"]
+    },
+    {
+      "dir": "scenarios/type-ambiguous",
+      "command": "validate",
+      "exitCode": 1,
+      "expectKinds": ["type-ambiguous"]
+    },
+    {
+      "dir": "scenarios/missing-sections",
+      "command": "validate",
+      "exitCode": 0,
+      "expectKinds": ["validated"],
+      "expectWarningKinds": ["section:missing-required"]
+    },
+    {
+      "dir": "scenarios/malformed-frontmatter",
+      "command": "validate",
+      "exitCode": 1,
+      "expectIngestFailure": true
+    },
+    {
+      "dir": "scenarios/broken-type-def",
+      "command": "validate",
+      "exitCode": 1,
+      "expectTypeParseFailure": true
+    },
+    {
+      "dir": "scenarios/referential-mismatch",
+      "command": "validate",
+      "exitCode": 1,
+      "expectKinds": ["type:referential-mismatch"]
+    },
+    {
+      "dir": "scenarios/referential-mismatch",
+      "command": "validate",
+      "referentialValidation": false,
+      "exitCode": 0,
+      "expectKinds": ["validated"]
+    },
+    {
+      "dir": "scenarios/create-no-template",
+      "command": "create",
+      "type": "bookmark",
+      "exitCode": 0,
+      "expectKinds": ["created"],
+      "expectFrontmatterOnly": true
+    },
+    {
+      "dir": "scenarios/create-with-template",
+      "command": "create",
+      "type": "meeting",
+      "exitCode": 0,
+      "expectKinds": ["created"],
+      "expectBodyContains": "## Agenda"
+    },
+    {
+      "dir": "scenarios/create-no-template",
+      "command": "create",
+      "type": "nonexistent",
+      "exitCode": 1,
+      "expectKinds": ["type-not-found"]
+    }
+  ],
+  "vaults": [
+    {
+      "dir": "vaults/knowledge-base",
+      "command": "validate",
+      "useConfig": true,
+      "exitCode": 0,
+      "expectKinds": ["validated"]
+    },
+    {
+      "dir": "vaults/knowledge-base",
+      "command": "types",
+      "useConfig": true,
+      "exitCode": 0,
+      "expectTypeNames": ["concept", "person", "source"]
+    },
+    {
+      "dir": "vaults/obsidian-style",
+      "command": "validate",
+      "useConfig": true,
+      "exitCode": 0,
+      "expectKinds": ["validated", "warn-untyped"]
+    },
+    {
+      "dir": "vaults/custom-config",
+      "command": "validate",
+      "useConfig": true,
+      "exitCode": 0,
+      "expectKinds": ["validated"]
+    }
+  ]
+}

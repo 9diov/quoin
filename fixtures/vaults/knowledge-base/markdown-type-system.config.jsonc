@@ -1,0 +1,7 @@
+{
+  // Knowledge base uses the built-in defaults; this file just pins them
+  // explicitly so the vault is self-documenting.
+  "typeDeclarationKey": "_type",
+  "referentialValidation": true,
+  "exclude": [".git/**", "node_modules/**"]
+}
