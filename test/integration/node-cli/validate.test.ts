@@ -1,37 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import { mkdtemp, writeFile, rm, mkdir } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
-import { tmpdir } from 'node:os';
+import { rm } from 'node:fs/promises';
 
 import { runValidate, expandTargets, formatValidateJson } from '../../../src/integration/node-cli/validate.js';
-import type { EffectiveConfig } from '../../../src/integration/node-cli/config.js';
-
-function defaultConfig(root: string, overrides: Partial<EffectiveConfig> = {}): EffectiveConfig {
-  return {
-    root,
-    include: ['**/*.md'],
-    exclude: ['.git/**', 'node_modules/**'],
-    typeDeclarationKey: '_type',
-    allowedUrlSchemes: ['http', 'https', 'mailto'],
-    untypedDocumentBehavior: 'skip',
-    referentialValidation: true,
-    resolverStrategy: 'basename',
-    outputFormat: 'human',
-    ...overrides,
-  };
-}
-
-async function createTempProject(
-  files: Record<string, string>,
-): Promise<string> {
-  const dir = await mkdtemp(join(tmpdir(), 'mts-validate-'));
-  for (const [relPath, content] of Object.entries(files)) {
-    const fullPath = join(dir, relPath);
-    await mkdir(dirname(fullPath), { recursive: true });
-    await writeFile(fullPath, content, 'utf-8');
-  }
-  return dir;
-}
+import { defaultConfig, createTempProject } from './helpers.js';
 
 describe('expandTargets', () => {
   it('resolves explicit file target', async () => {

@@ -1,15 +1,21 @@
 import type { EffectiveConfig } from './config.js';
-import { printHuman, printJson, printError } from './output.js';
 import {
   runValidate,
   formatValidateHuman,
   formatValidateJson,
 } from './validate.js';
+import {
+  runCreate,
+  createExitCode,
+  formatCreateHuman,
+  formatCreateJson,
+} from './create.js';
+import { runTypes, formatTypesHuman, formatTypesJson } from './types.js';
 
 export type CommandIntent =
   | { kind: 'validate'; config: EffectiveConfig; exitCode: number }
-  | { kind: 'create'; type: string; output: string; config: EffectiveConfig }
-  | { kind: 'types'; config: EffectiveConfig };
+  | { kind: 'create'; config: EffectiveConfig; exitCode: number }
+  | { kind: 'types'; config: EffectiveConfig; exitCode: number };
 
 export async function handleValidate(
   config: EffectiveConfig,
@@ -26,38 +32,33 @@ export async function handleValidate(
   return { kind: 'validate', config, exitCode: result.exitCode };
 }
 
-export function handleCreate(
+export async function handleCreate(
   type: string,
   output: string,
   config: EffectiveConfig,
-): CommandIntent {
-  printHuman(`create: not yet implemented (type: ${type}, output: ${output})`);
-  printJson({
-    command: 'create',
-    type,
-    output,
-    config: {
-      root: config.root,
-      include: config.include,
-      exclude: config.exclude,
-      typeDeclarationKey: config.typeDeclarationKey,
-      outputFormat: config.outputFormat,
-    },
-  });
-  return { kind: 'create', type, output, config };
+): Promise<Extract<CommandIntent, { kind: 'create' }>> {
+  const result = await runCreate(config, type, output);
+
+  if (config.outputFormat === 'json') {
+    formatCreateJson(result, config);
+  } else {
+    formatCreateHuman(result);
+  }
+
+  return { kind: 'create', config, exitCode: createExitCode(result) };
 }
 
-export function handleTypes(config: EffectiveConfig): CommandIntent {
-  printHuman(`types: not yet implemented (root: ${config.root})`);
-  printJson({
-    command: 'types',
-    config: {
-      root: config.root,
-      include: config.include,
-      exclude: config.exclude,
-      typeDeclarationKey: config.typeDeclarationKey,
-      outputFormat: config.outputFormat,
-    },
-  });
-  return { kind: 'types', config };
+export async function handleTypes(
+  config: EffectiveConfig,
+  detailName?: string,
+): Promise<Extract<CommandIntent, { kind: 'types' }>> {
+  const result = await runTypes(config, detailName);
+
+  if (config.outputFormat === 'json') {
+    formatTypesJson(result, config);
+  } else {
+    formatTypesHuman(result);
+  }
+
+  return { kind: 'types', config, exitCode: result.exitCode };
 }

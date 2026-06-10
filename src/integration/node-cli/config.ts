@@ -63,6 +63,23 @@ export function defaultEffectiveConfig(cwd: string): EffectiveConfig {
   };
 }
 
+/** Stable JSON snapshot of the effective config, shared by all command outputs. */
+export function serializeEffectiveConfig(
+  config: EffectiveConfig,
+): Record<string, unknown> {
+  return {
+    root: config.root,
+    include: config.include,
+    exclude: config.exclude,
+    typeDeclarationKey: config.typeDeclarationKey,
+    allowedUrlSchemes: config.allowedUrlSchemes,
+    untypedDocumentBehavior: config.untypedDocumentBehavior,
+    referentialValidation: config.referentialValidation,
+    resolverStrategy: config.resolverStrategy,
+    outputFormat: config.outputFormat,
+  };
+}
+
 function isValidOutputFormat(value: unknown): value is OutputFormat {
   return value === 'human' || value === 'json';
 }

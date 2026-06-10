@@ -10,8 +10,8 @@ import type {
 } from '../../core/validation.js';
 import type { Document } from '../../core/types.js';
 
-import type { EffectiveConfig } from './config.js';
-import { printHuman, printJson, printError } from './output.js';
+import { serializeEffectiveConfig, type EffectiveConfig } from './config.js';
+import { printHuman, printJson } from './output.js';
 import {
   discoverMarkdownFiles,
   filterTypeDefinitionCandidates,
@@ -468,17 +468,7 @@ export function formatValidateJson(
       typeParseFailures: result.typeParseFailures.length,
       targetDiagnostics: result.targetDiagnostics.length,
     },
-    effectiveConfig: {
-      root: config.root,
-      include: config.include,
-      exclude: config.exclude,
-      typeDeclarationKey: config.typeDeclarationKey,
-      allowedUrlSchemes: config.allowedUrlSchemes,
-      untypedDocumentBehavior: config.untypedDocumentBehavior,
-      referentialValidation: config.referentialValidation,
-      resolverStrategy: config.resolverStrategy,
-      outputFormat: config.outputFormat,
-    },
+    effectiveConfig: serializeEffectiveConfig(config),
     targets: result.targets.map((t) => {
       if (t.kind === 'validated') {
         return {

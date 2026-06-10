@@ -45,15 +45,18 @@ program
   .requiredOption('-o, --output <path>', 'output path for the new document')
   .action(async (opts, cmd) => {
     const effective = await loadAndResolveConfig(cmd);
-    handleCreate(opts.type, opts.output, effective);
+    const intent = await handleCreate(opts.type, opts.output, effective);
+    process.exit(intent.exitCode);
   });
 
 program
   .command('types')
   .description('List discovered type definition documents')
-  .action(async (_opts, cmd) => {
+  .argument('[type]', 'show detail for a single type by canonical name')
+  .action(async (type: string | undefined, _opts, cmd) => {
     const effective = await loadAndResolveConfig(cmd);
-    handleTypes(effective);
+    const intent = await handleTypes(effective, type);
+    process.exit(intent.exitCode);
   });
 
 async function loadAndResolveConfig(
