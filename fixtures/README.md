@@ -61,6 +61,8 @@ rm -rf fixtures/scenarios/create-with-template/_tmp
 | `malformed-frontmatter` | `validate` | 1 | ingest failure (unterminated `---`) fails the whole run |
 | `broken-type-def` | `validate` | 1 | a type def missing `## Schema` fails the whole run |
 | `referential-mismatch` | `validate` | 1 / 0 | `type:referential-mismatch`; passes with `--no-referential-validation` |
+| `binding-valid` | `validate` | 0 | untyped regular document is typed through config `bindings` |
+| `binding-type-not-found` | `validate` | 1 | `binding-type-not-found` from config-driven dispatch |
 | `create-no-template` | `create -t bookmark` | 0 | frontmatter-only file (type has no `## Template`) |
 | `create-with-template` | `create -t meeting` | 0 | frontmatter + template body |
 
@@ -78,6 +80,7 @@ npm run cli -- --root fixtures/scenarios/referential-mismatch --no-referential-v
 | `knowledge-base` | `Concept` / `Person` / `Source` types, interlinked notes, all valid | `validate` → all pass; `types`; `create -t concept` |
 | `obsidian-style` | types under `types/`, plain notes present; config sets `untypedDocumentBehavior: warn` | `validate` with vs without `--config` (skip vs warn) |
 | `custom-config` | `typeDeclarationKey: "kind"`, `https`-only URLs, `drafts/**` excluded | `validate --config …` → exit 0 (the failing draft is excluded) |
+| `bindings-config` | config-driven `bindings`; `types` shows discovered and undiscovered binding targets | `types --config …` |
 
 ### Gotchas baked into the fixtures (worth knowing when authoring vaults)
 

@@ -82,6 +82,20 @@
       "expectKinds": ["validated"]
     },
     {
+      "dir": "scenarios/binding-valid",
+      "command": "validate",
+      "useConfig": true,
+      "exitCode": 0,
+      "expectKinds": ["validated"]
+    },
+    {
+      "dir": "scenarios/binding-type-not-found",
+      "command": "validate",
+      "useConfig": true,
+      "exitCode": 1,
+      "expectKinds": ["binding-type-not-found"]
+    },
+    {
       "dir": "scenarios/create-no-template",
       "command": "create",
       "type": "bookmark",
@@ -133,6 +147,17 @@
       "useConfig": true,
       "exitCode": 0,
       "expectKinds": ["validated"]
+    },
+    {
+      "dir": "vaults/bindings-config",
+      "command": "types",
+      "useConfig": true,
+      "exitCode": 0,
+      "expectTypeNames": ["concept"],
+      "expectBindingSummaries": [
+        { "typeName": "concept", "status": "found" },
+        { "typeName": "article", "status": "not-found" }
+      ]
     }
   ]
 }

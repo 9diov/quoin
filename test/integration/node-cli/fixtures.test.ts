@@ -29,6 +29,7 @@ type Entry = {
   expectKinds?: string[];
   expectWarningKinds?: string[];
   expectTypeNames?: string[];
+  expectBindingSummaries?: { typeName: string; status: string }[];
   expectIngestFailure?: boolean;
   expectTypeParseFailure?: boolean;
   expectFrontmatterOnly?: boolean;
@@ -91,6 +92,16 @@ async function runTypesEntry(entry: Entry): Promise<void> {
   const names = result.types.map((t) => t.name);
   for (const name of entry.expectTypeNames ?? []) {
     expect(names).toContain(name);
+  }
+  for (const expected of entry.expectBindingSummaries ?? []) {
+    expect(result.bindingSummaries).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          typeName: expected.typeName,
+          status: expected.status,
+        }),
+      ]),
+    );
   }
 }
 

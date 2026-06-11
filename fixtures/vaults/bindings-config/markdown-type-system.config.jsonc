@@ -1,0 +1,6 @@
+{
+  "bindings": [
+    { "type": "concept", "match": "notes/**/*.md" },
+    { "type": "article", "match": "posts/**/*.md" }
+  ]
+}
