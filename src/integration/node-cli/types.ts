@@ -5,6 +5,7 @@ import type {
 } from '../../core/parser.js';
 
 import { serializeEffectiveConfig, type EffectiveConfig } from './config.js';
+import type { TypeBinding } from './bindings.js';
 import { printHuman, printJson } from './output.js';
 import { buildProjectUniverse } from './project.js';
 
@@ -38,8 +39,21 @@ export type TypeDetailResult =
   | { kind: 'detail-ambiguous'; name: string; candidateIds: string[] }
   | { kind: 'detail-unavailable'; name: string; reason: string };
 
+export type BindingSummary =
+  | { typeName: string; status: 'found'; bindings: TypeBinding[]; typeId: string }
+  | { typeName: string; status: 'not-found'; bindings: TypeBinding[] }
+  | {
+      typeName: string;
+      status: 'ambiguous';
+      bindings: TypeBinding[];
+      candidateIds: string[];
+    }
+  | { typeName: string; status: 'unavailable'; bindings: TypeBinding[]; reason: string };
+
 export type TypesResult = {
   types: TypeSummary[];
+  bindings: TypeBinding[];
+  bindingSummaries: BindingSummary[];
   ambiguousNames: { name: string; ids: string[] }[];
   parseFailures: { path: string; errors: ParseError[] }[];
   detail: TypeDetailResult | null;
@@ -103,6 +117,50 @@ export async function runTypes(
   const types = universe.parsedTypes
     .map(summarize)
     .sort((a, b) => a.id.localeCompare(b.id));
+  const bindings = [...config.bindings];
+  const bindingsByType = new Map<string, TypeBinding[]>();
+  for (const binding of bindings) {
+    const existing = bindingsByType.get(binding.type);
+    if (existing) {
+      existing.push(binding);
+    } else {
+      bindingsByType.set(binding.type, [binding]);
+    }
+  }
+  const bindingSummaries: BindingSummary[] = [...bindingsByType.entries()].map(
+    ([typeName, groupedBindings]) => {
+      const lookup = universe.typeRegistry.getByName(typeName);
+      switch (lookup.kind) {
+        case 'found':
+          return {
+            typeName,
+            status: 'found',
+            bindings: groupedBindings,
+            typeId: lookup.typeDef.id,
+          };
+        case 'not-found':
+          return {
+            typeName,
+            status: 'not-found',
+            bindings: groupedBindings,
+          };
+        case 'ambiguous':
+          return {
+            typeName,
+            status: 'ambiguous',
+            bindings: groupedBindings,
+            candidateIds: lookup.candidates.map((c) => c.id).sort(),
+          };
+        case 'unavailable':
+          return {
+            typeName,
+            status: 'unavailable',
+            bindings: groupedBindings,
+            reason: lookup.reason,
+          };
+      }
+    },
+  );
 
   const byName = new Map<string, ParsedTypeDefinitionDocument[]>();
   for (const typeDef of universe.parsedTypes) {
@@ -157,7 +215,15 @@ export async function runTypes(
   // ordinary document ingest failures do not control it.
   const exitCode = parseFailures.length > 0 ? 1 : 0;
 
-  return { types, ambiguousNames, parseFailures, detail, exitCode };
+  return {
+    types,
+    bindings,
+    bindingSummaries,
+    ambiguousNames,
+    parseFailures,
+    detail,
+    exitCode,
+  };
 }
 
 export function formatTypesHuman(result: TypesResult): void {
@@ -184,6 +250,31 @@ export function formatTypesHuman(result: TypesResult): void {
     printHuman('--- Ambiguous Names ---');
     for (const a of result.ambiguousNames) {
       printHuman(`  ${a.name}: ${a.ids.join(', ')}`);
+    }
+  }
+
+  if (result.bindings.length > 0) {
+    printHuman('--- Bindings ---');
+    for (const summary of result.bindingSummaries) {
+      let suffix = '';
+      switch (summary.status) {
+        case 'found':
+          suffix = `  [discovered: ${summary.typeId}]`;
+          break;
+        case 'not-found':
+          suffix = '  [undiscovered]';
+          break;
+        case 'ambiguous':
+          suffix = `  [ambiguous: ${summary.candidateIds.join(', ')}]`;
+          break;
+        case 'unavailable':
+          suffix = `  [unavailable: ${summary.reason}]`;
+          break;
+      }
+      printHuman(`  ${summary.typeName}${suffix}`);
+      for (const binding of summary.bindings) {
+        printHuman(`    ${binding.match}`);
+      }
     }
   }
 
@@ -250,8 +341,11 @@ export function formatTypesJson(
       types: result.types.length,
       ambiguous: result.ambiguousNames.length,
       parseFailures: result.parseFailures.length,
+      bindings: result.bindings.length,
     },
     types: result.types,
+    bindings: result.bindings,
+    bindingSummaries: result.bindingSummaries,
     ambiguousNames: result.ambiguousNames,
     parseFailures: result.parseFailures,
     detail: result.detail,

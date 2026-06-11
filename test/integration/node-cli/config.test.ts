@@ -5,10 +5,12 @@ import { tmpdir } from 'node:os';
 
 import {
   ConfigLoadError,
+  ConfigValidationError,
   defaultEffectiveConfig,
   findConfigFile,
   loadConfigFile,
   resolveEffectiveConfig,
+  serializeEffectiveConfig,
 } from '../../../src/integration/node-cli/config.js';
 
 describe('defaultEffectiveConfig', () => {
@@ -19,6 +21,7 @@ describe('defaultEffectiveConfig', () => {
       root: '/my/project',
       include: ['**/*.md'],
       exclude: ['.git/**', 'node_modules/**'],
+      bindings: [],
       typeDeclarationKey: '_type',
       allowedUrlSchemes: ['http', 'https', 'mailto'],
       untypedDocumentBehavior: 'skip',
@@ -55,6 +58,29 @@ describe('loadConfigFile', () => {
       expect(config.typeDeclarationKey).toBe('kind');
       expect(config.referentialValidation).toBe(false);
       expect(config.output?.format).toBe('json');
+      expect(config.bindings).toBeUndefined();
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('parses valid bindings from config', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'mts-test-'));
+    const configPath = join(dir, 'config.jsonc');
+    await writeFile(
+      configPath,
+      `{
+        "bindings": [
+          { "type": "concept", "match": "notes/**/*.md" }
+        ]
+      }`,
+    );
+
+    try {
+      const config = await loadConfigFile(configPath);
+      expect(config.bindings).toEqual([
+        { type: 'concept', match: 'notes/**/*.md' },
+      ]);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
@@ -85,6 +111,57 @@ describe('loadConfigFile', () => {
       const config = await loadConfigFile(configPath);
       expect(config.root).toBeUndefined();
       expect(config.include).toBeUndefined();
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('throws ConfigValidationError for non-array bindings', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'mts-test-'));
+    const configPath = join(dir, 'bad-bindings.jsonc');
+    await writeFile(configPath, '{ "bindings": "notes/**/*.md" }');
+
+    try {
+      await loadConfigFile(configPath);
+      expect.unreachable('should have thrown');
+    } catch (err) {
+      expect(err).toBeInstanceOf(ConfigValidationError);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('throws ConfigValidationError for malformed binding entries', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'mts-test-'));
+    const configPath = join(dir, 'bad-binding-entry.jsonc');
+    await writeFile(
+      configPath,
+      '{ "bindings": [{ "type": "concept", "match": "notes/**/*.md", "extra": true }] }',
+    );
+
+    try {
+      await loadConfigFile(configPath);
+      expect.unreachable('should have thrown');
+    } catch (err) {
+      expect(err).toBeInstanceOf(ConfigValidationError);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('throws ConfigValidationError for duplicate bindings', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'mts-test-'));
+    const configPath = join(dir, 'dup-binding.jsonc');
+    await writeFile(
+      configPath,
+      '{ "bindings": [{ "type": "concept", "match": "notes/**/*.md" }, { "type": "concept", "match": "notes/**/*.md" }] }',
+    );
+
+    try {
+      await loadConfigFile(configPath);
+      expect.unreachable('should have thrown');
+    } catch (err) {
+      expect(err).toBeInstanceOf(ConfigValidationError);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
@@ -243,6 +320,7 @@ describe('resolveEffectiveConfig', () => {
       {
         include: ['**/*.mdx'],
         exclude: ['.cache/**'],
+        bindings: [{ type: 'concept', match: 'notes/**/*.md' }],
         typeDeclarationKey: 'kind',
         allowedUrlSchemes: ['https'],
         untypedDocumentBehavior: 'warn',
@@ -254,6 +332,9 @@ describe('resolveEffectiveConfig', () => {
 
     expect(result.include).toEqual(['**/*.mdx']);
     expect(result.exclude).toEqual(['.cache/**']);
+    expect(result.bindings).toEqual([
+      { type: 'concept', match: 'notes/**/*.md' },
+    ]);
     expect(result.typeDeclarationKey).toBe('kind');
     expect(result.allowedUrlSchemes).toEqual(['https']);
     expect(result.untypedDocumentBehavior).toBe('warn');
@@ -266,6 +347,7 @@ describe('resolveEffectiveConfig', () => {
 
     expect(result.include).toEqual(['**/*.md']);
     expect(result.exclude).toEqual(['.git/**', 'node_modules/**']);
+    expect(result.bindings).toEqual([]);
     expect(result.typeDeclarationKey).toBe('_type');
     expect(result.allowedUrlSchemes).toEqual(['http', 'https', 'mailto']);
     expect(result.untypedDocumentBehavior).toBe('skip');
@@ -303,5 +385,26 @@ describe('resolveEffectiveConfig', () => {
     expect(result.untypedDocumentBehavior).toBe('skip');
     expect(result.resolverStrategy).toBe('basename');
     expect(result.outputFormat).toBe('human');
+  });
+
+  it('preserves bindings declaration order in serialized effective config', () => {
+    const config = resolveEffectiveConfig(
+      {
+        bindings: [
+          { type: 'a', match: 'one/**/*.md' },
+          { type: 'b', match: 'two/**/*.md' },
+          { type: 'c', match: 'three/**/*.md' },
+        ],
+      },
+      null,
+      '/cwd',
+    );
+
+    const serialized = serializeEffectiveConfig(config);
+    expect(serialized['bindings']).toEqual([
+      { type: 'a', match: 'one/**/*.md' },
+      { type: 'b', match: 'two/**/*.md' },
+      { type: 'c', match: 'three/**/*.md' },
+    ]);
   });
 });

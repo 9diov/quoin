@@ -4,6 +4,7 @@ import { isAbsolute } from 'node:path';
 import { parse as parseJsonc, printParseErrorCode, type ParseError } from 'jsonc-parser';
 
 import type { UntypedDocumentBehavior } from '../../core/validation.js';
+import type { TypeBinding } from './bindings.js';
 
 export type ResolverStrategy = 'basename';
 
@@ -13,6 +14,7 @@ export type NodeCliConfig = {
   root?: string;
   include?: string[];
   exclude?: string[];
+  bindings?: TypeBinding[];
   typeDeclarationKey?: string;
   allowedUrlSchemes?: string[];
   untypedDocumentBehavior?: UntypedDocumentBehavior;
@@ -29,6 +31,7 @@ export type EffectiveConfig = {
   root: string;
   include: string[];
   exclude: string[];
+  bindings: TypeBinding[];
   typeDeclarationKey: string;
   allowedUrlSchemes: string[];
   untypedDocumentBehavior: UntypedDocumentBehavior;
@@ -47,13 +50,22 @@ export class ConfigLoadError extends Error {
   }
 }
 
+export class ConfigValidationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'ConfigValidationError';
+  }
+}
+
 const CONFIG_FILE_NAME = 'markdown-type-system.config.jsonc';
+const CANONICAL_TYPE_NAME = /^[a-z0-9]([a-z0-9_-]*[a-z0-9])?$/;
 
 export function defaultEffectiveConfig(cwd: string): EffectiveConfig {
   return {
     root: resolve(cwd),
     include: ['**/*.md'],
     exclude: ['.git/**', 'node_modules/**'],
+    bindings: [],
     typeDeclarationKey: '_type',
     allowedUrlSchemes: ['http', 'https', 'mailto'],
     untypedDocumentBehavior: 'skip',
@@ -71,6 +83,7 @@ export function serializeEffectiveConfig(
     root: config.root,
     include: config.include,
     exclude: config.exclude,
+    bindings: config.bindings,
     typeDeclarationKey: config.typeDeclarationKey,
     allowedUrlSchemes: config.allowedUrlSchemes,
     untypedDocumentBehavior: config.untypedDocumentBehavior,
@@ -108,6 +121,56 @@ function coerceBoolean(value: unknown): boolean | undefined {
   return undefined;
 }
 
+function validateBindings(value: unknown): TypeBinding[] {
+  if (!Array.isArray(value)) {
+    throw new ConfigValidationError('Config "bindings" must be an array.');
+  }
+
+  const bindings: TypeBinding[] = [];
+  const seen = new Set<string>();
+
+  value.forEach((entry, index) => {
+    if (entry === null || typeof entry !== 'object' || Array.isArray(entry)) {
+      throw new ConfigValidationError(
+        `Config "bindings[${index}]" must be an object with exactly "type" and "match".`,
+      );
+    }
+
+    const obj = entry as Record<string, unknown>;
+    const keys = Object.keys(obj).sort();
+    if (keys.length !== 2 || !keys.includes('type') || !keys.includes('match')) {
+      throw new ConfigValidationError(
+        `Config "bindings[${index}]" must contain exactly "type" and "match".`,
+      );
+    }
+
+    const type = obj['type'];
+    if (typeof type !== 'string' || !CANONICAL_TYPE_NAME.test(type)) {
+      throw new ConfigValidationError(
+        `Config "bindings[${index}].type" must be a canonical type name.`,
+      );
+    }
+
+    const match = obj['match'];
+    if (typeof match !== 'string' || match.trim().length === 0) {
+      throw new ConfigValidationError(
+        `Config "bindings[${index}].match" must be a non-empty string.`,
+      );
+    }
+
+    const duplicateKey = JSON.stringify([type, match]);
+    if (seen.has(duplicateKey)) {
+      throw new ConfigValidationError(
+        `Config "bindings[${index}]" duplicates an earlier binding for type "${type}" and match "${match}".`,
+      );
+    }
+    seen.add(duplicateKey);
+    bindings.push({ type, match });
+  });
+
+  return bindings;
+}
+
 function parseConfig(raw: unknown): NodeCliConfig {
   if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) {
     return {};
@@ -124,6 +187,10 @@ function parseConfig(raw: unknown): NodeCliConfig {
 
   const exclude = coerceStringArray(obj['exclude']);
   if (exclude !== undefined) result.exclude = exclude;
+
+  if (Object.hasOwn(obj, 'bindings')) {
+    result.bindings = validateBindings(obj['bindings']);
+  }
 
   const typeDeclarationKey = coerceString(obj['typeDeclarationKey']);
   if (typeDeclarationKey !== undefined)
@@ -237,6 +304,7 @@ export function resolveEffectiveConfig(
     root,
     include: config?.include ?? defaults.include,
     exclude: config?.exclude ?? defaults.exclude,
+    bindings: config?.bindings ?? defaults.bindings,
     typeDeclarationKey:
       config?.typeDeclarationKey ?? defaults.typeDeclarationKey,
     allowedUrlSchemes:

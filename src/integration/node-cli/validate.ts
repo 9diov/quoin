@@ -11,6 +11,7 @@ import type {
 import type { Document } from '../../core/types.js';
 
 import { serializeEffectiveConfig, type EffectiveConfig } from './config.js';
+import { resolveEffectiveTypeDeclaration, type TypeBinding } from './bindings.js';
 import { printHuman, printJson } from './output.js';
 import {
   discoverMarkdownFiles,
@@ -52,6 +53,26 @@ export type ValidationTargetResult =
       kind: 'type-unavailable';
       path: string;
       declaration: unknown;
+      reason: string;
+    }
+  | { kind: 'ambiguous-binding'; path: string; candidates: TypeBinding[] }
+  | {
+      kind: 'binding-type-not-found';
+      path: string;
+      matchedBinding: TypeBinding;
+      typeName: string;
+    }
+  | {
+      kind: 'binding-type-ambiguous';
+      path: string;
+      matchedBinding: TypeBinding;
+      typeName: string;
+      candidateIds: string[];
+    }
+  | {
+      kind: 'binding-type-unavailable';
+      path: string;
+      matchedBinding: TypeBinding;
       reason: string;
     };
 
@@ -210,7 +231,6 @@ export async function runValidate(
     }
     targetPaths = rawTargetPaths.paths;
   } else {
-    const typeDefPaths = new Set(parsed.map((t) => t.id));
     const typeCandidatePaths = new Set(candidates.map((c) => c.path));
     for (const failure of failures) {
       typeCandidatePaths.add(failure.path);
@@ -233,81 +253,144 @@ export async function runValidate(
     if (!ingested) continue;
 
     const doc = ingested.document;
-    const declaration = doc.frontmatter[config.typeDeclarationKey];
+    const effective = resolveEffectiveTypeDeclaration(
+      doc,
+      path,
+      config.bindings,
+      config.typeDeclarationKey,
+    );
 
-    if (declaration === undefined) {
-      if (config.untypedDocumentBehavior === 'warn') {
+    switch (effective.kind) {
+      case 'untyped':
+        if (config.untypedDocumentBehavior === 'warn') {
+          targets.push({
+            kind: 'warn-untyped',
+            path,
+            warning: {
+              kind: 'document:untyped',
+              message: `Document "${path}" has no Type Declaration at "${config.typeDeclarationKey}".`,
+              location: { scope: 'config' },
+              details: { path, key: config.typeDeclarationKey },
+            },
+          });
+        } else {
+          targets.push({ kind: 'skipped-untyped', path });
+        }
+        break;
+      case 'ambiguous-binding':
         targets.push({
-          kind: 'warn-untyped',
+          kind: 'ambiguous-binding',
           path,
-          warning: {
-            kind: 'document:untyped',
-            message: `Document "${path}" has no Type Declaration at "${config.typeDeclarationKey}".`,
-            location: { scope: 'config' },
-            details: { path, key: config.typeDeclarationKey },
-          },
+          candidates: effective.candidates,
         });
-      } else {
-        targets.push({ kind: 'skipped-untyped', path });
+        break;
+      case 'frontmatter': {
+        const declResult = typeRegistry.getByDeclaration(effective.value);
+
+        switch (declResult.kind) {
+          case 'found': {
+            const result = validate(
+              doc,
+              declResult.typeDef,
+              validationConfig,
+              resolver,
+              typeRegistry,
+            );
+            targets.push({
+              kind: 'validated',
+              path,
+              result,
+              typeId: declResult.typeDef.id,
+              typeName: declResult.typeDef.name,
+            });
+            break;
+          }
+          case 'invalid-declaration':
+            targets.push({
+              kind: 'invalid-type-declaration',
+              path,
+              value: declResult.value,
+            });
+            break;
+          case 'missing-declaration':
+            targets.push({ kind: 'skipped-untyped', path });
+            break;
+          case 'not-found':
+            targets.push({
+              kind: 'type-not-found',
+              path,
+              declaration: effective.value,
+              typeName: declResult.typeName,
+            });
+            break;
+          case 'ambiguous':
+            targets.push({
+              kind: 'type-ambiguous',
+              path,
+              declaration: effective.value,
+              typeName: declResult.typeName,
+              candidateIds: declResult.candidates.map((c) => c.id),
+            });
+            break;
+          case 'unavailable':
+            targets.push({
+              kind: 'type-unavailable',
+              path,
+              declaration: effective.value,
+              reason: declResult.reason,
+            });
+            break;
+        }
+        break;
       }
-      continue;
-    }
-
-    const declResult = typeRegistry.getByDeclaration(declaration);
-
-    switch (declResult.kind) {
-      case 'found': {
-        const result = validate(
-          doc,
-          declResult.typeDef,
-          validationConfig,
-          resolver,
-          typeRegistry,
-        );
-        targets.push({
-          kind: 'validated',
-          path,
-          result,
-          typeId: declResult.typeDef.id,
-          typeName: declResult.typeDef.name,
-        });
+      case 'binding': {
+        const lookup = typeRegistry.getByName(effective.typeName);
+        switch (lookup.kind) {
+          case 'found': {
+            const result = validate(
+              doc,
+              lookup.typeDef,
+              validationConfig,
+              resolver,
+              typeRegistry,
+            );
+            targets.push({
+              kind: 'validated',
+              path,
+              result,
+              typeId: lookup.typeDef.id,
+              typeName: lookup.typeDef.name,
+            });
+            break;
+          }
+          case 'not-found':
+            targets.push({
+              kind: 'binding-type-not-found',
+              path,
+              matchedBinding: effective.matchedBinding,
+              typeName: lookup.typeName,
+            });
+            break;
+          case 'ambiguous':
+            targets.push({
+              kind: 'binding-type-ambiguous',
+              path,
+              matchedBinding: effective.matchedBinding,
+              typeName: lookup.typeName,
+              candidateIds: lookup.candidates.map((c) => c.id),
+            });
+            break;
+          case 'unavailable':
+            targets.push({
+              kind: 'binding-type-unavailable',
+              path,
+              matchedBinding: effective.matchedBinding,
+              reason: lookup.reason,
+            });
+            break;
+        }
         break;
       }
-      case 'invalid-declaration':
-        targets.push({
-          kind: 'invalid-type-declaration',
-          path,
-          value: declResult.value,
-        });
-        break;
-      case 'missing-declaration':
-        targets.push({ kind: 'skipped-untyped', path });
-        break;
-      case 'not-found':
-        targets.push({
-          kind: 'type-not-found',
-          path,
-          declaration,
-          typeName: declResult.typeName,
-        });
-        break;
-      case 'ambiguous':
-        targets.push({
-          kind: 'type-ambiguous',
-          path,
-          declaration,
-          typeName: declResult.typeName,
-          candidateIds: declResult.candidates.map((c) => c.id),
-        });
-        break;
-      case 'unavailable':
-        targets.push({
-          kind: 'type-unavailable',
-          path,
-          declaration,
-          reason: declResult.reason,
-        });
-        break;
     }
   }
 
@@ -323,7 +406,11 @@ export async function runValidate(
       t.kind === 'invalid-type-declaration' ||
       t.kind === 'type-not-found' ||
       t.kind === 'type-ambiguous' ||
-      t.kind === 'type-unavailable',
+      t.kind === 'type-unavailable' ||
+      t.kind === 'ambiguous-binding' ||
+      t.kind === 'binding-type-not-found' ||
+      t.kind === 'binding-type-ambiguous' ||
+      t.kind === 'binding-type-unavailable',
   );
 
   const exitCode =
@@ -404,6 +491,26 @@ export function formatValidateHuman(result: ValidateResult): void {
       case 'type-unavailable':
         printHuman(`FAIL  ${t.path}: ${t.reason}`);
         break;
+      case 'ambiguous-binding':
+        printHuman(
+          `FAIL  ${t.path}: ambiguous bindings (${t.candidates.map((c) => `${c.type}:${c.match}`).join(', ')})`,
+        );
+        break;
+      case 'binding-type-not-found':
+        printHuman(
+          `FAIL  ${t.path}: bound type "${t.typeName}" not found via ${t.matchedBinding.match}`,
+        );
+        break;
+      case 'binding-type-ambiguous':
+        printHuman(
+          `FAIL  ${t.path}: bound type "${t.typeName}" is ambiguous via ${t.matchedBinding.match}`,
+        );
+        break;
+      case 'binding-type-unavailable':
+        printHuman(
+          `FAIL  ${t.path}: bound type unavailable via ${t.matchedBinding.match}: ${t.reason}`,
+        );
+        break;
     }
   }
 
@@ -416,7 +523,11 @@ export function formatValidateHuman(result: ValidateResult): void {
       t.kind === 'invalid-type-declaration' ||
       t.kind === 'type-not-found' ||
       t.kind === 'type-ambiguous' ||
-      t.kind === 'type-unavailable',
+      t.kind === 'type-unavailable' ||
+      t.kind === 'ambiguous-binding' ||
+      t.kind === 'binding-type-not-found' ||
+      t.kind === 'binding-type-ambiguous' ||
+      t.kind === 'binding-type-unavailable',
   ).length;
   const skipped = result.targets.filter(
     (t) => t.kind === 'skipped-untyped' || t.kind === 'warn-untyped',
@@ -444,7 +555,11 @@ export function formatValidateJson(
       t.kind === 'invalid-type-declaration' ||
       t.kind === 'type-not-found' ||
       t.kind === 'type-ambiguous' ||
-      t.kind === 'type-unavailable',
+      t.kind === 'type-unavailable' ||
+      t.kind === 'ambiguous-binding' ||
+      t.kind === 'binding-type-not-found' ||
+      t.kind === 'binding-type-ambiguous' ||
+      t.kind === 'binding-type-unavailable',
   ).length;
   const skipped = result.targets.filter(
     (t) => t.kind === 'skipped-untyped' || t.kind === 'warn-untyped',

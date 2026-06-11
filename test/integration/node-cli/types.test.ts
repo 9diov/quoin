@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { rm } from 'node:fs/promises';
 
 import { runTypes } from '../../../src/integration/node-cli/types.js';
-import { defaultConfig, createTempProject } from './helpers.js';
+import { binding, defaultConfig, createTempProject } from './helpers.js';
 
 const CONCEPT = `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  title:\n    type: text\n    required: true\n  tags:\n    type: list<text>\n\`\`\`\n\n## Template\n\n\`\`\`markdown\n## Summary <!-- required -->\n\`\`\`\n`;
 
@@ -39,6 +39,59 @@ describe('runTypes', () => {
       const result = await runTypes(defaultConfig(dir));
       expect(result.types).toHaveLength(0);
       expect(result.exitCode).toBe(0);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('includes configured bindings in the result', async () => {
+    const dir = await createTempProject({
+      'types/Concept.md': CONCEPT,
+    });
+    try {
+      const result = await runTypes(
+        defaultConfig(dir, {
+          bindings: [binding('concept', 'notes/**/*.md')],
+        }),
+      );
+      expect(result.bindings).toEqual([
+        binding('concept', 'notes/**/*.md'),
+      ]);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('groups bindings by target type and labels undiscovered targets', async () => {
+    const dir = await createTempProject({
+      'types/Concept.md': CONCEPT,
+    });
+    try {
+      const result = await runTypes(
+        defaultConfig(dir, {
+          bindings: [
+            binding('concept', 'notes/**/*.md'),
+            binding('concept', 'ideas/**/*.md'),
+            binding('article', 'posts/**/*.md'),
+          ],
+        }),
+      );
+      expect(result.bindingSummaries).toEqual([
+        {
+          typeName: 'concept',
+          status: 'found',
+          typeId: 'types/Concept.md',
+          bindings: [
+            binding('concept', 'notes/**/*.md'),
+            binding('concept', 'ideas/**/*.md'),
+          ],
+        },
+        {
+          typeName: 'article',
+          status: 'not-found',
+          bindings: [binding('article', 'posts/**/*.md')],
+        },
+      ]);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }

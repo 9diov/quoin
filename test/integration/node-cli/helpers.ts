@@ -6,6 +6,7 @@ import {
   defaultEffectiveConfig,
   type EffectiveConfig,
 } from '../../../src/integration/node-cli/config.js';
+import type { TypeBinding } from '../../../src/integration/node-cli/bindings.js';
 
 /** An EffectiveConfig rooted at `root`, with per-test overrides on top. */
 export function defaultConfig(
@@ -13,6 +14,10 @@ export function defaultConfig(
   overrides: Partial<EffectiveConfig> = {},
 ): EffectiveConfig {
   return { ...defaultEffectiveConfig(root), ...overrides };
+}
+
+export function binding(type: string, match: string): TypeBinding {
+  return { type, match };
 }
 
 /** Materialize a throwaway project directory from a path -> content map. */

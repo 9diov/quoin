@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { rm } from 'node:fs/promises';
 
 import { runValidate, expandTargets, formatValidateJson } from '../../../src/integration/node-cli/validate.js';
-import { defaultConfig, createTempProject } from './helpers.js';
+import { binding, defaultConfig, createTempProject } from './helpers.js';
 
 describe('expandTargets', () => {
   it('resolves explicit file target', async () => {
@@ -182,6 +182,49 @@ describe('runValidate', () => {
     }
   });
 
+  it('validates an untyped document through a matching binding', async () => {
+    const dir = await createTempProject({
+      'types/Concept.md': `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  title:\n    type: text\n    required: true\n\`\`\`\n`,
+      'notes/doc.md': `---\ntitle: Hello\n---\n\nBody.`,
+    });
+    try {
+      const config = defaultConfig(dir, {
+        bindings: [binding('concept', 'notes/**/*.md')],
+      });
+      const result = await runValidate(config, []);
+      expect(result.exitCode).toBe(0);
+      expect(result.targets).toHaveLength(1);
+      expect(result.targets[0]!.kind).toBe('validated');
+      if (result.targets[0]!.kind === 'validated') {
+        expect(result.targets[0]!.typeName).toBe('concept');
+        expect(result.targets[0]!.result.passed).toBe(true);
+      }
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('prefers frontmatter declaration over matching bindings', async () => {
+    const dir = await createTempProject({
+      'types/Concept.md': `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  title:\n    type: text\n\`\`\`\n`,
+      'types/Article.md': `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  summary:\n    type: text\n\`\`\`\n`,
+      'notes/doc.md': `---\n_type: "[[Article]]"\nsummary: Hi\n---\n\nBody.`,
+    });
+    try {
+      const config = defaultConfig(dir, {
+        bindings: [binding('concept', 'notes/**/*.md')],
+      });
+      const result = await runValidate(config, []);
+      expect(result.targets).toHaveLength(1);
+      expect(result.targets[0]!.kind).toBe('validated');
+      if (result.targets[0]!.kind === 'validated') {
+        expect(result.targets[0]!.typeName).toBe('article');
+      }
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
   it('reports invalid-type-declaration for non-Wiki-Link value', async () => {
     const dir = await createTempProject({
       'doc.md': '---\n_type: 123\n---\n\nBody.',
@@ -210,6 +253,25 @@ describe('runValidate', () => {
     }
   });
 
+  it('reports binding-type-not-found for unknown bound type', async () => {
+    const dir = await createTempProject({
+      'notes/doc.md': '# No frontmatter',
+    });
+    try {
+      const result = await runValidate(
+        defaultConfig(dir, {
+          bindings: [binding('concept', 'notes/**/*.md')],
+        }),
+        [],
+      );
+      expect(result.targets).toHaveLength(1);
+      expect(result.targets[0]!.kind).toBe('binding-type-not-found');
+      expect(result.exitCode).toBe(1);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
   it('reports type-ambiguous for duplicate type names', async () => {
     const dir = await createTempProject({
       'a/Concept.md': `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  a:\n    type: text\n\`\`\`\n`,
@@ -221,6 +283,89 @@ describe('runValidate', () => {
       expect(result.targets).toHaveLength(1);
       expect(result.targets[0]!.kind).toBe('type-ambiguous');
       expect(result.exitCode).toBe(1);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('reports binding-type-ambiguous for duplicate bound type names', async () => {
+    const dir = await createTempProject({
+      'a/Concept.md': `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  a:\n    type: text\n\`\`\`\n`,
+      'b/Concept.md': `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  b:\n    type: text\n\`\`\`\n`,
+      'notes/doc.md': '# No frontmatter',
+    });
+    try {
+      const result = await runValidate(
+        defaultConfig(dir, {
+          bindings: [binding('concept', 'notes/**/*.md')],
+        }),
+        [],
+      );
+      expect(result.targets).toHaveLength(1);
+      expect(result.targets[0]!.kind).toBe('binding-type-ambiguous');
+      expect(result.exitCode).toBe(1);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('reports ambiguous-binding for different matching bindings', async () => {
+    const dir = await createTempProject({
+      'notes/doc.md': '# No frontmatter',
+    });
+    try {
+      const config = defaultConfig(dir, {
+        bindings: [
+          binding('concept', 'notes/**/*.md'),
+          binding('article', '**/*.md'),
+        ],
+      });
+      const result = await runValidate(config, []);
+      expect(result.targets).toHaveLength(1);
+      expect(result.targets[0]!.kind).toBe('ambiguous-binding');
+      expect(result.exitCode).toBe(1);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('uses the first same-type binding as the matched binding', async () => {
+    const dir = await createTempProject({
+      'notes/doc.md': '# No frontmatter',
+    });
+    try {
+      const config = defaultConfig(dir, {
+        bindings: [
+          binding('concept', 'notes/**/*.md'),
+          binding('concept', '**/*.md'),
+        ],
+      });
+      const result = await runValidate(config, []);
+      expect(result.targets).toHaveLength(1);
+      expect(result.targets[0]!.kind).toBe('binding-type-not-found');
+      if (result.targets[0]!.kind === 'binding-type-not-found') {
+        expect(result.targets[0]!.matchedBinding).toEqual(
+          binding('concept', 'notes/**/*.md'),
+        );
+      }
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('dispatches an explicit type definition target via frontmatter even when its path matches a binding', async () => {
+    const dir = await createTempProject({
+      'types/Concept.md': `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  title:\n    type: text\n\`\`\`\n`,
+    });
+    try {
+      const result = await runValidate(
+        defaultConfig(dir, {
+          bindings: [binding('concept', 'types/**/*.md')],
+        }),
+        ['types/Concept.md'],
+      );
+      expect(result.targets).toHaveLength(1);
+      expect(result.targets[0]!.kind).toBe('type-not-found');
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
@@ -277,6 +422,26 @@ describe('runValidate', () => {
       const result = await runValidate(defaultConfig(dir), []);
       expect(result.exitCode).toBe(1);
       expect(result.typeParseFailures).toHaveLength(1);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it('reports binding-type-unavailable for broken bound type candidates', async () => {
+    const dir = await createTempProject({
+      'types/Concept.md': '---\n_type: type\n---\n\n# No schema block',
+      'notes/doc.md': '# No frontmatter',
+    });
+    try {
+      const result = await runValidate(
+        defaultConfig(dir, {
+          bindings: [binding('concept', 'notes/**/*.md')],
+        }),
+        [],
+      );
+      expect(result.targets).toHaveLength(1);
+      expect(result.targets[0]!.kind).toBe('binding-type-unavailable');
+      expect(result.exitCode).toBe(1);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
@@ -393,6 +558,9 @@ describe('formatValidateJson', () => {
     expect((payload.summary as Record<string, unknown>).targets).toBe(0);
     expect((payload.effectiveConfig as Record<string, unknown>).root).toBe(
       '/test',
+    );
+    expect((payload.effectiveConfig as Record<string, unknown>).bindings).toEqual(
+      [],
     );
 
     spy.mockRestore();
