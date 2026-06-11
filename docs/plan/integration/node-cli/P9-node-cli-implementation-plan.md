@@ -10,6 +10,7 @@ The Node CLI contracts are specified across:
 - [D3 — Validation Semantics](../../../design/D3-validation-semantics.md)
 - [D4 — Integration Contracts](../../../design/D4-integration-contracts.md)
 - [D5 — Node CLI Integration](../../../design/D5-node-cli-integration.md)
+- [D6 — Path-Glob Type Bindings](../../../design/D6-path-glob-type-bindings.md)
 
 The Core surface is already implemented through:
 
@@ -127,6 +128,19 @@ Acceptance:
 - `types` reports discovered successful and broken Type Definition Documents.
 - Command result shapes and exit status match D5.
 
+### Phase 14 — Path-glob type bindings
+
+Goal: extend the existing Node CLI runtime with config-sourced path-glob Type Bindings from D6.
+
+Detailed plan: [P15 — Path-glob type bindings](P15-path-glob-type-bindings.md).
+
+Acceptance:
+
+- `bindings` is accepted and validated as config data.
+- Root dispatch for regular Documents becomes binding-aware while keeping frontmatter authoritative.
+- `validate` surfaces `ambiguous-binding` and `binding-type-not-found` outcomes.
+- `types` and JSON outputs expose the effective binding list.
+
 ## Suggested Milestones
 
 ### Milestone 5 — CLI runtime ready
@@ -153,11 +167,18 @@ Includes Phase 13.
 
 This milestone completes the narrow Node CLI reference integration described in D5.
 
+### Milestone 9 — D6 support complete
+
+Includes Phase 14.
+
+This milestone adds config-driven path-glob Type Bindings without changing the Core boundary.
+
 ## Implementation Principles
 
 - Keep Core unchanged unless D5 reveals a concrete missing seam.
 - Keep Node-specific I/O and path behavior out of `src/core/`.
 - Prefer shared runtime helpers for discovery, ingestion, resolver, registry, and reporting.
+- Keep binding dispatch logic in the Node integration layer beside existing root Type Declaration dispatch.
 - Prefer focused libraries over framework-heavy abstractions.
 - Prefer permissive-license dependencies only.
 - Preserve deterministic output and path normalization across all commands.

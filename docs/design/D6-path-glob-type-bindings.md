@@ -103,7 +103,7 @@ The Core API is unchanged. The Integration:
 3. Resolves the resulting type name through TypeRegistry exactly as today.
 4. Reports `ambiguous-binding` as a new validation target diagnostic and skips Core validation for that Document.
 
-A binding that names a type unknown to the TypeRegistry produces a binding-sourced miss on every matched Document. Because the Document has no frontmatter declaration value, the existing `type-not-found` shape from D5 — which requires `declaration: unknown` — does not fit. D6 adds a sibling result variant for binding-sourced misses; see [Additions to D5 result shapes](#additions-to-d5-result-shapes). When multiple bindings naming the same missing type match a Document, the first matching binding in declaration order is reported as `matchedBinding`, consistent with the resolution algorithm. Detecting unknown binding targets once at load time, rather than once per matched Document, is a Future work item.
+A binding-selected type name is resolved through `typeRegistry.getByName(...)` exactly like a frontmatter-sourced declaration. `TypeReferenceLookupResult` (D4) has three failure modes — `not-found`, `ambiguous`, `unavailable` — and each one needs a binding-sourced sibling because the existing D5 variants all require a `declaration: unknown` value the binding case does not have. D6 adds three sibling variants — `binding-type-not-found`, `binding-type-ambiguous`, and `binding-type-unavailable`; see [Additions to D5 result shapes](#additions-to-d5-result-shapes). When multiple bindings naming the same missing or ambiguous type match a Document, the first matching binding in declaration order is reported as `matchedBinding`, consistent with the resolution algorithm. Detecting unknown binding targets once at load time, rather than once per matched Document, is a Future work item.
 
 ## Node CLI integration
 
@@ -111,9 +111,9 @@ The Node CLI (D5) gains:
 
 - **Config field.** `NodeCliConfig` adds `bindings?: TypeBinding[]`. This is the only source of bindings in v1 — there is no sidecar file and no CLI flag for bindings. The field defaults to an empty list, matching today's behavior where every regular Document is dispatched via frontmatter.
 - **Validation of `bindings`.** Invalid entries (non-canonical `type` name, missing `match`, unknown keys, duplicates) are reported by the existing config-loading machinery as command-level config failures, the same way an invalid `include` glob is handled today. No new discovery diagnostic variant is needed.
-- **Per-target diagnostics.** `ambiguous-binding` and `binding-type-not-found` are new `ValidationTargetResult` variants. See [Additions to D5 result shapes](#additions-to-d5-result-shapes).
+- **Per-target diagnostics.** `ambiguous-binding`, `binding-type-not-found`, `binding-type-ambiguous`, and `binding-type-unavailable` are new `ValidationTargetResult` variants. See [Additions to D5 result shapes](#additions-to-d5-result-shapes).
 - **`types` command.** When `bindings` is non-empty, `types` lists each binding under its target type alongside the discovered Type Definition Document.
-- **Exit status.** `ambiguous-binding` and `binding-type-not-found` targets exit non-zero, following the same rule as other per-target failures. Invalid `bindings` in config exits non-zero under the existing "command-level config failure" exit clause.
+- **Exit status.** All four new per-target variants exit non-zero, following the same rule as other per-target failures. Invalid `bindings` in config exits non-zero under the existing "command-level config failure" exit clause.
 
 The `create` command is unaffected — it always writes an explicit Wiki Link under the configured Type Declaration key into the generated frontmatter (D5). Bindings are a read-side feature.
 
@@ -124,11 +124,15 @@ D5's `ValidationTargetResult` discriminated union (D5:412) gains:
 ```typescript
 type ValidationTargetResult =
   // ...existing variants...
-  | { kind: 'ambiguous-binding';     path: string; candidates: TypeBinding[] }
-  | { kind: 'binding-type-not-found'; path: string; matchedBinding: TypeBinding; typeName: string }
+  | { kind: 'ambiguous-binding';         path: string; candidates: TypeBinding[] }
+  | { kind: 'binding-type-not-found';    path: string; matchedBinding: TypeBinding; typeName: string }
+  | { kind: 'binding-type-ambiguous';    path: string; matchedBinding: TypeBinding; typeName: string; candidateIds: string[] }
+  | { kind: 'binding-type-unavailable';  path: string; matchedBinding: TypeBinding; reason: string }
 ```
 
-`binding-type-not-found` is the sibling of D5's `type-not-found`: same semantic (the named type is absent from the TypeRegistry), distinct shape because no `declaration` value exists. `type-not-found` continues to apply to frontmatter-sourced declarations exclusively.
+The three `binding-type-*` variants are siblings of D5's `type-not-found`, `type-ambiguous`, and `type-unavailable`. Same semantics — the binding-selected type name was absent, multiply-defined, or temporarily unresolvable in the TypeRegistry — but the binding-sourced variants carry `matchedBinding` instead of `declaration`, since there is no frontmatter declaration value when dispatch came from a binding. The frontmatter-sourced variants `type-not-found`, `type-ambiguous`, and `type-unavailable` continue to apply exclusively to frontmatter-sourced declarations.
+
+`ambiguous-binding` is distinct from the three `binding-type-*` variants: it fires *before* TypeRegistry lookup, when multiple bindings naming **different** types match the same Document and the Integration cannot pick a single type name to look up. The `binding-type-*` variants fire *after* a single type name has been selected and the lookup against the TypeRegistry has failed.
 
 D5's `EffectiveConfig` snapshot grows a `bindings: TypeBinding[]` field so the JSON output records the effective binding list for the run.
 

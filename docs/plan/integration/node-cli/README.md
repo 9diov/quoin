@@ -10,3 +10,4 @@ Current plans:
 - [P12 — Node Resolver and TypeRegistry](P12-node-resolver-and-type-registry.md)
 - [P13 — Validate command](P13-validate-command.md)
 - [P14 — Create and types commands](P14-create-and-types-commands.md)
+- [P15 — Path-glob type bindings](P15-path-glob-type-bindings.md)
