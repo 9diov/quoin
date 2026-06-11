@@ -26,6 +26,7 @@ type Entry = {
   useConfig?: boolean;
   referentialValidation?: boolean;
   type?: string;
+  targets?: string[];
   expectKinds?: string[];
   expectWarningKinds?: string[];
   expectTypeNames?: string[];
@@ -57,7 +58,7 @@ async function configFor(entry: Entry): Promise<EffectiveConfig> {
 
 async function runValidateEntry(entry: Entry): Promise<void> {
   const config = await configFor(entry);
-  const result = await runValidate(config, []);
+  const result = await runValidate(config, entry.targets ?? []);
 
   expect(result.exitCode).toBe(entry.exitCode);
 
@@ -139,7 +140,11 @@ describe('fixture manifest', () => {
   for (const entry of [...manifest.scenarios, ...manifest.vaults]) {
     const ref =
       entry.referentialValidation === false ? ' [--no-referential]' : '';
-    const label = `${entry.dir} :: ${entry.command}${ref} -> exit ${entry.exitCode}`;
+    const tgt =
+      entry.targets && entry.targets.length > 0
+        ? ` [${entry.targets.join(',')}]`
+        : '';
+    const label = `${entry.dir} :: ${entry.command}${ref}${tgt} -> exit ${entry.exitCode}`;
     it(label, async () => {
       if (entry.command === 'validate') await runValidateEntry(entry);
       else if (entry.command === 'types') await runTypesEntry(entry);

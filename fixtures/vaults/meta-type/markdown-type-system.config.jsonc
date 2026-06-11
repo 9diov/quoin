@@ -1,0 +1,10 @@
+{
+  // Vault demonstrating ADR-0008's user-extensible meta-Type Definition Document.
+  // `types/type.md` is the Type Definition Document whose canonical name is `type`;
+  // it enforces an `icon` property on every other Type Definition Document so an
+  // integration (e.g. Obsidian) can render each type with a glyph. Concrete type
+  // defs validate against `type.md` through ordinary validate — no new machinery.
+  "typeDeclarationKey": "_type",
+  "referentialValidation": true,
+  "exclude": [".git/**", "node_modules/**", ".golden-out/**"]
+}

@@ -96,6 +96,13 @@
       "expectKinds": ["binding-type-not-found"]
     },
     {
+      "dir": "scenarios/meta-type-missing-icon",
+      "command": "validate",
+      "targets": ["types/broken.md"],
+      "exitCode": 1,
+      "expectKinds": ["property:missing-required"]
+    },
+    {
       "dir": "scenarios/create-no-template",
       "command": "create",
       "type": "bookmark",
@@ -158,6 +165,28 @@
         { "typeName": "concept", "status": "found" },
         { "typeName": "article", "status": "not-found" }
       ]
+    },
+    {
+      "dir": "vaults/meta-type",
+      "command": "types",
+      "useConfig": true,
+      "exitCode": 0,
+      "expectTypeNames": ["type", "concept"]
+    },
+    {
+      "dir": "vaults/meta-type",
+      "command": "validate",
+      "useConfig": true,
+      "exitCode": 0,
+      "expectKinds": ["validated"]
+    },
+    {
+      "dir": "vaults/meta-type",
+      "command": "validate",
+      "useConfig": true,
+      "targets": ["types/concept.md"],
+      "exitCode": 0,
+      "expectKinds": ["validated"]
     }
   ]
 }
