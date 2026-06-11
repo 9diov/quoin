@@ -1,6 +1,6 @@
-# Markdown Type System
+# Quoin
 
-A type system for Markdown files that validates YAML frontmatter Properties against schemas declared in Markdown Type Definition Documents.
+Quoin, pronounced *coin*, is a type system for Markdown files that validates YAML frontmatter Properties against schemas declared in Markdown Type Definition Documents.
 
 ## What it does
 

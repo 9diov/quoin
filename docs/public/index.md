@@ -2,6 +2,8 @@
 
 Quoin — pronounced *coin* — is a type system for Markdown frontmatter. You declare schemas in plain Markdown files; Quoin validates that your documents conform to them.
 
+A quoin is a wedge used to lock type into a printing chase.
+
 ---
 
 ## Quick start

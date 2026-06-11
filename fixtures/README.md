@@ -24,12 +24,12 @@ Two things to know:
 
 1. **Config files are not auto-loaded with `--root`.** Config is discovered by
    searching upward from the current working directory, *not* from `--root`. The
-   `vaults/` fixtures ship a `markdown-type-system.config.jsonc`; to make it take
+   `vaults/` fixtures ship a `quoin.config.jsonc`; to make it take
    effect, pass it explicitly:
 
    ```bash
    npm run cli -- --root fixtures/vaults/custom-config \
-     --config fixtures/vaults/custom-config/markdown-type-system.config.jsonc validate
+     --config fixtures/vaults/custom-config/quoin.config.jsonc validate
    ```
 
 2. **Sandbox note (only some environments).** If `npm run cli` fails to bind an

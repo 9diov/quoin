@@ -1,7 +1,7 @@
 {
-  "name": "markdown-type-system",
+  "name": "quoin",
   "version": "0.1.0",
-  "description": "A type system for Markdown files that validates frontmatter properties against Markdown-defined schemas.",
+  "description": "Quoin is a type system for Markdown files that validates frontmatter properties against Markdown-defined schemas.",
   "type": "module",
   "private": true,
   "scripts": {

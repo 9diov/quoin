@@ -57,7 +57,7 @@ export class ConfigValidationError extends Error {
   }
 }
 
-const CONFIG_FILE_NAME = 'markdown-type-system.config.jsonc';
+const CONFIG_FILE_NAME = 'quoin.config.jsonc';
 const CANONICAL_TYPE_NAME = /^[a-z0-9]([a-z0-9_-]*[a-z0-9])?$/;
 
 export function defaultEffectiveConfig(cwd: string): EffectiveConfig {

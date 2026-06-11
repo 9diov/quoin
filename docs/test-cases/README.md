@@ -1,6 +1,6 @@
 # Test Cases
 
-Concrete test cases for the Markdown Type System design.
+Concrete test cases for the Quoin design.
 
 These are specification fixtures, not executable tests. Each case defines:
 

@@ -14,14 +14,14 @@ import { handleValidate, handleCreate, handleTypes } from './commands.js';
 const program = new Command();
 
 program
-  .name('markdown-type-system')
+  .name('quoin')
   .description(
     'Validate and scaffold Markdown files with typed frontmatter schemas',
   )
   .version('0.1.0');
 
 program
-  .option('--config <path>', 'path to config file (markdown-type-system.config.jsonc)')
+  .option('--config <path>', 'path to config file (quoin.config.jsonc)')
   .option('--root <path>', 'project root directory (overrides config root)')
   .option(
     '--format <format>',

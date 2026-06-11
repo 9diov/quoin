@@ -16,7 +16,7 @@ import {
 import { defaultConfig } from './helpers.js';
 
 const FIXTURES_DIR = fileURLToPath(new URL('../../../fixtures/', import.meta.url));
-const CONFIG_NAME = 'markdown-type-system.config.jsonc';
+const CONFIG_NAME = 'quoin.config.jsonc';
 const GOLDEN_OUT_DIR = '.golden-out';
 
 type Entry = {

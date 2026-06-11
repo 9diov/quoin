@@ -171,7 +171,7 @@ describe('loadConfigFile', () => {
 describe('findConfigFile', () => {
   it('finds config in start directory', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'mts-test-'));
-    const configPath = join(dir, 'markdown-type-system.config.jsonc');
+    const configPath = join(dir, 'quoin.config.jsonc');
     await writeFile(configPath, '{}');
 
     try {
@@ -185,7 +185,7 @@ describe('findConfigFile', () => {
   it('finds config in ancestor directory', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'mts-test-'));
     const childDir = join(dir, 'deep', 'subdir');
-    const configPath = join(dir, 'markdown-type-system.config.jsonc');
+    const configPath = join(dir, 'quoin.config.jsonc');
     await writeFile(configPath, '{}');
 
     try {
@@ -216,7 +216,7 @@ describe('resolveEffectiveConfig', () => {
   it('uses config file directory as root when config loaded without explicit root', () => {
     const result = resolveEffectiveConfig(
       {},
-      '/my/project/markdown-type-system.config.jsonc',
+      '/my/project/quoin.config.jsonc',
       '/some/other/cwd',
     );
     expect(result.root).toBe('/my/project');
@@ -225,7 +225,7 @@ describe('resolveEffectiveConfig', () => {
   it('uses config.root resolved against config file dir', () => {
     const result = resolveEffectiveConfig(
       { root: 'docs' },
-      '/my/project/markdown-type-system.config.jsonc',
+      '/my/project/quoin.config.jsonc',
       '/some/other/cwd',
     );
     expect(result.root).toBe('/my/project/docs');
@@ -234,7 +234,7 @@ describe('resolveEffectiveConfig', () => {
   it('uses absolute config.root directly', () => {
     const result = resolveEffectiveConfig(
       { root: '/absolute/path' },
-      '/my/project/markdown-type-system.config.jsonc',
+      '/my/project/quoin.config.jsonc',
       '/cwd',
     );
     expect(result.root).toBe('/absolute/path');
@@ -243,7 +243,7 @@ describe('resolveEffectiveConfig', () => {
   it('--root overrides config.root', () => {
     const result = resolveEffectiveConfig(
       { root: 'docs' },
-      '/my/project/markdown-type-system.config.jsonc',
+      '/my/project/quoin.config.jsonc',
       '/cwd',
       { root: '/cli/root' },
     );
@@ -253,7 +253,7 @@ describe('resolveEffectiveConfig', () => {
   it('--root overrides config file dir', () => {
     const result = resolveEffectiveConfig(
       {},
-      '/my/project/markdown-type-system.config.jsonc',
+      '/my/project/quoin.config.jsonc',
       '/cwd',
       { root: '/cli/root' },
     );

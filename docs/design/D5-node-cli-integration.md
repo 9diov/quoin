@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document defines a narrow Node.js CLI integration for the Markdown Type System.
+This document defines a narrow Node.js CLI integration for Quoin.
 
 It is a **reference integration**:
 
@@ -127,7 +127,7 @@ It:
 The CLI supports zero-config operation and an optional project config file:
 
 ```text
-markdown-type-system.config.jsonc
+quoin.config.jsonc
 ```
 
 Config discovery precedence:

@@ -5,7 +5,7 @@
 Create the minimal Node CLI shell that can:
 
 - parse subcommands and flags
-- locate and load `markdown-type-system.config.jsonc`
+- locate and load `quoin.config.jsonc`
 - compute effective config values
 - select output mode
 - hand control to command-specific runtime code

@@ -1,6 +1,6 @@
-# Markdown Type System
+# Quoin
 
-A system that enforces field-level schemas on Markdown files by declaring types in frontmatter.
+Quoin is a system that enforces field-level schemas on Markdown files by declaring types in frontmatter.
 
 ## Conventions
 

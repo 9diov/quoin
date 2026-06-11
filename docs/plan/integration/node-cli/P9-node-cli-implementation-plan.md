@@ -24,7 +24,7 @@ Recommended runtime dependency set:
 
 - [`commander`](https://github.com/tj/commander.js) for subcommands, flags, help text, and usage errors — MIT
 - [`fast-glob`](https://github.com/mrmlnc/fast-glob) for root-scoped Markdown discovery with include/exclude patterns — MIT
-- [`jsonc-parser`](https://www.npmjs.com/package/jsonc-parser) for `markdown-type-system.config.jsonc` — MIT
+- [`jsonc-parser`](https://www.npmjs.com/package/jsonc-parser) for `quoin.config.jsonc` — MIT
 - existing [`yaml`](https://eemeli.org/yaml/) dependency for frontmatter parsing and deterministic YAML emission — ISC
 
 Recommended standard-library usage:

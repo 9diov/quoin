@@ -7,7 +7,7 @@ Rename the project from `markdown-type-system` to `quoin` across code, configura
 After this phase:
 
 - The package is named `quoin`.
-- The CLI binary is named `quoin`.
+- The development CLI invoked via `npm run cli` identifies itself as `quoin`.
 - The default config file is `quoin.config.jsonc`.
 - All documentation reads as "Quoin" or "quoin" where it previously read "Markdown Type System" or "markdown-type-system".
 - The directory layout under `src/` is unchanged.
@@ -30,13 +30,13 @@ The rename is mechanical. No design contract changes are part of this phase.
 
 - `"name": "quoin"`
 - update `"description"` to reflect the new name; the substantive description does not change
-- add a `"bin"` entry:
+- keep the existing development `npm run cli` entry unchanged
 
-```json
-"bin": { "quoin": "./dist/integration/node-cli/index.js" }
-```
+`package-lock.json`:
 
-The `bin` entry enables `npm i -g quoin` to install a `quoin` command. Source path may be adjusted to whatever the build emits; for the development `tsx` entry, the existing `npm run cli` script is unchanged.
+- refresh the root package name from `markdown-type-system` to `quoin`
+
+This phase does not introduce packaged-distribution mechanics. No `"bin"` entry, build script, `dist/` output, or global-install story is part of this rename.
 
 ### CLI runtime
 
@@ -83,6 +83,7 @@ This phase does not:
 - accept legacy `markdown-type-system.config.jsonc` as a fallback config name
 - restructure `src/`, `docs/`, or `test/` directories
 - rename the local working-tree directory or the GitHub repository (handled outside this plan)
+- add packaged CLI distribution work such as a `"bin"` entry, build pipeline, or published install path
 - register the npm package, the `quoin.io` domain, or a Homebrew formula
 - change Core APIs, CLI commands, result shapes, or exit-status rules
 
@@ -94,6 +95,7 @@ Expected touch points:
 
 ```text
 package.json
+package-lock.json
 src/integration/node-cli/index.ts
 src/integration/node-cli/config.ts
 README.md
@@ -117,22 +119,24 @@ No new files are created by this phase.
 
 ## Steps
 
-1. Apply the `package.json` updates: `name`, `description`, `bin`.
-2. Update the CLI program name and help text in `src/integration/node-cli/index.ts`.
-3. Update `CONFIG_FILE_NAME` in `src/integration/node-cli/config.ts`.
-4. Sweep `README.md` and `CONTEXT.md` for old-name references; rewrite titles and prose.
-5. Sweep the design docs (`D5`, `D6`) for `markdown-type-system.config.jsonc` references.
-6. Sweep the plan README files and `P9` / `P10` for old-name references.
-7. Sweep `docs/test-cases/README.md` and `fixtures/README.md`.
-8. Rename any fixture config files from `markdown-type-system.config.jsonc` to `quoin.config.jsonc` and update the corresponding fixture tests.
-9. Update test assertions in `test/integration/node-cli/fixtures.test.ts` and `test/integration/node-cli/config.test.ts`.
-10. Run `npm run typecheck`. Fix any breakage.
-11. Run `npm test`. Fix any breakage; re-snapshot golden output if the file name leaked into snapshot text.
-12. Final search: `grep -ril "markdown-type-system\|Markdown Type System\|markdown type system" --include='*.md' --include='*.ts' --include='*.json' --include='*.jsonc' --include='*.yml' --include='*.yaml' . | grep -v node_modules` must return only intentional historical references (e.g. inside a changelog entry, if one exists). Commit otherwise.
+1. Apply the `package.json` updates: `name`, `description`.
+2. Refresh `package-lock.json` so its root package metadata also reads `quoin`.
+3. Update the CLI program name and help text in `src/integration/node-cli/index.ts`.
+4. Update `CONFIG_FILE_NAME` in `src/integration/node-cli/config.ts`.
+5. Sweep `README.md` and `CONTEXT.md` for old-name references; rewrite titles and prose.
+6. Sweep the design docs (`D5`, `D6`) for `markdown-type-system.config.jsonc` references.
+7. Sweep the plan README files and `P9` / `P10` for old-name references.
+8. Sweep `docs/test-cases/README.md` and `fixtures/README.md`.
+9. Rename any fixture config files from `markdown-type-system.config.jsonc` to `quoin.config.jsonc` and update the corresponding fixture tests.
+10. Update test assertions in `test/integration/node-cli/fixtures.test.ts` and `test/integration/node-cli/config.test.ts`.
+11. Run `npm run typecheck`. Fix any breakage.
+12. Run `npm test`. Fix any breakage; re-snapshot golden output if the file name leaked into snapshot text.
+13. Final search: `grep -ril "markdown-type-system\|Markdown Type System\|markdown type system" --include='*.md' --include='*.ts' --include='*.json' --include='*.jsonc' --include='*.yml' --include='*.yaml' . | grep -v node_modules` must return only intentional historical references (e.g. inside a changelog entry, if one exists). Commit otherwise.
 
 ## Acceptance Criteria
 
-- `package.json` reports `"name": "quoin"` and exposes a `quoin` bin entry.
+- `package.json` reports `"name": "quoin"`.
+- `package-lock.json` reports the root package name as `quoin`.
 - The CLI invoked via `npm run cli -- --help` prints `quoin` as the program name and references `quoin.config.jsonc` in its help text.
 - Loading a project that contains `quoin.config.jsonc` succeeds; loading a project that still contains `markdown-type-system.config.jsonc` and no `quoin.config.jsonc` falls back to zero-config (the old name is no longer recognized).
 - No file under `src/`, `test/`, `docs/`, `fixtures/`, or the repository root contains the string `markdown-type-system` or `Markdown Type System` outside intentional historical mentions.
