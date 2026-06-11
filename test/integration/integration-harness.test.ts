@@ -18,7 +18,7 @@ function conceptTypeFixture(): RawMarkdownFixture {
   return {
     path: 'types/Concept.md',
     raw: typeDocRaw(
-      `properties:\n  skills:\n    type: list<skill>\n  level:\n    type: choice<level>\n  title:\n    type: text\n    default: Untitled`,
+      `properties:\n  skills:\n    type: "list<[[skill]]>"\n  level:\n    type: "[[level]]"\n  title:\n    type: text\n    default: Untitled`,
       '## Summary <!-- required -->\n\n## References',
     ),
   };

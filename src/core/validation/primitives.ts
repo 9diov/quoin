@@ -1,4 +1,5 @@
 import { isValidWikiLinkShape, parseExternalLink } from '../link-grammar.js';
+import { isCanonicalDate, isIso8601WithTimezone } from '../primitive-grammar.js';
 import { isValueEmpty } from './emptiness.js';
 import { validationError } from './errors.js';
 import type { PropertyTypeName } from '../parser.js';
@@ -74,19 +75,6 @@ function validateDate(value: unknown, propertyName: string): ValidationError | n
   return null;
 }
 
-function isCanonicalDate(s: string): boolean {
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
-  if (!m) return false;
-  const year = Number(m[1]);
-  const month = Number(m[2]);
-  const day = Number(m[3]);
-  if (year === undefined || month === undefined || day === undefined) return false;
-  if (month < 1 || month > 12) return false;
-  const daysInMonth = new Date(year, month, 0).getDate();
-  if (day < 1 || day > daysInMonth) return false;
-  return true;
-}
-
 function validateDatetime(value: unknown, propertyName: string): ValidationError | null {
   if (typeof value !== 'string') {
     return validationError(
@@ -103,15 +91,6 @@ function validateDatetime(value: unknown, propertyName: string): ValidationError
     );
   }
   return null;
-}
-
-const ISO_DATETIME_RE =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
-
-function isIso8601WithTimezone(s: string): boolean {
-  if (!ISO_DATETIME_RE.test(s)) return false;
-  const ts = Date.parse(s);
-  return !isNaN(ts);
 }
 
 function validateWikiLinkShape(value: unknown, propertyName: string): ValidationError | null {

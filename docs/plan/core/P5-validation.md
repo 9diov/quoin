@@ -29,8 +29,8 @@ For each Property declared in `typeDef.schema.properties`, run a staged pipeline
 1. **Presence**: if absent from `document.frontmatter` and `required: true` → `property:missing-required`. If absent and not required → skip remaining stages.
 2. **Emptiness**: if present but empty and `allow-empty` is not `true` → `property:empty-not-allowed`. If present but empty and `allow-empty: true` → skip remaining stages.
 3. **Type check** (see below).
-4. **Link Resolution** (for `wiki-link`, `list<X>`, `choice<Y>` values that pass shape validation).
-5. **Referential Validation** (for `list<X>`, `choice<Y>` when `config.referentialValidation: true`).
+4. **Link Resolution** (for `wiki-link`, top-level `[[name]]`, and `list<X>` items that pass Wiki Link shape validation). `list<primitive>` items other than `wiki-link` and `choice<"a"|"b"|"c">` skip this stage.
+5. **Referential Validation** (for top-level `[[name]]` and `list<[[name]]>` only, when `config.referentialValidation: true`).
 
 Unknown Properties in `document.frontmatter` (not declared in the schema) are silently allowed — schemas are open by default.
 
@@ -61,28 +61,34 @@ Unknown Properties in `document.frontmatter` (not declared in the schema) are si
 - **`wiki-link`**: accepts only non-empty strings passing `isValidWikiLinkShape`. Shape failures → `property:wrong-type`. Link Resolution runs only after shape passes.
 - **`url`**: accepts only Markdown External Link syntax (`[text](url)`) passing `parseExternalLink` with `config.allowedUrlSchemes`. Shape/scheme failures → `property:wrong-type`. Core never performs network validation.
 
+### Typed reference validation
+
+**Top-level `[[name]]` (`{ kind: 'type-ref'; name: N }`):**
+
+1. Value must be a non-empty string passing `isValidWikiLinkShape`. Failures → `property:wrong-type`.
+2. On success, proceeds to Link Resolution.
+3. When `config.referentialValidation: true`, proceeds to Referential Validation against Type Reference `N`.
+
 ### Collection Type validation
 
 **`list<X>`:**
 
 1. Value must be a YAML array. Non-array → `property:wrong-type`.
-2. Each item must be a non-empty string. Non-string or empty → `property:wrong-type` at `{ scope: 'property', property, index }`.
-3. Each item must pass `isValidWikiLinkShape`. Shape failures → `property:wrong-type` with index.
-4. Each item that passes shape proceeds to Link Resolution.
-5. If `config.referentialValidation: true`, each successfully resolved item proceeds to Referential Validation against Type Reference `X`.
+2. Per-item validation depends on `X`:
+   - **Primitive (`{ kind: 'primitive'; name: P }`)**: each item is validated by `validatePrimitive(item, P, allowedUrlSchemes)`. Failures → `property:wrong-type` at `{ scope: 'property', property, index }`. No Link Resolution. No Referential Validation, regardless of `config.referentialValidation`.
+   - **Type Reference (`{ kind: 'type-ref'; name: N }`)**: each item must be a non-empty string passing `isValidWikiLinkShape`. Failures → `property:wrong-type` with index. Items that pass shape proceed to Link Resolution and (when `referentialValidation: true`) Referential Validation against `N`.
 
-**`choice<Y>`:**
+**`choice<"a"|"b"|"c">` (`{ kind: 'choice'; members: M[] }` where each member is `{ kind: 'literal'; value }`):**
 
-1. Value must be a non-empty string. Non-string, empty, or array → `property:wrong-type`.
-2. Value must pass `isValidWikiLinkShape`. Shape failure → `property:wrong-type`.
-3. Proceeds to Link Resolution.
-4. If `config.referentialValidation: true`, proceeds to Referential Validation against Type Reference `Y`.
+1. Value must be a string. Non-string → `property:wrong-type`.
+2. Let `allowed = members.map(m => m.value)` (in declaration order). Value must equal one entry of `allowed` exactly (case-sensitive). String not in `allowed` → `property:invalid-enum-value` with `details: { value, allowed }`. Empty string is treated as empty (emptiness stage); never reaches the enum match step unless `allow-empty: true`, in which case it is a non-match and produces `property:invalid-enum-value`.
+3. No Link Resolution. No Referential Validation.
 
 List validation accumulates item-level errors. When one item fails, Validation stops downstream stages for that item but continues checking sibling items. For example, item at index 0 failing shape check never reaches Link Resolution; item at index 2 that passes shape proceeds to Link Resolution independently.
 
 ### Link Resolution
 
-Runs for `wiki-link`, `list<X>`, and `choice<Y>` values that pass Wiki Link shape validation.
+Runs for `wiki-link`, top-level `[[name]]`, and `list<X>` items (whether `X` is `wiki-link` or `[[name]]`) that pass Wiki Link shape validation. `list<primitive>` items other than `wiki-link` and `choice<"a"|"b"|"c">` skip Link Resolution.
 
 If `resolver` is missing when a value reaches Link Resolution → `config:missing-dependency` with `details: { dependency: 'resolver' }` at that value's location. Never throws.
 
@@ -98,7 +104,7 @@ Resolver result mapping:
 
 ### Referential Validation
 
-Applies only when `config.referentialValidation: true`, and only to `list<X>` and `choice<Y>` values. Primitive `wiki-link` is never referentially validated.
+Applies only when `config.referentialValidation: true`, and only to top-level `[[name]]` and `list<[[name]]>`. Primitive `wiki-link`, `list<wiki-link>`, other `list<primitive>` forms, and `choice<"a"|"b"|"c">` are never referentially validated — none of them declare a Type Reference.
 
 If `typeRegistry` is missing when a Collection Type value reaches Referential Validation → `config:missing-dependency` with `details: { dependency: 'typeRegistry' }` at that value's location.
 
@@ -222,7 +228,8 @@ src/core/
     property.ts              Per-property pipeline (presence → emptiness → type dispatch → resolve → referential)
     emptiness.ts             isValueEmpty(value, allowEmptyList: boolean) helper
     primitives.ts            Primitive type validators: text, number, boolean, date, datetime, url
-    collections.ts           list<X> + choice<Y> shape validation + item-level pipeline
+    type-ref.ts              top-level [[name]] validation (shape → resolve → optional referential)
+    collections.ts           list<X> + choice<"a"|"b"|"c"> validation (list dispatches on primitive vs type-ref; choice is enum-only)
     link.ts                  Link Resolution stage: call resolver, map results to ValidationError
     referential.ts           Referential Validation stage: getByName → getByDeclaration → compare
     sections.ts              Required Section checking against document.body

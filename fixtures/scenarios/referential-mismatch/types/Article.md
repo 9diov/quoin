@@ -7,5 +7,5 @@ _type: type
 ```yaml
 properties:
   related:
-    type: list<article>
+    type: "list<[[article]]>"
 ```

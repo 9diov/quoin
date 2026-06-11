@@ -30,10 +30,10 @@ properties:
   mentor:
     type: wiki-link
   skills:
-    type: list<skill>
+    type: "list<[[skill]]>"
     allow-empty: false
   level:
-    type: choice<level>
+    type: "[[level]]"
   homepage:
     type: url
   priority:
@@ -242,7 +242,7 @@ Schema:
 ```yaml
 properties:
   skills:
-    type: list<skill>
+    type: "list<[[skill]]>"
 ```
 
 Document frontmatter:
@@ -269,7 +269,7 @@ Schema:
 ```yaml
 properties:
   skills:
-    type: list<skill>
+    type: "list<[[skill]]>"
     allow-empty: false
 ```
 
@@ -677,6 +677,141 @@ Expected error:
 }
 ```
 
+### V025 top-level [[name]] resolves and (with referentialValidation) checks type
+
+Config:
+
+```ts
+{ referentialValidation: true }
+```
+
+Schema:
+
+```yaml
+properties:
+  level:
+    type: "[[level]]"
+```
+
+Document frontmatter:
+
+```yaml
+_type: "[[Concept]]"
+level: "[[Beginner]]"
+```
+
+Resolver:
+
+```ts
+("[[Beginner]]") => {
+  kind: 'found',
+  document: {
+    path: 'levels/Beginner.md',
+    frontmatter: { _type: '[[Level]]' },
+    body: ''
+  }
+}
+```
+
+TypeRegistry: returns the Level type definition for `getByName('level')` and `getByDeclaration('[[Level]]')`, both with `id: 'types/Level.md'`.
+
+Expected:
+
+```ts
+{ passed: true, errors: [], warnings: [] }
+```
+
+### V026 top-level [[name]] rejects non-Wiki-Link string
+
+Schema:
+
+```yaml
+properties:
+  level:
+    type: "[[level]]"
+```
+
+Document frontmatter:
+
+```yaml
+_type: "[[Concept]]"
+level: "Beginner"
+```
+
+Expected:
+
+```ts
+{
+  passed: false,
+  errors: [
+    {
+      kind: 'property:wrong-type',
+      location: { scope: 'property', property: 'level' }
+    }
+  ],
+  warnings: []
+}
+```
+
+### V027 top-level [[name]] referential mismatch
+
+Config:
+
+```ts
+{ referentialValidation: true }
+```
+
+Schema:
+
+```yaml
+properties:
+  level:
+    type: "[[level]]"
+```
+
+Document frontmatter:
+
+```yaml
+_type: "[[Concept]]"
+level: "[[TypeScript]]"
+```
+
+Resolver:
+
+```ts
+("[[TypeScript]]") => {
+  kind: 'found',
+  document: {
+    path: 'skills/TypeScript.md',
+    frontmatter: { _type: '[[Skill]]' },
+    body: ''
+  }
+}
+```
+
+TypeRegistry: `getByName('level')` returns the Level type def (`id: 'types/Level.md'`); `getByDeclaration('[[Skill]]')` returns the Skill type def (`id: 'types/Skill.md'`).
+
+Expected:
+
+```ts
+{
+  passed: false,
+  errors: [
+    {
+      kind: 'type:referential-mismatch',
+      location: { scope: 'property', property: 'level' },
+      details: {
+        expectedTypeId: 'types/Level.md',
+        actualTypeId: 'types/Skill.md',
+        wikiLink: '[[TypeScript]]',
+        targetPath: 'skills/TypeScript.md'
+      }
+    }
+  ],
+  warnings: []
+}
+```
+
 ## Collection Types
 
 ### V030 list accumulates item-level errors
@@ -686,7 +821,7 @@ Schema:
 ```yaml
 properties:
   skills:
-    type: list<skill>
+    type: "list<[[skill]]>"
 ```
 
 Document frontmatter:
@@ -730,14 +865,16 @@ Resolver expectation:
 Resolver is called only for index 2.
 ```
 
-### V031 choice requires a single Wiki Link string
+### V031 top-level [[name]] requires a single Wiki Link string
+
+A top-level Type Reference rejects arrays — that is the `list<[[name]]>` form.
 
 Schema:
 
 ```yaml
 properties:
   level:
-    type: choice<level>
+    type: "[[level]]"
 ```
 
 Document frontmatter:
@@ -770,7 +907,7 @@ Schema:
 ```yaml
 properties:
   skills:
-    type: list<skill>
+    type: "list<[[skill]]>"
 ```
 
 Document frontmatter:
@@ -806,6 +943,257 @@ Expected:
 { passed: true, errors: [], warnings: [] }
 ```
 
+### V033 list<text> validates each item as a primitive
+
+Schema:
+
+```yaml
+properties:
+  tags:
+    type: list<text>
+```
+
+Document frontmatter:
+
+```yaml
+_type: "[[Concept]]"
+tags:
+  - "alpha"
+  - 42
+  - "  "
+```
+
+Resolver:
+
+```ts
+undefined
+```
+
+Expected:
+
+```ts
+{
+  passed: false,
+  errors: [
+    {
+      kind: 'property:wrong-type',
+      location: { scope: 'property', property: 'tags', index: 1 },
+      details: { expected: 'text' }
+    },
+    {
+      kind: 'property:empty-not-allowed',
+      location: { scope: 'property', property: 'tags', index: 2 }
+    }
+  ],
+  warnings: []
+}
+```
+
+A `list<primitive>` never invokes Resolver. The missing Resolver in this case is not an error.
+
+### V034 list<number> rejects non-numeric items
+
+Schema:
+
+```yaml
+properties:
+  scores:
+    type: list<number>
+```
+
+Document frontmatter:
+
+```yaml
+_type: "[[Concept]]"
+scores:
+  - 1
+  - "2"
+  - 3
+```
+
+Expected:
+
+```ts
+{
+  passed: false,
+  errors: [
+    {
+      kind: 'property:wrong-type',
+      location: { scope: 'property', property: 'scores', index: 1 },
+      details: { expected: 'number' }
+    }
+  ],
+  warnings: []
+}
+```
+
+### V035 list<wiki-link> validates shape but does not referentially check
+
+Config:
+
+```ts
+{ referentialValidation: true }
+```
+
+Schema:
+
+```yaml
+properties:
+  links:
+    type: list<wiki-link>
+```
+
+Document frontmatter:
+
+```yaml
+_type: "[[Concept]]"
+links:
+  - "[[Page A]]"
+  - "[[Page B]]"
+```
+
+Resolver:
+
+```ts
+(_) => ({ kind: 'found', document: { path: '_.md', frontmatter: {}, body: '' } })
+```
+
+TypeRegistry:
+
+```ts
+undefined
+```
+
+Expected:
+
+```ts
+{ passed: true, errors: [], warnings: [] }
+```
+
+`list<wiki-link>` resolves each link via Resolver but never invokes TypeRegistry, regardless of `referentialValidation`. Missing TypeRegistry is therefore not a config error.
+
+### V036 choice<enum> matches one of the allowed values
+
+Schema:
+
+```yaml
+properties:
+  status:
+    type: 'choice<"draft"|"published"|"archived">'
+```
+
+Document frontmatter:
+
+```yaml
+_type: "[[Concept]]"
+status: "published"
+```
+
+Expected:
+
+```ts
+{ passed: true, errors: [], warnings: [] }
+```
+
+### V037 choice<enum> rejects unlisted value
+
+Schema:
+
+```yaml
+properties:
+  status:
+    type: 'choice<"draft"|"published"|"archived">'
+```
+
+Document frontmatter:
+
+```yaml
+_type: "[[Concept]]"
+status: "ready"
+```
+
+Expected:
+
+```ts
+{
+  passed: false,
+  errors: [
+    {
+      kind: 'property:invalid-enum-value',
+      location: { scope: 'property', property: 'status' },
+      details: { value: 'ready', allowed: ['draft', 'published', 'archived'] }
+    }
+  ],
+  warnings: []
+}
+```
+
+### V038 choice<enum> rejects non-string value
+
+Schema:
+
+```yaml
+properties:
+  status:
+    type: 'choice<"draft"|"published">'
+```
+
+Document frontmatter:
+
+```yaml
+_type: "[[Concept]]"
+status: 1
+```
+
+Expected:
+
+```ts
+{
+  passed: false,
+  errors: [
+    {
+      kind: 'property:wrong-type',
+      location: { scope: 'property', property: 'status' },
+      details: { expected: 'string' }
+    }
+  ],
+  warnings: []
+}
+```
+
+### V039 choice<enum> match is case-sensitive
+
+Schema:
+
+```yaml
+properties:
+  status:
+    type: 'choice<"draft"|"published">'
+```
+
+Document frontmatter:
+
+```yaml
+_type: "[[Concept]]"
+status: "Draft"
+```
+
+Expected:
+
+```ts
+{
+  passed: false,
+  errors: [
+    {
+      kind: 'property:invalid-enum-value',
+      location: { scope: 'property', property: 'status' },
+      details: { value: 'Draft', allowed: ['draft', 'published'] }
+    }
+  ],
+  warnings: []
+}
+```
+
 ## Referential Validation
 
 ### V040 referential match passes
@@ -821,7 +1209,7 @@ Schema:
 ```yaml
 properties:
   skills:
-    type: list<skill>
+    type: "list<[[skill]]>"
 ```
 
 Document frontmatter:
@@ -871,7 +1259,7 @@ Schema:
 ```yaml
 properties:
   skills:
-    type: list<skill>
+    type: "list<[[skill]]>"
 ```
 
 Document frontmatter:
@@ -920,7 +1308,7 @@ Schema:
 ```yaml
 properties:
   skills:
-    type: list<skill>
+    type: "list<[[skill]]>"
 ```
 
 Document frontmatter:
@@ -969,7 +1357,7 @@ Schema:
 ```yaml
 properties:
   skills:
-    type: list<skill>
+    type: "list<[[skill]]>"
 ```
 
 Document frontmatter:
@@ -1019,7 +1407,7 @@ Schema:
 ```yaml
 properties:
   skills:
-    type: list<skill>
+    type: "list<[[skill]]>"
 ```
 
 Document frontmatter:
@@ -1100,7 +1488,7 @@ Schema:
 ```yaml
 properties:
   tags:
-    type: list<skill>
+    type: "list<[[skill]]>"
 ```
 
 Document frontmatter:

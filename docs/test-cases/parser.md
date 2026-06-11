@@ -351,7 +351,9 @@ Expected error:
 }
 ```
 
-### P014 Type Reference name must be canonical
+### P014 Type Reference inside list<...> must be a bare Wiki Link
+
+Bare identifiers inside `list<...>` are reserved for primitive names. Type References must be written as `[[name]]`.
 
 Type Definition Document:
 
@@ -361,7 +363,7 @@ Type Definition Document:
 ```yaml
 properties:
   skills:
-    type: list<Skill>
+    type: list<skill>
 ```
 ````
 
@@ -371,7 +373,331 @@ Expected error:
 {
   kind: 'parser:invalid-type-reference',
   location: { scope: 'property', property: 'skills' },
-  details: { value: 'Skill' }
+  details: { value: 'skill', reason: 'expected-wiki-link-or-primitive' }
+}
+```
+
+### P014a non-canonical name inside Wiki Link
+
+Type Definition Document:
+
+````markdown
+## Schema
+
+```yaml
+properties:
+  skills:
+    type: "list<[[Skill]]>"
+```
+````
+
+Expected error:
+
+```ts
+{
+  kind: 'parser:invalid-type-reference',
+  location: { scope: 'property', property: 'skills' },
+  details: { value: 'Skill', reason: 'non-canonical-name' }
+}
+```
+
+### P014b Wiki Link inside angle brackets must be bare
+
+Type Definition Document:
+
+````markdown
+## Schema
+
+```yaml
+properties:
+  skills:
+    type: "list<[[skill|Skills]]>"
+```
+````
+
+Expected error:
+
+```ts
+{
+  kind: 'parser:invalid-type-reference',
+  location: { scope: 'property', property: 'skills' },
+  details: { value: '[[skill|Skills]]', reason: 'wiki-link-not-bare' }
+}
+```
+
+### P015 list<primitive> parses to a primitive item type
+
+Type Definition Document:
+
+````markdown
+## Schema
+
+```yaml
+properties:
+  tags:
+    type: list<text>
+  scores:
+    type: list<number>
+```
+````
+
+Expected parsed properties:
+
+```ts
+{
+  tags:   { type: { kind: 'list', of: { kind: 'primitive', name: 'text'   } } },
+  scores: { type: { kind: 'list', of: { kind: 'primitive', name: 'number' } } }
+}
+```
+
+### P016 list<wiki-link> parses to bare-link item type
+
+Type Definition Document:
+
+````markdown
+## Schema
+
+```yaml
+properties:
+  links:
+    type: list<wiki-link>
+```
+````
+
+Expected parsed property:
+
+```ts
+{
+  links: { type: { kind: 'list', of: { kind: 'primitive', name: 'wiki-link' } } }
+}
+```
+
+### P017 top-level [[name]] parses to a Type Reference
+
+Type Definition Document:
+
+````markdown
+## Schema
+
+```yaml
+properties:
+  level:
+    type: "[[level]]"
+```
+````
+
+Expected parsed property:
+
+```ts
+{
+  level: { type: { kind: 'type-ref', name: 'level' } }
+}
+```
+
+### P017a list<[[name]]> parses to a Type Reference
+
+Type Definition Document:
+
+````markdown
+## Schema
+
+```yaml
+properties:
+  skills:
+    type: "list<[[skill]]>"
+```
+````
+
+Expected parsed property:
+
+```ts
+{
+  skills: { type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } } }
+}
+```
+
+### P018 choice<"a"|"b"|"c"> parses to a literal enum
+
+Type Definition Document:
+
+````markdown
+## Schema
+
+```yaml
+properties:
+  status:
+    type: 'choice<"draft"|"published"|"archived">'
+```
+````
+
+Expected parsed property:
+
+```ts
+{
+  status: {
+    type: {
+      kind: 'choice',
+      members: [
+        { kind: 'literal', value: 'draft' },
+        { kind: 'literal', value: 'published' },
+        { kind: 'literal', value: 'archived' },
+      ],
+    }
+  }
+}
+```
+
+Whitespace around enum values is trimmed; single-quoted and double-quoted literals are accepted and may be mixed across members.
+
+### P018a bare identifier inside choice<...> is rejected
+
+Bare identifiers (including primitive names) inside `choice<...>` are not valid in v1; only quoted string literals are accepted.
+
+Type Definition Document:
+
+````markdown
+## Schema
+
+```yaml
+properties:
+  status:
+    type: choice<draft|published>
+```
+````
+
+Expected error:
+
+```ts
+{
+  kind: 'parser:invalid-enum',
+  location: { scope: 'property', property: 'status' },
+  details: { values: ['draft', 'published'] }
+}
+```
+
+### P018e Wiki Link inside choice<...> is rejected
+
+Type Definition Document:
+
+````markdown
+## Schema
+
+```yaml
+properties:
+  level:
+    type: "choice<[[level]]>"
+```
+````
+
+Expected error:
+
+```ts
+{
+  kind: 'parser:invalid-enum',
+  location: { scope: 'property', property: 'level' },
+  details: { values: ['[[level]]'] }
+}
+```
+
+### P018b choice<"a"|> rejects empty enum segment
+
+Type Definition Document:
+
+````markdown
+## Schema
+
+```yaml
+properties:
+  status:
+    type: 'choice<"draft"|>'
+```
+````
+
+Expected error:
+
+```ts
+{
+  kind: 'parser:invalid-enum',
+  location: { scope: 'property', property: 'status' },
+  details: { values: ['draft', ''] }
+}
+```
+
+### P018c choice<"a"|"a"> rejects duplicate literal
+
+Type Definition Document:
+
+````markdown
+## Schema
+
+```yaml
+properties:
+  status:
+    type: 'choice<"draft"|"draft">'
+```
+````
+
+Expected error:
+
+```ts
+{
+  kind: 'parser:invalid-enum',
+  location: { scope: 'property', property: 'status' },
+  details: { values: ['draft', 'draft'] }
+}
+```
+
+### P018d choice<""|"b"> rejects empty literal
+
+Type Definition Document:
+
+````markdown
+## Schema
+
+```yaml
+properties:
+  status:
+    type: 'choice<""|"draft">'
+```
+````
+
+Expected error:
+
+```ts
+{
+  kind: 'parser:invalid-enum',
+  location: { scope: 'property', property: 'status' },
+  details: { values: ['', 'draft'] }
+}
+```
+
+### P018f mixed quote styles are accepted
+
+Type Definition Document:
+
+````markdown
+## Schema
+
+```yaml
+properties:
+  status:
+    type: 'choice<"draft"|''published''>'
+```
+````
+
+Expected parsed property:
+
+```ts
+{
+  status: {
+    type: {
+      kind: 'choice',
+      members: [
+        { kind: 'literal', value: 'draft' },
+        { kind: 'literal', value: 'published' },
+      ],
+    }
+  }
 }
 ```
 
@@ -387,7 +713,7 @@ Type Definition Document:
 ```yaml
 properties:
   level:
-    type: choice<level>
+    type: "[[level]]"
     default: "Beginner"
 ```
 ````
@@ -425,6 +751,77 @@ Expected error:
   location: { scope: 'property', property: 'description' },
   details: { reason: 'empty-not-allowed' }
 }
+```
+
+### P022a list<text> default validates items as primitives
+
+Type Definition Document:
+
+````markdown
+## Schema
+
+```yaml
+properties:
+  tags:
+    type: list<text>
+    default: ["alpha", 42]
+```
+````
+
+Expected error:
+
+```ts
+{
+  kind: 'parser:invalid-default',
+  location: { scope: 'property', property: 'tags' },
+  details: { expected: 'text', index: 1 }
+}
+```
+
+### P022b choice<...> default must match an allowed literal
+
+Type Definition Document:
+
+````markdown
+## Schema
+
+```yaml
+properties:
+  status:
+    type: 'choice<"draft"|"published">'
+    default: "ready"
+```
+````
+
+Expected error:
+
+```ts
+{
+  kind: 'parser:invalid-default',
+  location: { scope: 'property', property: 'status' },
+  details: { expected: 'enum', allowed: ['draft', 'published'] }
+}
+```
+
+### P022c choice<...> default that matches is accepted
+
+Type Definition Document:
+
+````markdown
+## Schema
+
+```yaml
+properties:
+  status:
+    type: 'choice<"draft"|"published">'
+    default: "draft"
+```
+````
+
+Expected:
+
+```ts
+{ kind: 'ok' }
 ```
 
 ### P022 empty default allowed when allow-empty is true
@@ -467,6 +864,32 @@ Expected error:
   location: { scope: 'document' },
   details: { name: 'Skill' }
 }
+```
+
+### P030a identity name may equal a primitive name
+
+Primitive type names are not reserved as `identity.name`. The Wiki Link form (`[[text]]`) disambiguates usage at the call site.
+
+Identity:
+
+```ts
+{ id: 'types/Text.md', name: 'text' }
+```
+
+Type Definition Document:
+
+````markdown
+## Schema
+
+```yaml
+properties: {}
+```
+````
+
+Expected:
+
+```ts
+{ kind: 'ok' }
 ```
 
 ### P031 identity id must be non-empty

@@ -95,7 +95,7 @@ describe('V006 empty list passes by default', () => {
   it('allows empty list when allow-empty is not specified', () => {
     const typeDef = makeTypeDef({
       properties: {
-        skills: { type: { kind: 'list', of: 'skill' } },
+        skills: { type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } } },
       },
     });
 
@@ -111,7 +111,7 @@ describe('V007 empty list fails with allow-empty false', () => {
   it('returns property:empty-not-allowed for empty list when allow-empty is false', () => {
     const typeDef = makeTypeDef({
       properties: {
-        skills: { type: { kind: 'list', of: 'skill' }, 'allow-empty': false },
+        skills: { type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } }, 'allow-empty': false },
       },
     });
 
@@ -130,7 +130,7 @@ describe('V008 choice rejects empty value by default', () => {
   it('returns property:empty-not-allowed for null choice without allow-empty', () => {
     const typeDef = makeTypeDef({
       properties: {
-        level: { type: { kind: 'choice', of: 'level' } },
+        level: { type: { kind: 'type-ref', name: 'level' } },
       },
     });
 
@@ -147,7 +147,7 @@ describe('V008 choice rejects empty value by default', () => {
   it('returns property:empty-not-allowed for empty string choice without allow-empty', () => {
     const typeDef = makeTypeDef({
       properties: {
-        level: { type: { kind: 'choice', of: 'level' } },
+        level: { type: { kind: 'type-ref', name: 'level' } },
       },
     });
 

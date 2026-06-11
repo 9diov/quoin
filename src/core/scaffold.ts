@@ -20,11 +20,7 @@ export function scaffold(
     if (!('default' in propertySchema)) continue;
 
     const value = propertySchema.default;
-    if (
-      typeof propertySchema.type === 'object' &&
-      propertySchema.type.kind === 'list' &&
-      Array.isArray(value)
-    ) {
+    if (Array.isArray(value)) {
       properties[key] = [...value];
     } else {
       properties[key] = value;

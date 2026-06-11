@@ -40,15 +40,20 @@ properties:
   description:
     type: text
     required: true
+  tags:
+    type: list<text>
   skills:
-    type: list<skill>
+    type: "list<[[skill]]>"
     allow-empty: false
   homepage:
     type: url
   level:
-    type: choice<level>
+    type: "[[level]]"
     required: true
     default: "[[levels/Beginner]]"
+  status:
+    type: 'choice<"draft"|"published"|"archived">'
+    default: "draft"
 ```
 ````
 
@@ -57,26 +62,24 @@ Documents conform to a Type Definition Document by declaring `_type` in frontmat
 ```yaml
 _type: "[[Concept]]"
 description: "A reusable idea"
+tags: ["typescript", "types"]
 skills:
   - "[[skills/TypeScript]]"
 homepage: "[TypeScript](https://www.typescriptlang.org/)"
 level: "[[levels/Beginner]]"
+status: "draft"
 ```
 
-Supported primitive Property types:
+Supported Property types:
 
-- `text`
-- `number`
-- `boolean`
-- `date`
-- `datetime`
-- `wiki-link`
-- `url`
+| Form | Example | Meaning |
+|---|---|---|
+| Primitive | `type: text` | One of `text`, `number`, `boolean`, `date`, `datetime`, `wiki-link`, `url`. |
+| Typed reference | `type: "[[skill]]"` | A Wiki Link to a Document of type `skill`. |
+| List | `type: list<text>` / `type: "list<[[skill]]>"` | Ordered list whose items are primitives or typed references. |
+| Enum | `type: 'choice<"draft"\|"published">'` | Value must equal one of the listed quoted string literals exactly. |
 
-Supported Collection Types:
-
-- `list<X>` — ordered list of Wiki Links to Documents conforming to Type Definition Document `X`
-- `choice<Y>` — one Wiki Link to a Document conforming to Type Definition Document `Y`
+YAML quoting note: any `type` value containing `[[...]]` should be quoted — `[` is a YAML flow-sequence indicator. Bare `[[name]]` at the top level MUST be quoted; `list<[[name]]>` SHOULD be quoted for portability.
 
 Supported Constraints:
 
@@ -121,7 +124,7 @@ Required Sections are marked with `<!-- required -->`. Section matching is exact
 
 - **Wiki Links** use `[[TargetDocument]]` and are resolved by an Integration-supplied Resolver during standard Validation.
 - **External Links** use standard Markdown link syntax, `[text](url)`, and are declared as `type: url`.
-- **Referential Validation** is opt-in. It applies only to `list<X>` and `choice<Y>`, checking whether linked Documents conform to declared Type References using an Integration-supplied TypeRegistry.
+- **Referential Validation** is opt-in. It applies only to typed references — `type: "[[name]]"` and `list<[[name]]>` — checking whether linked Documents conform to declared Type References using an Integration-supplied TypeRegistry. Primitive `wiki-link`, `list<wiki-link>`, and `choice<"a"|"b"|"c">` carry no Type Reference and are never referentially validated.
 - Referential Validation is not transitive.
 
 ## Design docs

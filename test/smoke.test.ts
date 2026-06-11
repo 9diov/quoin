@@ -37,7 +37,7 @@ import type {
 describe('Core types', () => {
   it('accepts literal values matching D2/D3/D4 shapes', () => {
     const primitive: PrimitiveTypeName = 'text';
-    const collection: CollectionTypeName = { kind: 'list', of: 'skill' };
+    const collection: CollectionTypeName = { kind: 'list', of: { kind: 'type-ref', name: 'skill' } };
     const propertyType: PropertyTypeName = collection;
     const propertySchema: PropertySchema = {
       type: primitive,

@@ -30,6 +30,7 @@ export type ValidationErrorKind =
   | 'property:missing-required'
   | 'property:wrong-type'
   | 'property:empty-not-allowed'
+  | 'property:invalid-enum-value'
   | 'resolve:broken-wiki-link'
   | 'resolve:invalid-wiki-link'
   | 'resolve:ambiguous-wiki-link'

@@ -15,7 +15,7 @@ Implement `parseTypeDefinitionDocument` so that every test case in [parser.md](.
 
 P4 (Link and Section grammar helpers) is split out so Validation can reuse the same grammar. P3 needs three of those helpers up front:
 
-- Wiki Link shape validation — for `wiki-link`, `list<X>`, `choice<Y>` defaults
+- Wiki Link shape validation — for `wiki-link`, top-level `[[name]]`, and `list<[[name]]>` defaults
 - External Link shape validation + allowed-scheme check — for `url` defaults
 - ATX heading parser with fenced-code awareness + required-marker extraction — for Template Block Section parsing
 
@@ -61,10 +61,20 @@ A working `parseTypeDefinitionDocument` covering all of the following.
 
 ### Type parsing
 
-- Primitive names: `text`, `number`, `boolean`, `date`, `datetime`, `wiki-link`, `url`. Unknown → `parser:unknown-property-type`.
-- Collection literals: `list<X>` and `choice<Y>`. Parse the inner Type Reference name and validate it as a canonical identifier.
-- Non-canonical Type Reference name (e.g., `list<Skill>`) → `parser:invalid-type-reference` with `details.value`.
-- No other angle-bracket forms accepted (`set<X>`, `map<K,V>`, nested generics, etc.).
+A `type:` value is dispatched on shape:
+
+- **Bare primitive name** (`text`, `number`, `boolean`, `date`, `datetime`, `wiki-link`, `url`) → `{ kind: 'primitive', name }` (returned as the bare `PrimitiveTypeName` literal in the parsed schema).
+- **Bare Wiki Link** matching `[[ name ]]` (with optional surrounding whitespace inside the brackets) → `{ kind: 'type-ref'; name }` after the bare-Wiki-Link rules below.
+- **`list<X>`** → trim the bracket contents and dispatch:
+  - X matches a primitive name literal → `{ kind: 'list'; of: { kind: 'primitive'; name: X } }`.
+  - X matches `[[ name ]]` shape → `{ kind: 'list'; of: { kind: 'type-ref'; name } }` after the bare-Wiki-Link rules below.
+  - X is any other bare identifier (e.g., `list<skill>`) → `parser:invalid-type-reference` with `details.value` and `details.reason: 'expected-wiki-link-or-primitive'`.
+  - X is empty (`list<>`) or contains `|` (malformed enum) → `parser:invalid-enum` with `details.values`.
+- **`choice<Y>`** — literal-enum in v1. Trim the bracket contents and split on `|`. Each segment, after trimming, must be a quoted string literal: `"value"` or `'value'`. The two quote styles are interchangeable and may be mixed across members (`choice<"a"|'b'>`). The literal value cannot contain its own quote character; no escape sequences are supported. Validate: at least two members, all unique by `value`, no empty literal. Any segment that is not a quoted literal (bare identifier, primitive name, Wiki Link, etc.) is rejected. Empty bracket (`choice<>`), empty segment (`choice<"a"|>`), empty literal (`choice<""|"b">`), duplicate (`choice<"a"|"a">`), or single member (`choice<"a">` has no `|`) all produce `parser:invalid-enum` with `details.values` (the parsed values in order, with empty strings for empty segments). Parsed as `{ kind: 'choice'; members: [{ kind: 'literal'; value }, ...] }`.
+- **Bare Wiki Link rules** (applied wherever `[[name]]` appears in a `type:` value):
+  - Reject alias (`[[name|alias]]`), heading or block fragment (`[[name#heading]]`, `[[name#^block]]`), and path (`[[dir/name]]`) → `parser:invalid-type-reference` with `details.reason: 'wiki-link-not-bare'`.
+  - `name` must be a canonical identifier — otherwise → `parser:invalid-type-reference` with `details.reason: 'non-canonical-name'`.
+- Anything else (other bare identifiers at the top level, other angle-bracket constructors like `set<X>`, `map<K,V>`, nested generics) → `parser:unknown-property-type`.
 
 ### Property keys
 
@@ -74,6 +84,7 @@ A working `parseTypeDefinitionDocument` covering all of the following.
 ### Identity
 
 - `identity.name` must follow the same canonical rule as Property keys → `parser:invalid-type-definition-identity` with `details.name`.
+- Primitive type names are NOT reserved as `identity.name`. The Wiki Link form (`[[text]]`) disambiguates usage from primitives (`text`) at every call site.
 - `identity.id` must be a non-empty string after trimming → `parser:invalid-type-definition-identity` with `details.id`.
 
 ### Defaults
@@ -87,8 +98,9 @@ When `default` is present, validate it locally against the declared type using t
 - `datetime` default must be an ISO 8601 datetime with timezone.
 - `wiki-link` default must pass Wiki Link shape validation.
 - `url` default must pass External Link shape validation and use an allowed scheme under `ParserConfig.allowedUrlSchemes` (default `['http', 'https', 'mailto']`).
-- `list<X>` default must be an array of valid Wiki Links.
-- `choice<Y>` default must be a single valid Wiki Link.
+- Top-level `[[name]]` default must be a single valid Wiki Link.
+- `list<X>` default must be an array. When `X` is a primitive, each item is validated as that primitive. When `X` is a Type Reference, each item must be a valid Wiki Link.
+- `choice<"a"|"b"|"c">` default must be a string equal to one of the declared literal members' `value` exactly (case-sensitive). Otherwise → `parser:invalid-default` with `details.expected: 'enum'` and `details.allowed: string[]`.
 
 Violations → `parser:invalid-default` with `details.expected` (the type the default failed against) or `details.reason: 'empty-not-allowed'` for empty-not-allowed cases.
 

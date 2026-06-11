@@ -12,5 +12,5 @@ properties:
   summary:
     type: text
   related:
-    type: list<concept>
+    type: "list<[[concept]]>"
 ```

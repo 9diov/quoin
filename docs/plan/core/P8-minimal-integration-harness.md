@@ -198,8 +198,8 @@ Add end-to-end tests for at least these cases:
 - Untyped Document with `untypedDocumentBehavior: 'warn'` returns a `document:untyped` warning without calling `validate`.
 - New-Document creation flow returns scaffolded frontmatter plus templated body.
 - Existing-Document validation flow succeeds with an in-memory Resolver and TypeRegistry.
-- Referential Validation succeeds end-to-end for a `list<skill>` property using discovered type defs and resolved target Documents.
-- Referential Validation succeeds end-to-end for a `choice<level>` property using discovered type defs and resolved target Documents.
+- Referential Validation succeeds end-to-end for a `list<[[skill]]>` property using discovered type defs and resolved target Documents.
+- Referential Validation succeeds end-to-end for a top-level `[[level]]` property using discovered type defs and resolved target Documents.
 - Root Type Declaration that resolves to no type definition returns a structured harness failure.
 - Ambiguous root Type Declaration returns a structured harness failure.
 - Parser failure in a discovered Type Definition Document surfaces as structured harness data rather than crashing the test.

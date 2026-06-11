@@ -13,7 +13,7 @@ describe('V030 list accumulates item-level errors', () => {
   it('returns per-item errors and only calls resolver on valid items', () => {
     const typeDef = makeTypeDef({
       properties: {
-        skills: { type: { kind: 'list', of: 'skill' } },
+        skills: { type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } } },
       },
     });
 
@@ -54,11 +54,11 @@ describe('V030 list accumulates item-level errors', () => {
   });
 });
 
-describe('V031 choice requires a single Wiki Link string', () => {
-  it('returns property:wrong-type when choice value is an array', () => {
+describe('V031 top-level [[name]] requires a single Wiki Link string', () => {
+  it('returns property:wrong-type when value is an array', () => {
     const typeDef = makeTypeDef({
       properties: {
-        level: { type: { kind: 'choice', of: 'level' } },
+        level: { type: { kind: 'type-ref', name: 'level' } },
       },
     });
 
@@ -79,7 +79,7 @@ describe('V032 list does not use TypeRegistry when Referential Validation is off
   it('passes without calling typeRegistry when referentialValidation is false', () => {
     const typeDef = makeTypeDef({
       properties: {
-        skills: { type: { kind: 'list', of: 'skill' } },
+        skills: { type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } } },
       },
     });
 

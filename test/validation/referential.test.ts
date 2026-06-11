@@ -25,7 +25,7 @@ describe('V040 referential match passes', () => {
   it('passes when target document conforms to expected type', () => {
     const typeDef = makeTypeDef({
       properties: {
-        skills: { type: { kind: 'list', of: 'skill' } },
+        skills: { type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } } },
       },
     });
 
@@ -66,7 +66,7 @@ describe('V041 missing TypeRegistry is config error after link resolves', () => 
   it('returns config:missing-dependency when typeRegistry is undefined', () => {
     const typeDef = makeTypeDef({
       properties: {
-        skills: { type: { kind: 'list', of: 'skill' } },
+        skills: { type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } } },
       },
     });
 
@@ -105,7 +105,7 @@ describe('V042 unknown Type Reference', () => {
   it('returns type:unknown-reference when getByName returns not-found', () => {
     const typeDef = makeTypeDef({
       properties: {
-        skills: { type: { kind: 'list', of: 'skill' } },
+        skills: { type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } } },
       },
     });
 
@@ -149,7 +149,7 @@ describe('V043 target Document missing Type Declaration', () => {
   it('returns type:missing-declaration when target has no _type', () => {
     const typeDef = makeTypeDef({
       properties: {
-        skills: { type: { kind: 'list', of: 'skill' } },
+        skills: { type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } } },
       },
     });
 
@@ -193,7 +193,7 @@ describe('V044 target Document referential mismatch', () => {
   it('returns type:referential-mismatch when target is different type', () => {
     const typeDef = makeTypeDef({
       properties: {
-        skills: { type: { kind: 'list', of: 'skill' } },
+        skills: { type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } } },
       },
     });
 
@@ -237,7 +237,7 @@ describe('V045 type:ambiguous-reference from getByName', () => {
   it('returns type:ambiguous-reference when getByName returns ambiguous', () => {
     const typeDef = makeTypeDef({
       properties: {
-        skills: { type: { kind: 'list', of: 'skill' } },
+        skills: { type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } } },
       },
     });
 
@@ -281,7 +281,7 @@ describe('V046 type:unavailable from getByName', () => {
   it('returns type:unavailable when getByName returns unavailable', () => {
     const typeDef = makeTypeDef({
       properties: {
-        skills: { type: { kind: 'list', of: 'skill' } },
+        skills: { type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } } },
       },
     });
 
@@ -325,7 +325,7 @@ describe('V047 type:invalid-declaration from getByDeclaration', () => {
   it('returns type:invalid-declaration when getByDeclaration returns invalid-declaration', () => {
     const typeDef = makeTypeDef({
       properties: {
-        skills: { type: { kind: 'list', of: 'skill' } },
+        skills: { type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } } },
       },
     });
 
@@ -369,7 +369,7 @@ describe('V048 type:unknown-declaration from getByDeclaration', () => {
   it('returns type:unknown-declaration when getByDeclaration returns not-found', () => {
     const typeDef = makeTypeDef({
       properties: {
-        skills: { type: { kind: 'list', of: 'skill' } },
+        skills: { type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } } },
       },
     });
 
@@ -413,7 +413,7 @@ describe('V049 type:ambiguous-declaration from getByDeclaration', () => {
   it('returns type:ambiguous-declaration when getByDeclaration returns ambiguous', () => {
     const typeDef = makeTypeDef({
       properties: {
-        skills: { type: { kind: 'list', of: 'skill' } },
+        skills: { type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } } },
       },
     });
 

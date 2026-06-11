@@ -1,6 +1,8 @@
 import type {
+  ListItemType,
   ParseError,
   ParserConfig,
+  PrimitiveTypeName,
   PropertySchema,
   PropertyTypeName,
 } from '../parser.js';
@@ -8,14 +10,23 @@ import {
   isValidExternalLinkShape,
   isValidWikiLinkShape,
 } from '../link-grammar.js';
+import { isCanonicalDate, isIso8601WithTimezone } from '../primitive-grammar.js';
 import { propertyError } from './errors.js';
 
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const DATETIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:?\d{2})$/;
+function describeListItem(item: ListItemType): string {
+  return item.kind === 'primitive' ? item.name : `[[${item.name}]]`;
+}
 
 function describeType(type: PropertyTypeName): string {
   if (typeof type === 'string') return type;
-  return `${type.kind}<${type.of}>`;
+  switch (type.kind) {
+    case 'type-ref':
+      return `[[${type.name}]]`;
+    case 'list':
+      return `list<${describeListItem(type.of)}>`;
+    case 'choice':
+      return `choice<${type.members.map((m) => JSON.stringify(m.value)).join('|')}>`;
+  }
 }
 
 function isEmpty(type: PropertyTypeName, value: unknown): boolean {
@@ -24,6 +35,51 @@ function isEmpty(type: PropertyTypeName, value: unknown): boolean {
   if (Array.isArray(value) && value.length === 0) return true;
   void type;
   return false;
+}
+
+function checkPrimitiveDefault(
+  property: string,
+  value: unknown,
+  name: PrimitiveTypeName,
+  allowedSchemes: string[],
+): ParseError | null {
+  switch (name) {
+    case 'text':
+      if (typeof value !== 'string') {
+        return defaultError(property, `Default must be a string.`, { expected: 'text' });
+      }
+      return null;
+    case 'number':
+      if (typeof value !== 'number' || !Number.isFinite(value)) {
+        return defaultError(property, `Default must be a finite number.`, { expected: 'number' });
+      }
+      return null;
+    case 'boolean':
+      if (typeof value !== 'boolean') {
+        return defaultError(property, `Default must be a boolean.`, { expected: 'boolean' });
+      }
+      return null;
+    case 'date':
+      if (typeof value !== 'string' || !isCanonicalDate(value)) {
+        return defaultError(property, `Default must be a YYYY-MM-DD date string.`, { expected: 'date' });
+      }
+      return null;
+    case 'datetime':
+      if (typeof value !== 'string' || !isIso8601WithTimezone(value)) {
+        return defaultError(property, `Default must be an ISO 8601 datetime with timezone.`, { expected: 'datetime' });
+      }
+      return null;
+    case 'wiki-link':
+      if (!isValidWikiLinkShape(value)) {
+        return defaultError(property, `Default must be a Wiki Link.`, { expected: 'wiki-link' });
+      }
+      return null;
+    case 'url':
+      if (!isValidExternalLinkShape(value, allowedSchemes)) {
+        return defaultError(property, `Default must be a Markdown External Link with an allowed scheme.`, { expected: 'url' });
+      }
+      return null;
+  }
 }
 
 function defaultError(
@@ -61,70 +117,55 @@ export function validateDefault(
   }
 
   if (typeof type === 'string') {
-    switch (type) {
-      case 'text':
-        if (typeof value !== 'string') {
-          return [defaultError(property, `Default must be a string.`, { expected: 'text' })];
-        }
-        return [];
-      case 'number':
-        if (typeof value !== 'number' || !Number.isFinite(value)) {
-          return [defaultError(property, `Default must be a finite number.`, { expected: 'number' })];
-        }
-        return [];
-      case 'boolean':
-        if (typeof value !== 'boolean') {
-          return [defaultError(property, `Default must be a boolean.`, { expected: 'boolean' })];
-        }
-        return [];
-      case 'date':
-        if (typeof value !== 'string' || !DATE_RE.test(value)) {
-          return [defaultError(property, `Default must be a YYYY-MM-DD date string.`, { expected: 'date' })];
-        }
-        return [];
-      case 'datetime':
-        if (typeof value !== 'string' || !DATETIME_RE.test(value)) {
-          return [
-            defaultError(property, `Default must be an ISO 8601 datetime with timezone.`, {
-              expected: 'datetime',
-            }),
-          ];
-        }
-        return [];
-      case 'wiki-link':
-        if (!isValidWikiLinkShape(value)) {
-          return [defaultError(property, `Default must be a Wiki Link.`, { expected: 'wiki-link' })];
-        }
-        return [];
-      case 'url':
-        if (!isValidExternalLinkShape(value, allowedSchemes)) {
-          return [defaultError(property, `Default must be a Markdown External Link with an allowed scheme.`, { expected: 'url' })];
-        }
-        return [];
+    const err = checkPrimitiveDefault(property, value, type, allowedSchemes);
+    return err ? [err] : [];
+  }
+
+  if (type.kind === 'type-ref') {
+    if (!isValidWikiLinkShape(value)) {
+      return [defaultError(property, `Default must be a Wiki Link.`, { expected: 'wiki-link' })];
     }
+    return [];
   }
 
   if (type.kind === 'list') {
     if (!Array.isArray(value)) {
-      return [defaultError(property, `Default must be an array of Wiki Links.`, { expected: typeLabel })];
+      return [defaultError(property, `Default must be an array.`, { expected: typeLabel })];
     }
     const errors: ParseError[] = [];
-    value.forEach((item, index) => {
-      if (!isValidWikiLinkShape(item)) {
-        errors.push(
-          defaultError(property, `Default item ${index} must be a Wiki Link.`, {
-            expected: 'wiki-link',
-            index,
-          }),
-        );
-      }
-    });
+    if (type.of.kind === 'primitive') {
+      const primitiveName = type.of.name;
+      value.forEach((item, index) => {
+        const err = checkPrimitiveDefault(property, item, primitiveName, allowedSchemes);
+        if (err) {
+          errors.push({
+            ...err,
+            details: { ...(err.details ?? {}), index },
+          });
+        }
+      });
+    } else {
+      value.forEach((item, index) => {
+        if (!isValidWikiLinkShape(item)) {
+          errors.push(
+            defaultError(property, `Default item ${index} must be a Wiki Link.`, {
+              expected: 'wiki-link',
+              index,
+            }),
+          );
+        }
+      });
+    }
     return errors;
   }
 
   if (type.kind === 'choice') {
-    if (!isValidWikiLinkShape(value)) {
-      return [defaultError(property, `Default must be a Wiki Link.`, { expected: 'wiki-link' })];
+    const allowed = type.members.map((m) => m.value);
+    if (typeof value !== 'string') {
+      return [defaultError(property, `Default must be a string.`, { expected: 'enum', allowed })];
+    }
+    if (!allowed.includes(value)) {
+      return [defaultError(property, `Default must equal one of the declared enum values.`, { expected: 'enum', allowed })];
     }
     return [];
   }

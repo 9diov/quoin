@@ -1,16 +1,22 @@
+import type { ChoiceMember, ListItemType } from '../parser.js';
 import type { Resolver, TypeRegistry } from '../integration.js';
 import { isValidWikiLinkShape } from '../link-grammar.js';
 import { validationError } from './errors.js';
 import { resolveWikiLink } from './link.js';
 import { validateReferential } from './referential.js';
+import { validatePrimitive } from './primitives.js';
 import type { ValidationError } from '../validation.js';
+import type { ResolvedConfig } from './config.js';
+
+function describeItem(item: ListItemType): string {
+  return item.kind === 'primitive' ? item.name : `[[${item.name}]]`;
+}
 
 export function validateList(
   value: unknown,
-  typeRefName: string,
+  item: ListItemType,
   propertyName: string,
-  referentialValidation: boolean,
-  typeDeclarationKey: string,
+  config: ResolvedConfig,
   resolver: Resolver | undefined,
   typeRegistry: TypeRegistry | undefined,
 ): ValidationError[] {
@@ -18,7 +24,7 @@ export function validateList(
     return [
       validationError(
         'property:wrong-type',
-        `Property "${propertyName}" must be an array for type list<${typeRefName}>.`,
+        `Property "${propertyName}" must be an array for type list<${describeItem(item)}>.`,
         { scope: 'property', property: propertyName },
       ),
     ];
@@ -27,9 +33,33 @@ export function validateList(
   const errors: ValidationError[] = [];
 
   for (let i = 0; i < value.length; i++) {
-    const item = value[i];
+    const entry = value[i];
 
-    if (typeof item !== 'string' || item.trim().length === 0) {
+    if (item.kind === 'primitive') {
+      const primitiveError = validatePrimitive(
+        entry,
+        item.name,
+        propertyName,
+        config.allowedUrlSchemes,
+      );
+      if (primitiveError) {
+        errors.push({
+          ...primitiveError,
+          location: { scope: 'property', property: propertyName, index: i },
+        });
+        continue;
+      }
+      if (item.name === 'wiki-link' && typeof entry === 'string') {
+        const status = resolveWikiLink(entry, resolver, propertyName, i);
+        if (status.kind === 'error') {
+          errors.push(status.error);
+        }
+      }
+      continue;
+    }
+
+    // item.kind === 'type-ref'
+    if (typeof entry !== 'string' || entry.trim().length === 0) {
       errors.push(
         validationError(
           'property:wrong-type',
@@ -40,7 +70,7 @@ export function validateList(
       continue;
     }
 
-    if (!isValidWikiLinkShape(item)) {
+    if (!isValidWikiLinkShape(entry)) {
       errors.push(
         validationError(
           'property:wrong-type',
@@ -51,19 +81,19 @@ export function validateList(
       continue;
     }
 
-    const status = resolveWikiLink(item, resolver, propertyName, i);
+    const status = resolveWikiLink(entry, resolver, propertyName, i);
     if (status.kind === 'error') {
       errors.push(status.error);
       continue;
     }
 
-    if (referentialValidation) {
+    if (config.referentialValidation) {
       const refResult = validateReferential(
-        item,
-        typeRefName,
+        entry,
+        item.name,
         status.document,
         typeRegistry,
-        typeDeclarationKey,
+        config.typeDeclarationKey,
         propertyName,
         i,
       );
@@ -78,64 +108,30 @@ export function validateList(
 
 export function validateChoice(
   value: unknown,
-  typeRefName: string,
+  members: ChoiceMember[],
   propertyName: string,
-  referentialValidation: boolean,
-  typeDeclarationKey: string,
-  resolver: Resolver | undefined,
-  typeRegistry: TypeRegistry | undefined,
 ): ValidationError[] {
-  if (typeof value !== 'string' || value.trim().length === 0) {
+  const allowed = members.map((m) => m.value);
+  if (typeof value !== 'string') {
     return [
       validationError(
         'property:wrong-type',
-        `Property "${propertyName}" must be a non-empty string Wiki Link for type choice<${typeRefName}>.`,
+        `Property "${propertyName}" must be a string for type choice<${allowed.map((v) => JSON.stringify(v)).join('|')}>.`,
         { scope: 'property', property: propertyName },
       ),
     ];
   }
 
-  if (Array.isArray(value)) {
+  if (!allowed.includes(value)) {
     return [
       validationError(
-        'property:wrong-type',
-        `Property "${propertyName}" must be a single Wiki Link string, not an array.`,
+        'property:invalid-enum-value',
+        `Property "${propertyName}" must equal one of: ${allowed.map((v) => JSON.stringify(v)).join(', ')}.`,
         { scope: 'property', property: propertyName },
+        { value, allowed },
       ),
     ];
   }
 
-  if (!isValidWikiLinkShape(value)) {
-    return [
-      validationError(
-        'property:wrong-type',
-        `Property "${propertyName}" must be a valid Wiki Link.`,
-        { scope: 'property', property: propertyName },
-      ),
-    ];
-  }
-
-  const errors: ValidationError[] = [];
-
-  const status = resolveWikiLink(value, resolver, propertyName);
-  if (status.kind === 'error') {
-    errors.push(status.error);
-    return errors;
-  }
-
-  if (referentialValidation) {
-    const refResult = validateReferential(
-      value,
-      typeRefName,
-      status.document,
-      typeRegistry,
-      typeDeclarationKey,
-      propertyName,
-    );
-    if (refResult) {
-      errors.push(refResult);
-    }
-  }
-
-  return errors;
+  return [];
 }

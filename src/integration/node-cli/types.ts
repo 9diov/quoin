@@ -47,10 +47,15 @@ export type TypesResult = {
 };
 
 function renderPropertyType(type: PropertyTypeName): string {
-  if (typeof type === 'string') {
-    return type;
+  if (typeof type === 'string') return type;
+  switch (type.kind) {
+    case 'type-ref':
+      return `[[${type.name}]]`;
+    case 'list':
+      return `list<${type.of.kind === 'primitive' ? type.of.name : `[[${type.of.name}]]`}>`;
+    case 'choice':
+      return `choice<${type.members.map((m) => JSON.stringify(m.value)).join('|')}>`;
   }
-  return `${type.kind}<${type.of}>`;
 }
 
 function summarize(typeDef: ParsedTypeDefinitionDocument): TypeSummary {

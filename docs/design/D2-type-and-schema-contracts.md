@@ -14,11 +14,25 @@ type PrimitiveTypeName =
   | 'wiki-link'
   | 'url'
 
-type CollectionTypeName =
-  | { kind: 'list';   of: string }   // string = Type Reference name
-  | { kind: 'choice'; of: string }
+type TypeReference = { kind: 'type-ref'; name: string }   // [[name]] usage
 
-type PropertyTypeName = PrimitiveTypeName | CollectionTypeName
+type ListItemType =
+  | { kind: 'primitive'; name: PrimitiveTypeName }
+  | TypeReference
+
+// Union member of a choice<...> type. v1 supports literal members only;
+// primitive and type-ref members are reserved for a future union extension
+// (e.g. `choice<text|[[tag]]>`). The Parser rejects non-literal members today.
+type ChoiceMember =
+  | { kind: 'literal';   value: string }
+  // | { kind: 'primitive'; name: PrimitiveTypeName }   // reserved (future)
+  // | TypeReference                                    // reserved (future)
+
+type CollectionTypeName =
+  | { kind: 'list';   of: ListItemType }
+  | { kind: 'choice'; members: ChoiceMember[] }   // non-empty, members unique
+
+type PropertyTypeName = PrimitiveTypeName | TypeReference | CollectionTypeName
 
 
 // ── Schema ───────────────────────────────────────────────────────────
@@ -83,6 +97,7 @@ type ParseErrorKind =
   | 'parser:invalid-property-key'
   | 'parser:unknown-property-type'
   | 'parser:invalid-type-reference'
+  | 'parser:invalid-enum'
   | 'parser:invalid-property-schema'
   | 'parser:invalid-default'
   | 'parser:duplicate-template-block'
@@ -175,10 +190,14 @@ The Parser rejects a Type Definition Document that declares a Property key viola
 
 The same canonical identifier rule applies to:
 
-- Type Reference names in `list<X>` and `choice<Y>`
+- Type Reference names inside `type: "[[name]]"` and `list<[[name]]>`
 - `TypeDefinitionDocumentIdentity.name`
 
+Quoted literal values inside `choice<...>` (`"draft"`, `'In Progress'`) are NOT subject to the canonical identifier rule — they may contain spaces, mixed case, and most punctuation.
+
 `TypeDefinitionDocumentIdentity.id` is opaque to the Core, but must be a non-empty string after trimming.
+
+Primitive type names and Type Reference names are syntactically disjoint — primitives appear bare (`list<text>`) and Type References appear as Wiki Links (`list<[[skill]]>`) — so the Core does not reserve primitive names as `TypeDefinitionDocumentIdentity.name`. A user MAY name a Type Definition Document `text`, `number`, etc.; usage of that type in another schema is always spelled `[[text]]` and never collides with the primitive.
 
 ### Possible future relaxations
 
@@ -326,11 +345,138 @@ When `default` is present, Parser validates it against the same local type and e
 
 - No Resolver calls.
 - No TypeRegistry calls.
+- Primitive defaults must satisfy the primitive's local shape (string for `text`, finite number for `number`, etc.).
 - Wiki Link defaults must have valid Wiki Link shape.
 - URL defaults must have valid External Link shape and allowed scheme under ParserConfig.
+- Top-level `[[name]]` defaults must be a single valid Wiki Link.
+- `list<X>` defaults must be an array; each item must satisfy X's local shape:
+  - When X is a primitive, each item is validated as that primitive.
+  - When X is a Type Reference, each item must be a valid Wiki Link.
+- `choice<"a"|"b"|"c">` defaults must be a string equal to one of the declared literal members' `value` exactly (case-sensitive).
 - Empty defaults must obey `allow-empty`.
 
 This keeps Scaffolding from emitting values that immediately fail local Property validation.
+
+---
+
+## Type expression grammar
+
+A `type:` value in a Property schema is one of:
+
+- A `PrimitiveTypeName` bare identifier — `text`, `number`, `boolean`, `date`, `datetime`, `wiki-link`, `url`.
+- A bare Wiki Link `[[name]]` — declares the Property holds a Wiki Link to a Document of type *name*. Parsed as `{ kind: 'type-ref'; name }`.
+- `list<X>` — a list whose item type is `X`.
+- `choice<"a"|"b"|"c">` — a literal enum: the value must equal one of the listed quoted string literals exactly.
+
+The four forms are syntactically disjoint and the Parser dispatches on shape alone.
+
+### Top-level `[[name]]`
+
+```yaml
+type: "[[skill]]"        # Property must be a Wiki Link to a Document of type "skill"
+```
+
+Parsed as `{ kind: 'type-ref'; name: 'skill' }`. The same bare-Wiki-Link rules used inside `list<...>` (see below) apply: no alias, no fragment, no path; `name` is a canonical identifier.
+
+### `list<X>`
+
+`X` is one of:
+
+- A `PrimitiveTypeName` literal — parsed as `{ kind: 'list'; of: { kind: 'primitive'; name: X } }`.
+- A bare Wiki Link `[[name]]` — parsed as `{ kind: 'list'; of: { kind: 'type-ref'; name } }`.
+
+Examples:
+
+```yaml
+type: list<text>           # list of strings
+type: list<number>         # list of finite numbers
+type: list<wiki-link>      # list of bare Wiki Links (no referential validation)
+type: "list<[[skill]]>"    # list of Wiki Links resolving to type "skill"
+```
+
+### `choice<"a"|"b"|"c">`
+
+`choice` is enum-only in v1: two or more quoted string literals separated by `|`. Parsed as `{ kind: 'choice'; members: [{ kind: 'literal'; value: 'a' }, ...] }`.
+
+Literal members may use either `"double"` or `'single'` quotes — they are equivalent, and a single `choice<...>` may mix styles (`choice<"a"|'b'>`). Quote style does not affect the parsed value.
+
+Whitespace around members is permitted and trimmed: `choice< "a" | "b" >` is equivalent to `choice<"a"|"b">`. Duplicate literal values produce `parser:invalid-enum`.
+
+Bare identifiers inside `choice<...>` (e.g., `choice<draft|published>`) are **not** allowed and produce `parser:invalid-enum`. Bare identifiers are reserved for the future union extension (`choice<text|[[tag]]>`). In v1, every member must be a quoted literal.
+
+There is no `choice<[[name]]>` form. A single-reference Property is spelled `type: "[[name]]"` at the top level.
+
+Examples:
+
+```yaml
+type: 'choice<"draft"|"published">'    # outer single-quoted YAML — preferred
+type: "choice<'draft'|'published'>"    # inner single-quoted literals also accepted
+type: 'choice<"a" | "b" | "c">'        # whitespace around members is ignored
+```
+
+### YAML quoting for `choice<...>`
+
+`choice<...>` literals contain `"` or `'`. To keep the schema readable, **author the outer YAML scalar in the opposite quote style** to the inner literal:
+
+```yaml
+type: 'choice<"draft"|"published">'    # outer single, inner double — recommended
+type: "choice<'draft'|'published'>"    # outer double, inner single
+type: "choice<\"draft\"|\"published\">"  # escaped double-in-double — avoid
+```
+
+Plain (unquoted) YAML is not portable because `<`, `>`, `"`, and `'` are not reliably parseable as plain scalars across YAML implementations. Always quote a `type` value that contains `choice<...>`.
+
+### Literal value rules
+
+Inside `choice<...>` quoted literals:
+
+- Any character except the opening quote character, newline, and `|` is allowed.
+- No escape sequences in v1. A literal cannot contain its own quote character. Use the other quote style if you need a `"` or `'` inside the value (e.g. `choice<'they"ll'|'others'>`).
+- Empty literals (`""`, `''`) are rejected at parse time → `parser:invalid-enum`. To permit an empty value, declare `allow-empty: true` on the Property.
+
+### Bare Wiki Link rules
+
+Wherever `[[name]]` appears in a `type:` value — at the top level or inside `list<...>` — it must be the bare form:
+
+- Exact shape `[[name]]` — no alias (`[[name|alias]]`), no heading or block fragment (`[[name#heading]]`, `[[name#^block]]`), no path (`[[dir/name]]`).
+- `name` must be a canonical identifier (lowercase, `[a-z0-9_-]`, no leading/trailing `-` or `_`).
+- Whitespace around `[[name]]` inside the angle brackets is permitted and trimmed.
+
+Violations produce `parser:invalid-type-reference` with `details.value` and one of:
+
+- `details.reason: 'wiki-link-not-bare'` — the Wiki Link includes alias, fragment, or path segments (e.g., `"[[skill|alias]]"`, `"[[skill#heading]]"`, `"[[types/skill]]"`).
+- `details.reason: 'non-canonical-name'` — name inside `[[...]]` is not a canonical identifier (e.g., `"[[Skill]]"`).
+
+### YAML quoting
+
+A top-level `[[name]]` MUST be quoted, because an unquoted scalar starting with `[` is parsed as a YAML flow sequence:
+
+```yaml
+type: "[[skill]]"      # MUST quote — required
+type: [[skill]]        # parsed as a nested sequence — wrong
+```
+
+`list<[[name]]>` SHOULD be quoted for portability across YAML parsers:
+
+```yaml
+type: "list<[[skill]]>"
+```
+
+Primitive forms and enums contain no flow indicators and parse safely unquoted:
+
+```yaml
+type: text
+type: list<text>
+type: choice<draft|published>
+```
+
+### Errors
+
+- Non-Wiki-Link Type Reference at top level or inside `list<...>` (e.g., `type: skill`, `list<skill>`) → `parser:unknown-property-type` at top level (it is neither a primitive nor a recognised collection form); inside `list<...>` → `parser:invalid-type-reference` with `details.reason: 'expected-wiki-link-or-primitive'`.
+- Non-canonical name inside `[[...]]` (e.g., `"[[Skill]]"`, `"list<[[Skill]]>"`) → `parser:invalid-type-reference` with `details.reason: 'non-canonical-name'`.
+- Non-bare Wiki Link (alias, fragment, or path) → `parser:invalid-type-reference` with `details.reason: 'wiki-link-not-bare'`.
+- Empty bracket contents (`list<>`, `choice<>`), empty enum segments (`choice<"a"|>`, `choice<|"b">`), bare identifiers in `choice<...>` (e.g. `choice<draft|published>`), empty literals (`choice<""|"b">`), duplicate literal values, single member (`choice<"a">` has no `|`), or Wiki Links inside `choice<...>` (e.g., `choice<[[a]]|[[b]]>`) → `parser:invalid-enum`.
+- Other angle-bracket constructors (`set<X>`, `map<K,V>`, nested generics) → `parser:unknown-property-type`.
 
 ---
 

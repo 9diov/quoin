@@ -26,6 +26,7 @@ type ValidationErrorKind =
   | 'property:missing-required'
   | 'property:wrong-type'
   | 'property:empty-not-allowed'
+  | 'property:invalid-enum-value'        // value not in choice<"a"|"b"|"c"> allowed set
   | 'resolve:broken-wiki-link'          // Wiki Link target was not found
   | 'resolve:invalid-wiki-link'         // Wiki Link value was malformed
   | 'resolve:ambiguous-wiki-link'       // Wiki Link matched multiple Documents
@@ -138,24 +139,34 @@ Empty Property:
 
 ---
 
+## Typed reference validation
+
+A top-level `type: "[[name]]"` declares the Property holds a Wiki Link to a Document of type *name*.
+
+1. Value must be a non-empty string with valid Wiki Link syntax. Failures → `property:wrong-type`.
+2. Value is resolved with Resolver.
+3. If `referentialValidation: true`, the resolved target Document is referentially validated against Type Reference *name* via TypeRegistry.
+
+This is the same pipeline used per-item by `list<[[name]]>`, lifted to the single-value case.
+
+---
+
 ## Collection Type validation
 
 `list<X>`:
 
-1. Value must be a YAML array.
-2. Each item must be a non-empty string.
-3. Each item must be valid Wiki Link syntax.
-4. Each item is resolved with Resolver.
-5. If `referentialValidation: true`, each resolved target Document is checked against Type Reference `X` with TypeRegistry.
+1. Value must be a YAML array. Non-array → `property:wrong-type`.
+2. Per-item validation depends on `X`:
+   - **X is a primitive** (`{ kind: 'primitive'; name: P }`): each item is validated as primitive `P` using the same rules as a top-level primitive Property (text, number, boolean, date, datetime, `wiki-link` shape, or `url` shape + scheme). Item-level failures → `property:wrong-type` at `{ scope: 'property', property, index }`. No Link Resolution. No Referential Validation, even when `referentialValidation: true`.
+   - **X is a Type Reference** (`{ kind: 'type-ref'; name: N }`): each item must be a non-empty string with valid Wiki Link syntax, then resolved with Resolver, then (when `referentialValidation: true`) referentially validated against Type Reference `N` via TypeRegistry.
 
-`choice<Y>`:
+`choice<"a"|"b"|"c">` (literal-enum in v1):
 
-1. Value must be a non-empty string.
-2. Value must be valid Wiki Link syntax.
-3. Value is resolved with Resolver.
-4. If `referentialValidation: true`, the resolved target Document is checked against Type Reference `Y` with TypeRegistry.
+1. Value must be a string. Non-string → `property:wrong-type`.
+2. Value must equal one of the declared literal members' `value` exactly (case-sensitive). Non-match → `property:invalid-enum-value` with `details.value` and `details.allowed: string[]` (the list of allowed literal values, in declaration order).
+3. No Link Resolution. No Referential Validation.
 
-Collection Types imply Wiki Link shape validation for their contained values. Referential Validation does not apply to primitive `wiki-link`, because primitive Wiki Links do not declare a Type Reference.
+`list<[[name]]>` is the only collection form that invokes Resolver and TypeRegistry. `list<primitive>` and `choice<...>` never invoke either. Referential Validation does not apply to primitive `wiki-link`, `list<wiki-link>`, or `choice<...>`, because none of them declare a Type Reference.
 
 List validation accumulates item-level errors. When one item fails, Validation stops downstream stages for that item but continues checking sibling items.
 
@@ -163,7 +174,7 @@ List validation accumulates item-level errors. When one item fails, Validation s
 
 ## Link Resolution
 
-Link Resolution is part of standard Validation for `wiki-link`, `list<X>`, and `choice<Y>` values. Resolver is required for any present, non-empty value that passes Wiki Link shape validation.
+Link Resolution is part of standard Validation for `wiki-link`, top-level `[[name]]`, and `list<X>` (both primitive `wiki-link` items and `[[name]]` items). Resolver is required for any present, non-empty value that passes Wiki Link shape validation. `list<other-primitive>` and `choice<"a"|"b"|"c">` skip Link Resolution entirely.
 
 If Resolver is missing when a value reaches Link Resolution, Validation returns `config:missing-dependency` at that value's location. It does not throw.
 
@@ -179,7 +190,7 @@ Resolver result mapping:
 
 ## Referential Validation
 
-Referential Validation applies only when `referentialValidation: true`, and only to Collection Types.
+Referential Validation applies only when `referentialValidation: true`, and only to top-level `[[name]]` and `list<[[name]]>`. Primitive `wiki-link`, primitive-item lists (`list<text>`, `list<wiki-link>`, …), and enums (`choice<"a"|"b"|"c">`) carry no Type Reference and are never referentially validated.
 
 TypeRegistry is required after a Collection Type value resolves successfully. If TypeRegistry is missing at that point, Validation returns `config:missing-dependency` at that value's location.
 

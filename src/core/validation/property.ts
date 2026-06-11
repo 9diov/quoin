@@ -1,10 +1,12 @@
 import type { PropertySchema, PropertyTypeName } from '../parser.js';
 import type { Resolver, TypeRegistry } from '../integration.js';
+import { isValidWikiLinkShape } from '../link-grammar.js';
 import { isValueEmpty } from './emptiness.js';
 import { validationError } from './errors.js';
 import { validatePrimitive } from './primitives.js';
 import { validateList, validateChoice } from './collections.js';
 import { resolveWikiLink } from './link.js';
+import { validateReferential } from './referential.js';
 import type { ValidationError } from '../validation.js';
 import type { ResolvedConfig } from './config.js';
 
@@ -87,25 +89,43 @@ function validateTypedValue(
   }
 
   switch (type.kind) {
+    case 'type-ref': {
+      if (typeof value !== 'string' || !isValidWikiLinkShape(value)) {
+        return [
+          validationError(
+            'property:wrong-type',
+            `Property "${propertyName}" must be a valid Wiki Link.`,
+            { scope: 'property', property: propertyName },
+          ),
+        ];
+      }
+      const status = resolveWikiLink(value, resolver, propertyName);
+      if (status.kind === 'error') {
+        return [status.error];
+      }
+      if (config.referentialValidation) {
+        const refError = validateReferential(
+          value,
+          type.name,
+          status.document,
+          typeRegistry,
+          config.typeDeclarationKey,
+          propertyName,
+        );
+        if (refError) return [refError];
+      }
+      return [];
+    }
     case 'list':
       return validateList(
         value,
         type.of,
         propertyName,
-        config.referentialValidation,
-        config.typeDeclarationKey,
+        config,
         resolver,
         typeRegistry,
       );
     case 'choice':
-      return validateChoice(
-        value,
-        type.of,
-        propertyName,
-        config.referentialValidation,
-        config.typeDeclarationKey,
-        resolver,
-        typeRegistry,
-      );
+      return validateChoice(value, type.members, propertyName);
   }
 }

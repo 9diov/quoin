@@ -81,8 +81,11 @@ npm run cli -- --root fixtures/scenarios/referential-mismatch --no-referential-v
 
 ### Gotchas baked into the fixtures (worth knowing when authoring vaults)
 
-- **Collection element types are Type References, not "plain text".** `list<concept>`
-  items must be Wiki Links to `Concept` documents — there is no "list of strings".
+- **Typed references use Wiki Link syntax inside angle brackets.** `list<concept>`
+  is invalid — write `"list<[[concept]]>"` whose items must be Wiki Links to
+  `Concept` documents. For a list of plain strings, use `list<text>`. Single-value
+  typed references use the bare form: `type: "[[concept]]"` (no `choice<...>`
+  wrapper — `choice` is enum-only).
 - **Wiki Link resolution is basename match, case-insensitive but not
   space/hyphen-normalized.** `[[Event Sourcing]]` resolves to `Event Sourcing.md`,
   not `event-sourcing.md`.

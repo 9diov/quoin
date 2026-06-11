@@ -98,7 +98,7 @@ describe('present values are not overwritten', () => {
       schema: {
         properties: {
           skills: {
-            type: { kind: 'list', of: 'skill' },
+            type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } },
             'allow-empty': true,
             default: ['[[TypeScript]]'],
           },
@@ -171,7 +171,7 @@ describe('falsy defaults', () => {
       schema: {
         properties: {
           skills: {
-            type: { kind: 'list', of: 'skill' },
+            type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } },
             default: [],
           },
         },
@@ -203,7 +203,7 @@ describe('array reference isolation', () => {
       schema: {
         properties: {
           skills: {
-            type: { kind: 'list', of: 'skill' },
+            type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } },
             default: defaultList,
           },
         },
@@ -234,7 +234,7 @@ describe('multiple properties', () => {
         properties: {
           title: { type: 'text', default: 'Untitled' },
           description: { type: 'text', required: true },
-          tags: { type: { kind: 'list', of: 'skill' }, default: ['[[Tag]]'] },
+          tags: { type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } }, default: ['[[Tag]]'] },
         },
       },
     });

@@ -173,19 +173,108 @@ describe('P010–P014 — Schema strictness', () => {
     expect(err?.details).toEqual({ key: 'required', expected: 'boolean' });
   });
 
-  it('P014: Type Reference name must be canonical', () => {
-    const body = `## Schema\n\n\`\`\`yaml\nproperties:\n  skills:\n    type: list<Skill>\n\`\`\`\n`;
+  it('P014: bare identifier inside list<...> is rejected', () => {
+    const body = `## Schema\n\n\`\`\`yaml\nproperties:\n  skills:\n    type: list<skill>\n\`\`\`\n`;
     const errors = expectErrors(parse(body));
     const err = findError(errors, 'parser:invalid-type-reference');
     expect(err).toBeDefined();
     expect(err?.location).toEqual({ scope: 'property', property: 'skills' });
-    expect(err?.details).toEqual({ value: 'Skill' });
+    expect(err?.details).toEqual({ value: 'skill', reason: 'expected-wiki-link-or-primitive' });
+  });
+
+  it('P014a: non-canonical name inside Wiki Link is rejected', () => {
+    const body = `## Schema\n\n\`\`\`yaml\nproperties:\n  skills:\n    type: "list<[[Skill]]>"\n\`\`\`\n`;
+    const errors = expectErrors(parse(body));
+    const err = findError(errors, 'parser:invalid-type-reference');
+    expect(err).toBeDefined();
+    expect(err?.details).toEqual({ value: 'Skill', reason: 'non-canonical-name' });
+  });
+
+  it('P015: list<text> parses to primitive item type', () => {
+    const body = `## Schema\n\n\`\`\`yaml\nproperties:\n  tags:\n    type: list<text>\n\`\`\`\n`;
+    const result = parse(body);
+    expect(result.kind).toBe('ok');
+    if (result.kind !== 'ok') return;
+    expect(result.typeDef.schema.properties['tags']?.type).toEqual({
+      kind: 'list',
+      of: { kind: 'primitive', name: 'text' },
+    });
+  });
+
+  it('P017: top-level [[name]] parses to Type Reference', () => {
+    const body = `## Schema\n\n\`\`\`yaml\nproperties:\n  level:\n    type: "[[level]]"\n\`\`\`\n`;
+    const result = parse(body);
+    expect(result.kind).toBe('ok');
+    if (result.kind !== 'ok') return;
+    expect(result.typeDef.schema.properties['level']?.type).toEqual({
+      kind: 'type-ref',
+      name: 'level',
+    });
+  });
+
+  it('P018: choice<"a"|"b"|"c"> parses to enum (double quotes)', () => {
+    const body = `## Schema\n\n\`\`\`yaml\nproperties:\n  status:\n    type: 'choice<"draft"|"published"|"archived">'\n\`\`\`\n`;
+    const result = parse(body);
+    expect(result.kind).toBe('ok');
+    if (result.kind !== 'ok') return;
+    expect(result.typeDef.schema.properties['status']?.type).toEqual({
+      kind: 'choice',
+      members: [
+        { kind: 'literal', value: 'draft' },
+        { kind: 'literal', value: 'published' },
+        { kind: 'literal', value: 'archived' },
+      ],
+    });
+  });
+
+  it('P018-alt: single-quoted literals are also accepted', () => {
+    const body = `## Schema\n\n\`\`\`yaml\nproperties:\n  status:\n    type: "choice<'draft'|'published'>"\n\`\`\`\n`;
+    const result = parse(body);
+    expect(result.kind).toBe('ok');
+    if (result.kind !== 'ok') return;
+    expect(result.typeDef.schema.properties['status']?.type).toEqual({
+      kind: 'choice',
+      members: [
+        { kind: 'literal', value: 'draft' },
+        { kind: 'literal', value: 'published' },
+      ],
+    });
+  });
+
+  it('P018-mixed: mixed quote styles are allowed', () => {
+    const body = `## Schema\n\n\`\`\`yaml\nproperties:\n  status:\n    type: 'choice<"draft"|''published''>'\n\`\`\`\n`;
+    const result = parse(body);
+    expect(result.kind).toBe('ok');
+    if (result.kind !== 'ok') return;
+    expect(result.typeDef.schema.properties['status']?.type).toEqual({
+      kind: 'choice',
+      members: [
+        { kind: 'literal', value: 'draft' },
+        { kind: 'literal', value: 'published' },
+      ],
+    });
+  });
+
+  it('P018a: bare identifiers inside choice<...> are rejected', () => {
+    const body = `## Schema\n\n\`\`\`yaml\nproperties:\n  label:\n    type: choice<draft|published>\n\`\`\`\n`;
+    const errors = expectErrors(parse(body));
+    const err = findError(errors, 'parser:invalid-enum');
+    expect(err).toBeDefined();
+    expect(err?.details).toEqual({ values: ['draft', 'published'] });
+  });
+
+  it('P018b: empty literal is rejected', () => {
+    const body = `## Schema\n\n\`\`\`yaml\nproperties:\n  label:\n    type: 'choice<""|"b">'\n\`\`\`\n`;
+    const errors = expectErrors(parse(body));
+    const err = findError(errors, 'parser:invalid-enum');
+    expect(err).toBeDefined();
+    expect(err?.details).toEqual({ values: ['', 'b'] });
   });
 });
 
 describe('P020–P022 — Defaults', () => {
   it('P020: default is locally type-checked', () => {
-    const body = `## Schema\n\n\`\`\`yaml\nproperties:\n  level:\n    type: choice<level>\n    default: "Beginner"\n\`\`\`\n`;
+    const body = `## Schema\n\n\`\`\`yaml\nproperties:\n  level:\n    type: "[[level]]"\n    default: "Beginner"\n\`\`\`\n`;
     const errors = expectErrors(parse(body));
     const err = findError(errors, 'parser:invalid-default');
     expect(err).toBeDefined();
@@ -206,6 +295,28 @@ describe('P020–P022 — Defaults', () => {
     const body = `## Schema\n\n\`\`\`yaml\nproperties:\n  description:\n    type: text\n    allow-empty: true\n    default: ""\n\`\`\`\n`;
     const result = parse(body);
     expect(result.kind).toBe('ok');
+  });
+
+  it('P022d: date default rejects impossible calendar day', () => {
+    const body = `## Schema\n\n\`\`\`yaml\nproperties:\n  d:\n    type: date\n    default: "2024-02-31"\n\`\`\`\n`;
+    const errors = expectErrors(parse(body));
+    const err = findError(errors, 'parser:invalid-default');
+    expect(err).toBeDefined();
+    expect(err?.details?.['expected']).toBe('date');
+  });
+
+  it('P022e: datetime default accepts HH:MM with timezone (seconds optional)', () => {
+    const body = `## Schema\n\n\`\`\`yaml\nproperties:\n  t:\n    type: datetime\n    default: "2024-01-01T12:34+07:00"\n\`\`\`\n`;
+    const result = parse(body);
+    expect(result.kind).toBe('ok');
+  });
+
+  it('P022f: datetime default rejects offset without colon', () => {
+    const body = `## Schema\n\n\`\`\`yaml\nproperties:\n  t:\n    type: datetime\n    default: "2024-01-01T12:34:56+0700"\n\`\`\`\n`;
+    const errors = expectErrors(parse(body));
+    const err = findError(errors, 'parser:invalid-default');
+    expect(err).toBeDefined();
+    expect(err?.details?.['expected']).toBe('datetime');
   });
 });
 
@@ -302,7 +413,7 @@ properties:
     type: text
     required: "true"
   level:
-    type: choice<Level>
+    type: "list<[[Level]]>"
 \`\`\`
 `;
     const errors = expectErrors(parse(body));

@@ -49,7 +49,10 @@ type TypeDeclarationLookupResult =
   | { kind: 'unavailable'; reason: string }
 
 type TypeRegistry = {
-  // Resolves a Type Reference from a Collection Type, e.g. "skill" in list<skill>.
+  // Resolves a Type Reference declared by a Property schema,
+  // e.g. "skill" in [[skill]] or list<[[skill]]>. Not called for list<primitive>
+  // (e.g. list<text>) or enums (e.g. choice<"draft"|"published">) — those forms
+  // declare no Type Reference and bypass TypeRegistry entirely.
   getByName(typeName: string): TypeReferenceLookupResult
 
   // Resolves a Document's Type Declaration, e.g. _type: "[[Skill]]".

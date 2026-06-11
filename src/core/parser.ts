@@ -14,11 +14,25 @@ export type PrimitiveTypeName =
   | 'wiki-link'
   | 'url';
 
-export type CollectionTypeName =
-  | { kind: 'list'; of: string }
-  | { kind: 'choice'; of: string };
+export type TypeReference = { kind: 'type-ref'; name: string };
 
-export type PropertyTypeName = PrimitiveTypeName | CollectionTypeName;
+export type ListItemType =
+  | { kind: 'primitive'; name: PrimitiveTypeName }
+  | TypeReference;
+
+// Union member of a choice<...> type. v1 supports literal members only.
+// Primitive and type-ref member kinds are reserved for a future union extension
+// (e.g. `choice<text|[[tag]]>`).
+export type ChoiceMember = { kind: 'literal'; value: string };
+
+export type CollectionTypeName =
+  | { kind: 'list'; of: ListItemType }
+  | { kind: 'choice'; members: ChoiceMember[] };
+
+export type PropertyTypeName =
+  | PrimitiveTypeName
+  | TypeReference
+  | CollectionTypeName;
 
 export type PropertySchema = {
   type: PropertyTypeName;
@@ -72,6 +86,7 @@ export type ParseErrorKind =
   | 'parser:invalid-property-key'
   | 'parser:unknown-property-type'
   | 'parser:invalid-type-reference'
+  | 'parser:invalid-enum'
   | 'parser:invalid-property-schema'
   | 'parser:invalid-default'
   | 'parser:duplicate-template-block'

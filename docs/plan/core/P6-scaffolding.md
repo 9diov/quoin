@@ -56,8 +56,9 @@ Parser already guarantees that a parsed `default` is locally valid for its decla
 Rules:
 
 - Include primitive defaults as-is.
-- Include `list<X>` defaults as arrays of Wiki Links.
-- Include `choice<Y>` defaults as a single Wiki Link string.
+- Include top-level `[[name]]` defaults as a single Wiki Link string.
+- Include `list<X>` defaults as arrays — items are Wiki Link strings when `X` is a Type Reference, or raw primitive values when `X` is a primitive.
+- Include `choice<"a"|"b"|"c">` defaults as a single string equal to one of the declared literal members' `value`.
 - Treat `default: null`, `default: ''`, and `default: []` as valid defaults when they survived Parser.
 - Detect a declared default by schema key presence, not by truthiness.
 

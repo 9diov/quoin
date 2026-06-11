@@ -33,7 +33,7 @@ Property keys declared in Type Definition Documents must match `[a-z0-9_-]`, be 
 _Avoid_: Field, variable, attribute, key
 
 **Wiki Link**:
-A Property value in the form `[[TargetDocument]]` — an internal reference to another Document in the same vault or repository. Used by Collection Types (`list<X>`, `choice<Y>`) as the value format for Type References.
+A Property value in the form `[[TargetDocument]]` — an internal reference to another Document in the same vault or repository. Used by Type References (`type: "[[name]]"`, `list<[[name]]>`) and by primitive `wiki-link` Properties.
 _Avoid_: Internal link, wikilink, link
 
 **External Link**:
@@ -69,11 +69,11 @@ The pure data structure returned by the Core after a Scaffolding operation — d
 _Avoid_: Patch, diff, update
 
 **Collection Type**:
-A Property type that wraps a Type Reference — currently `list<X>` (ordered list of links to Documents of type X) and `choice<Y>` (a single link to a Document of type Y). The only two forms supported; no maps, sets, or other containers.
+A Property type that takes an inner form in angle brackets — currently `list<X>` (ordered list whose items are primitives or Type References) and `choice<"a"|"b"|"c">` (a literal enum: value must equal one of the listed quoted string literals exactly). The only two forms supported; no maps, sets, or other containers. The `choice<...>` grammar reserves room for a future union extension (`choice<text|[[tag]]>`); v1 accepts quoted literals only.
 _Avoid_: Container type, compound type, generic type
 
 **Type Reference**:
-A named reference to a Type Definition Document used as a constraint within a Property's type declaration (e.g. `list<skill>`, `choice<level>`).
+A named reference to a Type Definition Document used inside a Property's type declaration, spelled as a bare Wiki Link `[[name]]`. Appears at the top level (`type: "[[skill]]"` — a single typed link) or inside a list (`list<[[skill]]>` — items are typed links). `name` is a canonical identifier matching `TypeDefinitionDocumentIdentity.name`.
 _Avoid_: Type parameter, type argument, linked type
 
 **Untyped Document**:
@@ -85,11 +85,11 @@ A user-authored Type Definition Document whose `TypeDefinitionDocumentIdentity.n
 _Avoid_: Schema of schemas, root type, type-of-types
 
 **Link Resolution**:
-The standard Validation stage after Wiki Link shape validation — resolving a Wiki Link to a Document, or returning a precise reason resolution failed. Runs for present, non-empty `wiki-link`, `list<X>`, and `choice<Y>` values that pass shape validation.
+The standard Validation stage after Wiki Link shape validation — resolving a Wiki Link to a Document, or returning a precise reason resolution failed. Runs for present, non-empty `wiki-link`, top-level `[[name]]`, and `list<X>` items (whether `X` is `wiki-link` or `[[name]]`) that pass shape validation.
 _Avoid_: Link checking, link validation
 
 **Referential Validation**:
-The opt-in Collection Type validation stage after Link Resolution — checking that the target Document conforms to the Type Reference declared in the schema (e.g. a `list<skill>` entry must conform to the `skill` type). Applies only to `list<X>` and `choice<Y>`, not primitive `wiki-link`. Opt-in via Validation Config, as it requires TypeRegistry lookup and can be expensive at scale.
+The opt-in Validation stage after Link Resolution — checking that the target Document conforms to the Type Reference declared in the schema (e.g. a `list<[[skill]]>` entry must conform to the `skill` type). Applies only to typed references — top-level `[[name]]` and `list<[[name]]>` — not primitive `wiki-link`, `list<wiki-link>`, or enum `choice<"a"|"b"|"c">`. Opt-in via Validation Config, as it requires TypeRegistry lookup and can be expensive at scale.
 _Avoid_: Deep validation, type validation, reference checking
 
 **Validation Config**:
@@ -126,7 +126,7 @@ The pure result returned by a Resolver. Describes whether a Wiki Link resolved t
 _Avoid_: Resolver output, lookup result, resolved link
 
 **TypeRegistry**:
-A lookup interface injected by the Integration into the Core for Referential Validation. Resolves Type References from Collection Types and Type Declarations from target Document frontmatter to Type Definition Documents. The Core compares resolved Type Definition Document identity, not raw Type Declaration strings.
+A lookup interface injected by the Integration into the Core for Referential Validation. Resolves Type References declared by Property schemas (top-level `[[name]]`, `list<[[name]]>`) and Type Declarations from target Document frontmatter to Type Definition Documents. The Core compares resolved Type Definition Document identity, not raw Type Declaration strings.
 _Avoid_: Type store, schema registry, definition loader
 
 **Integration**:
