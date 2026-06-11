@@ -2,9 +2,32 @@
   "name": "quoin",
   "version": "0.1.0",
   "description": "Quoin is a type system for Markdown files that validates frontmatter properties against Markdown-defined schemas.",
+  "license": "MIT",
   "type": "module",
-  "private": true,
+  "private": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "quoin": "./dist/integration/node-cli/index.js"
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
+    "build": "tsc -p tsconfig.build.json && node scripts/fix-cli-bin.mjs",
+    "prepack": "npm run build",
+    "smoke:pack": "node scripts/package-smoke-test.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",

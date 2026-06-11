@@ -2,6 +2,22 @@
 
 Quoin, pronounced *coin*, is a type system for Markdown files that validates YAML frontmatter Properties against schemas declared in Markdown Type Definition Documents.
 
+## Install
+
+For local packaging verification:
+
+```sh
+npm run build
+TARBALL="$(npm pack --quiet | tail -1)"
+npm install -g "./$TARBALL"
+```
+
+For source checkout development:
+
+```sh
+npm run cli -- --help
+```
+
 ## What it does
 
 - **Type Definition Documents** live in `types/*.md` and declare schemas under `## Schema`

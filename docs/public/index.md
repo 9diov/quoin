@@ -11,6 +11,13 @@ A quoin is a wedge used to lock type into a printing chase.
 ### 1. Install
 
 ```sh
+TARBALL="$(npm pack --quiet | tail -1)"
+npm install -g "./$TARBALL"
+```
+
+Once Quoin is published to the npm registry, this becomes:
+
+```sh
 npm install -g quoin
 ```
 
