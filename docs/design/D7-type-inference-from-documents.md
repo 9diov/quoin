@@ -318,4 +318,18 @@ The `create` command (D5) is unaffected. Inference is purely a new entry point.
 - [D5 — Node CLI Integration](D5-node-cli-integration.md): adds the `infer` subcommand alongside `create`, `types`, and `validate`. Reuses the same project-root resolution, glob engine, and config-loading machinery.
 - [D6 — Path-Glob Type Bindings](D6-path-glob-type-bindings.md): complementary. D6 binds existing types to Documents (read-side); D7 produces new types from Documents (write-side). They do not interact: bindings are not consulted during inference, and inferred Type Definition Documents are picked up by D6 only insofar as the user wires them in afterward.
 - ADR-0005 (Functional Core / Imperative Shell): preserved. Inference and rendering are pure; the Integration handles the file I/O.
+
+## Design Principle Violations
+
+**DP8 — Silent `text` fallback for empty-only scalars** (type-detection ladder, empty observation)
+
+When a scalar property is observed only as empty across all input Documents, the inferred type silently defaults to `text` with no diagnostic emitted: "For scalars, the `text`-fallback is silent; the user can narrow." DP8 requires that output be fully explainable. A silent fallback produces a result the user cannot trace back to an explicit policy.
+
+**DP7 — Silent BOM stripping** (input normalisation)
+
+BOM characters are stripped from input without surfacing the normalisation: "BOMs are stripped silently." DP7 requires that host-specific input conventions be surfaced explicitly rather than silently absorbed. A caller that passes BOM-prefixed content receives no signal that the input was modified before inference ran.
+
+**DP9 — Hardcoded URL detection policy** (type-detection ladder, `allowedUrlSchemes`)
+
+The URL detection step matches `http://`, `https://`, and `mailto:` by default and acknowledges the policy is "configurable via Parser's `allowedUrlSchemes` in a future revision" — meaning it is not currently configurable. DP9 requires that features depending on judgment or host-specific taste either expose their policy explicitly or be deferred. A hardcoded, unexposed policy is neither.
 - ADR-0008 (Type Definition Document self-identifies via frontmatter): preserved. The rendered output begins with `_type: type` under the configured Type Declaration key, and the input-filtering step uses the same marker to exclude existing Type Definition Documents from the inference set.

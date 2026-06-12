@@ -584,4 +584,10 @@ Rejected required markers:
 ## Definitions <!-- required=true -->
 ```
 
+## Design Principle Violation
+
+**DP7 — Host-specific convention baked into Core** (property key syntax, rationale at the `[a-z0-9_-]` constraint)
+
+The lowercase-only property key rule is justified by Obsidian's silent-lowercasing behaviour: "Obsidian (primary Integration target) silently lowercases all Property keys on save. Allowing mixed-case keys in schemas would cause phantom Validation Errors on Obsidian." This embeds a host-specific normalisation as a universal Core constraint rather than surfacing the collision at the Integration layer. DP7 requires that host conventions be permitted at the Integration layer but never silently absorbed into Core behaviour.
+
 Duplicate required Section identities inside a Template Block are Parser errors. Duplicate non-required Section identities are allowed.

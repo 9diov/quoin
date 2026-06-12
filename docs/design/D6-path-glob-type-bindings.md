@@ -166,4 +166,10 @@ A `validated` outcome carries no marker indicating whether the type came from fr
 - [D3 — Validation Semantics](D3-validation-semantics.md): unchanged. Bindings affect which Type Definition Document is selected, not how validation runs.
 - [D4 — Integration Contracts](D4-integration-contracts.md): bindings extend Root Type Dispatch with a new pre-resolution step.
 - [D5 — Node CLI Integration](D5-node-cli-integration.md): the Node CLI gains a `bindings` config field and two new per-target diagnostics.
+
+## Design Principle Violation
+
+**DP8 — Silent ignore of glob match on a Type Definition Document** (binding resolution, exclusion rule)
+
+When a glob matches a Type Definition Document, the match is silently discarded: "the glob match is silently ignored for that file. A future lint may warn." DP8 requires that every operation produce fully explainable output and that ambiguity be reported rather than silently resolved. An ignored match is invisible to the author and provides no basis for diagnosing a misconfigured binding.
 - ADR-0008: bindings do not change Type Definition discovery; the literal `type` value under the configured Type Declaration key remains the only Type Definition identifier.
