@@ -13,6 +13,8 @@
 
 ## To do
 
+* [ ] (Implementation) Land the property-based testing first iteration described in [P18](P18-property-based-testing-first-iteration.md)
+  Output: `test/property/**`, `fast-check` dev dependencies
 * [ ] (Design) Design the future `repair()` capability referenced in [D1](../design/D1-architecture.md)
   Output: repair design doc
 * [ ] (Planning) Break `infer` implementation into numbered execution plans
@@ -48,6 +50,8 @@
   Output: [P16](P16-rename-to-quoin.md)
 * [x] (Planning) Build package for npm
   Output: [P17](P17-build-package-for-npm.md)
+* [x] (Planning) Property-based testing first iteration
+  Output: [P18](P18-property-based-testing-first-iteration.md)
 
 * [x] (Implementation) Build the pure core and validation stack
   Output: `src/core/**`, `test/parser/**`, `test/validation/**`, `test/scaffold/**`, `test/template/**`
