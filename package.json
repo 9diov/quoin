@@ -29,11 +29,16 @@
     "prepack": "npm run build",
     "smoke:pack": "node scripts/package-smoke-test.mjs",
     "typecheck": "tsc --noEmit",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "check": "npm run lint && npm run typecheck && npm run test",
     "test": "vitest run",
     "test:watch": "vitest",
     "cli": "tsx src/integration/node-cli/index.ts"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.5.0",
     "@types/micromatch": "^4.0.10",
     "@types/node": "^25.9.2",
     "tsx": "^4.22.4",

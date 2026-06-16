@@ -1,11 +1,19 @@
-import type { IntegrationName } from '../validation.js';
 import type { Schema } from '../parser.js';
+import type { IntegrationName, ValidationWarning } from '../validation.js';
 import { validationWarning } from './errors.js';
-import type { ValidationWarning } from '../validation.js';
 
 const RESERVED_PROPERTIES: Record<IntegrationName, ReadonlySet<string>> = {
   obsidian: new Set(['tags', 'aliases', 'cssclasses', 'publish']),
-  hugo: new Set(['title', 'date', 'draft', 'aliases', 'description', 'categories', 'tags', 'weight']),
+  hugo: new Set([
+    'title',
+    'date',
+    'draft',
+    'aliases',
+    'description',
+    'categories',
+    'tags',
+    'weight',
+  ]),
   jekyll: new Set(['layout', 'title', 'date', 'categories', 'tags', 'published']),
   gitbook: new Set(['title', 'layout', 'description', 'type']),
   docusaurus: new Set([

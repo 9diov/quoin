@@ -1,20 +1,18 @@
-import { describe, expect, it } from 'vitest';
-import { mkdtemp, writeFile, rm, symlink, mkdir } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
+import { mkdir, mkdtemp, rm, symlink, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
+import { dirname, join } from 'node:path';
+import { describe, expect, it } from 'vitest';
 
 import {
-  discoverMarkdownFiles,
-  ingestMarkdownFiles,
   discoverAndIngest,
-  isTypeDefinitionCandidate,
+  discoverMarkdownFiles,
   filterTypeDefinitionCandidates,
   type IngestedMarkdown,
+  ingestMarkdownFiles,
+  isTypeDefinitionCandidate,
 } from '../../../src/integration/node-cli/ingestion.js';
 
-async function createTempProject(
-  files: Record<string, string | null>,
-): Promise<string> {
+async function createTempProject(files: Record<string, string | null>): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), 'mts-ingest-'));
   for (const [relPath, content] of Object.entries(files)) {
     const fullPath = join(dir, relPath);
@@ -76,11 +74,11 @@ describe('discoverMarkdownFiles', () => {
       'dist/bundle.md': 'content',
     });
     try {
-      const paths = await discoverMarkdownFiles(dir, ['**/*.md'], [
-        'node_modules/**',
-        '.git/**',
-        'dist/**',
-      ]);
+      const paths = await discoverMarkdownFiles(
+        dir,
+        ['**/*.md'],
+        ['node_modules/**', '.git/**', 'dist/**'],
+      );
       expect(paths).toEqual(['a.md']);
     } finally {
       await rm(dir, { recursive: true, force: true });
@@ -207,12 +205,7 @@ describe('ingestMarkdownFiles', () => {
     try {
       const results = await ingestMarkdownFiles(dir, ['doc.md']);
       expect(results).toHaveLength(1);
-      expectDocument(
-        results[0]!,
-        'doc.md',
-        {},
-        '--- title\n\n## Body content.',
-      );
+      expectDocument(results[0]!, 'doc.md', {}, '--- title\n\n## Body content.');
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
@@ -225,12 +218,7 @@ describe('ingestMarkdownFiles', () => {
     try {
       const results = await ingestMarkdownFiles(dir, ['doc.md']);
       expect(results).toHaveLength(1);
-      expectDocument(
-        results[0]!,
-        'doc.md',
-        {},
-        '# Just a heading',
-      );
+      expectDocument(results[0]!, 'doc.md', {}, '# Just a heading');
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
@@ -301,12 +289,7 @@ describe('ingestMarkdownFiles', () => {
     try {
       const results = await ingestMarkdownFiles(dir, ['doc.md']);
       expect(results).toHaveLength(1);
-      expectDocument(
-        results[0]!,
-        'doc.md',
-        { title: '--- separator ---', desc: 'text' },
-        'Body.',
-      );
+      expectDocument(results[0]!, 'doc.md', { title: '--- separator ---', desc: 'text' }, 'Body.');
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
@@ -371,11 +354,7 @@ describe('ingestMarkdownFiles', () => {
       'plain.md': '# No frontmatter',
     });
     try {
-      const results = await ingestMarkdownFiles(dir, [
-        'good.md',
-        'bad.md',
-        'plain.md',
-      ]);
+      const results = await ingestMarkdownFiles(dir, ['good.md', 'bad.md', 'plain.md']);
       expect(results).toHaveLength(3);
       expectDocument(results[0]!, 'good.md', { title: 'OK' }, 'Body.');
       expectIngestFailure(results[1]!, 'bad.md', 'frontmatter');
@@ -460,10 +439,7 @@ describe('filterTypeDefinitionCandidates', () => {
 
     const candidates = filterTypeDefinitionCandidates(results, '_type');
     expect(candidates).toHaveLength(2);
-    expect(candidates.map((c) => c.path)).toEqual([
-      'types/Concept.md',
-      'types/Skill.md',
-    ]);
+    expect(candidates.map((c) => c.path)).toEqual(['types/Concept.md', 'types/Skill.md']);
   });
 
   it('returns empty array when no candidates', () => {
@@ -497,7 +473,7 @@ describe('discoverAndIngest', () => {
       expect(paths).toEqual(['one.md', 'two.md']);
       const failures = results.filter((r) => r.kind === 'ingest-failure');
       expect(failures).toHaveLength(1);
-      expect((failures[0]!).path).toBe('three.md');
+      expect(failures[0]!.path).toBe('three.md');
     } finally {
       await rm(dir, { recursive: true, force: true });
     }

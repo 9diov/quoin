@@ -1,16 +1,7 @@
 import type { EffectiveConfig } from './config.js';
-import {
-  runValidate,
-  formatValidateHuman,
-  formatValidateJson,
-} from './validate.js';
-import {
-  runCreate,
-  createExitCode,
-  formatCreateHuman,
-  formatCreateJson,
-} from './create.js';
-import { runTypes, formatTypesHuman, formatTypesJson } from './types.js';
+import { createExitCode, formatCreateHuman, formatCreateJson, runCreate } from './create.js';
+import { formatTypesHuman, formatTypesJson, runTypes } from './types.js';
+import { formatValidateHuman, formatValidateJson, runValidate } from './validate.js';
 
 export type CommandIntent =
   | { kind: 'validate'; config: EffectiveConfig; exitCode: number }

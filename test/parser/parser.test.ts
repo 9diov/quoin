@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  parseTypeDefinitionDocument,
   type ParseError,
   type ParseResult,
+  parseTypeDefinitionDocument,
   type TypeDefinitionDocumentIdentity,
 } from '../../src/index.js';
 
@@ -95,7 +95,7 @@ properties:
     if (result.kind !== 'ok') return;
     expect(result.typeDef.id).toBe('types/Concept.md');
     expect(result.typeDef.name).toBe('concept');
-    expect(result.typeDef.schema.properties['description']).toEqual({
+    expect(result.typeDef.schema.properties.description).toEqual({
       type: 'text',
       required: true,
     });
@@ -195,7 +195,7 @@ describe('P010–P014 — Schema strictness', () => {
     const result = parse(body);
     expect(result.kind).toBe('ok');
     if (result.kind !== 'ok') return;
-    expect(result.typeDef.schema.properties['tags']?.type).toEqual({
+    expect(result.typeDef.schema.properties.tags?.type).toEqual({
       kind: 'list',
       of: { kind: 'primitive', name: 'text' },
     });
@@ -206,7 +206,7 @@ describe('P010–P014 — Schema strictness', () => {
     const result = parse(body);
     expect(result.kind).toBe('ok');
     if (result.kind !== 'ok') return;
-    expect(result.typeDef.schema.properties['level']?.type).toEqual({
+    expect(result.typeDef.schema.properties.level?.type).toEqual({
       kind: 'type-ref',
       name: 'level',
     });
@@ -217,7 +217,7 @@ describe('P010–P014 — Schema strictness', () => {
     const result = parse(body);
     expect(result.kind).toBe('ok');
     if (result.kind !== 'ok') return;
-    expect(result.typeDef.schema.properties['status']?.type).toEqual({
+    expect(result.typeDef.schema.properties.status?.type).toEqual({
       kind: 'choice',
       members: [
         { kind: 'literal', value: 'draft' },
@@ -232,7 +232,7 @@ describe('P010–P014 — Schema strictness', () => {
     const result = parse(body);
     expect(result.kind).toBe('ok');
     if (result.kind !== 'ok') return;
-    expect(result.typeDef.schema.properties['status']?.type).toEqual({
+    expect(result.typeDef.schema.properties.status?.type).toEqual({
       kind: 'choice',
       members: [
         { kind: 'literal', value: 'draft' },
@@ -246,7 +246,7 @@ describe('P010–P014 — Schema strictness', () => {
     const result = parse(body);
     expect(result.kind).toBe('ok');
     if (result.kind !== 'ok') return;
-    expect(result.typeDef.schema.properties['status']?.type).toEqual({
+    expect(result.typeDef.schema.properties.status?.type).toEqual({
       kind: 'choice',
       members: [
         { kind: 'literal', value: 'draft' },
@@ -279,7 +279,7 @@ describe('P020–P022 — Defaults', () => {
     const err = findError(errors, 'parser:invalid-default');
     expect(err).toBeDefined();
     expect(err?.location).toEqual({ scope: 'property', property: 'level' });
-    expect(err?.details?.['expected']).toBe('wiki-link');
+    expect(err?.details?.expected).toBe('wiki-link');
   });
 
   it('P021: empty default must obey allow-empty', () => {
@@ -288,7 +288,7 @@ describe('P020–P022 — Defaults', () => {
     const err = findError(errors, 'parser:invalid-default');
     expect(err).toBeDefined();
     expect(err?.location).toEqual({ scope: 'property', property: 'description' });
-    expect(err?.details?.['reason']).toBe('empty-not-allowed');
+    expect(err?.details?.reason).toBe('empty-not-allowed');
   });
 
   it('P022: empty default allowed when allow-empty is true', () => {
@@ -302,7 +302,7 @@ describe('P020–P022 — Defaults', () => {
     const errors = expectErrors(parse(body));
     const err = findError(errors, 'parser:invalid-default');
     expect(err).toBeDefined();
-    expect(err?.details?.['expected']).toBe('date');
+    expect(err?.details?.expected).toBe('date');
   });
 
   it('P022e: datetime default accepts HH:MM with timezone (seconds optional)', () => {
@@ -316,7 +316,7 @@ describe('P020–P022 — Defaults', () => {
     const errors = expectErrors(parse(body));
     const err = findError(errors, 'parser:invalid-default');
     expect(err).toBeDefined();
-    expect(err?.details?.['expected']).toBe('datetime');
+    expect(err?.details?.expected).toBe('datetime');
   });
 });
 
@@ -393,7 +393,7 @@ describe('URL defaults reject unparseable targets', () => {
     const errors = expectErrors(parse(body));
     const err = findError(errors, 'parser:invalid-default');
     expect(err).toBeDefined();
-    expect(err?.details?.['expected']).toBe('url');
+    expect(err?.details?.expected).toBe('url');
   });
 
   it('accepts a well-formed https URL', () => {

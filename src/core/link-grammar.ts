@@ -77,7 +77,7 @@ export function parseExternalLink(
   }
 
   const schemeMatch = /^([a-zA-Z][a-zA-Z0-9+.-]*):/.exec(url);
-  if (!schemeMatch || !schemeMatch[1]) {
+  if (!schemeMatch?.[1]) {
     return { kind: 'invalid', reason: 'missing-scheme' };
   }
   const scheme = schemeMatch[1].toLowerCase();

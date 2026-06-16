@@ -1,7 +1,7 @@
 import type { TemplateBlock } from '../parser.js';
 import { extractAtxHeadings } from '../section-parser.js';
-import { validationWarning } from './errors.js';
 import type { ValidationWarning } from '../validation.js';
+import { validationWarning } from './errors.js';
 
 export function validateSections(
   body: string,

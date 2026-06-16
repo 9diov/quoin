@@ -1,7 +1,6 @@
 import { readFile } from 'node:fs/promises';
-import { join, dirname, resolve } from 'node:path';
-import { isAbsolute } from 'node:path';
-import { parse as parseJsonc, printParseErrorCode, type ParseError } from 'jsonc-parser';
+import { dirname, isAbsolute, join, resolve } from 'node:path';
+import { type ParseError, parse as parseJsonc, printParseErrorCode } from 'jsonc-parser';
 
 import type { UntypedDocumentBehavior } from '../../core/validation.js';
 import type { TypeBinding } from './bindings.js';
@@ -76,9 +75,7 @@ export function defaultEffectiveConfig(cwd: string): EffectiveConfig {
 }
 
 /** Stable JSON snapshot of the effective config, shared by all command outputs. */
-export function serializeEffectiveConfig(
-  config: EffectiveConfig,
-): Record<string, unknown> {
+export function serializeEffectiveConfig(config: EffectiveConfig): Record<string, unknown> {
   return {
     root: config.root,
     include: config.include,
@@ -144,14 +141,14 @@ function validateBindings(value: unknown): TypeBinding[] {
       );
     }
 
-    const type = obj['type'];
+    const type = obj.type;
     if (typeof type !== 'string' || !CANONICAL_TYPE_NAME.test(type)) {
       throw new ConfigValidationError(
         `Config "bindings[${index}].type" must be a canonical type name.`,
       );
     }
 
-    const match = obj['match'];
+    const match = obj.match;
     if (typeof match !== 'string' || match.trim().length === 0) {
       throw new ConfigValidationError(
         `Config "bindings[${index}].match" must be a non-empty string.`,
@@ -179,46 +176,42 @@ function parseConfig(raw: unknown): NodeCliConfig {
   const obj = raw as Record<string, unknown>;
   const result: NodeCliConfig = {};
 
-  const root = coerceString(obj['root']);
+  const root = coerceString(obj.root);
   if (root !== undefined) result.root = root;
 
-  const include = coerceStringArray(obj['include']);
+  const include = coerceStringArray(obj.include);
   if (include !== undefined) result.include = include;
 
-  const exclude = coerceStringArray(obj['exclude']);
+  const exclude = coerceStringArray(obj.exclude);
   if (exclude !== undefined) result.exclude = exclude;
 
   if (Object.hasOwn(obj, 'bindings')) {
-    result.bindings = validateBindings(obj['bindings']);
+    result.bindings = validateBindings(obj.bindings);
   }
 
-  const typeDeclarationKey = coerceString(obj['typeDeclarationKey']);
-  if (typeDeclarationKey !== undefined)
-    result.typeDeclarationKey = typeDeclarationKey;
+  const typeDeclarationKey = coerceString(obj.typeDeclarationKey);
+  if (typeDeclarationKey !== undefined) result.typeDeclarationKey = typeDeclarationKey;
 
-  const allowedUrlSchemes = coerceStringArray(obj['allowedUrlSchemes']);
-  if (allowedUrlSchemes !== undefined)
-    result.allowedUrlSchemes = allowedUrlSchemes;
+  const allowedUrlSchemes = coerceStringArray(obj.allowedUrlSchemes);
+  if (allowedUrlSchemes !== undefined) result.allowedUrlSchemes = allowedUrlSchemes;
 
-  const untypedBehavior = obj['untypedDocumentBehavior'];
-  if (isValidUntypedBehavior(untypedBehavior))
-    result.untypedDocumentBehavior = untypedBehavior;
+  const untypedBehavior = obj.untypedDocumentBehavior;
+  if (isValidUntypedBehavior(untypedBehavior)) result.untypedDocumentBehavior = untypedBehavior;
 
-  const referentialValidation = coerceBoolean(obj['referentialValidation']);
-  if (referentialValidation !== undefined)
-    result.referentialValidation = referentialValidation;
+  const referentialValidation = coerceBoolean(obj.referentialValidation);
+  if (referentialValidation !== undefined) result.referentialValidation = referentialValidation;
 
-  const resolverRaw = obj['resolver'] as Record<string, unknown> | undefined;
+  const resolverRaw = obj.resolver as Record<string, unknown> | undefined;
   if (resolverRaw) {
-    const strategy = coerceString(resolverRaw['strategy']);
+    const strategy = coerceString(resolverRaw.strategy);
     if (strategy === 'basename') {
       result.resolver = { strategy };
     }
   }
 
-  const outputRaw = obj['output'] as Record<string, unknown> | undefined;
+  const outputRaw = obj.output as Record<string, unknown> | undefined;
   if (outputRaw) {
-    const format = outputRaw['format'];
+    const format = outputRaw.format;
     if (isValidOutputFormat(format)) {
       result.output = { format };
     }
@@ -232,9 +225,7 @@ export async function loadConfigFile(configPath: string): Promise<NodeCliConfig>
   const errors: ParseError[] = [];
   const parsed = parseJsonc(raw, errors);
   if (errors.length > 0) {
-    const messages = errors.map(
-      (e) => `${printParseErrorCode(e.error)} at offset ${e.offset}`,
-    );
+    const messages = errors.map((e) => `${printParseErrorCode(e.error)} at offset ${e.offset}`);
     throw new ConfigLoadError(
       `Failed to parse config file "${configPath}": ${messages.join('; ')}`,
       errors,
@@ -246,18 +237,12 @@ export async function loadConfigFile(configPath: string): Promise<NodeCliConfig>
 export async function findConfigFile(startDir: string): Promise<string | null> {
   const searchPath = resolve(startDir);
 
-  for (
-    let dir: string = searchPath;
-    dir !== dirname(dir);
-    dir = dirname(dir)
-  ) {
+  for (let dir: string = searchPath; dir !== dirname(dir); dir = dirname(dir)) {
     const candidate = join(dir, CONFIG_FILE_NAME);
     try {
       await readFile(candidate, 'utf-8');
       return candidate;
-    } catch {
-      continue;
-    }
+    } catch {}
   }
 
   const rootCandidate = join('/', CONFIG_FILE_NAME);
@@ -281,19 +266,14 @@ export function resolveEffectiveConfig(
 ): EffectiveConfig {
   const defaults = defaultEffectiveConfig(cwd);
 
-  const configBaseDir =
-    configFilePath !== null ? dirname(configFilePath) : cwd;
+  const configBaseDir = configFilePath !== null ? dirname(configFilePath) : cwd;
 
   let root: string;
 
   if (overrides.root !== undefined) {
-    root = isAbsolute(overrides.root)
-      ? resolve(overrides.root)
-      : resolve(cwd, overrides.root);
+    root = isAbsolute(overrides.root) ? resolve(overrides.root) : resolve(cwd, overrides.root);
   } else if (config?.root !== undefined) {
-    root = isAbsolute(config.root)
-      ? resolve(config.root)
-      : resolve(configBaseDir, config.root);
+    root = isAbsolute(config.root) ? resolve(config.root) : resolve(configBaseDir, config.root);
   } else if (configFilePath !== null) {
     root = resolve(dirname(configFilePath));
   } else {
@@ -305,21 +285,14 @@ export function resolveEffectiveConfig(
     include: config?.include ?? defaults.include,
     exclude: config?.exclude ?? defaults.exclude,
     bindings: config?.bindings ?? defaults.bindings,
-    typeDeclarationKey:
-      config?.typeDeclarationKey ?? defaults.typeDeclarationKey,
-    allowedUrlSchemes:
-      config?.allowedUrlSchemes ?? defaults.allowedUrlSchemes,
-    untypedDocumentBehavior:
-      config?.untypedDocumentBehavior ?? defaults.untypedDocumentBehavior,
+    typeDeclarationKey: config?.typeDeclarationKey ?? defaults.typeDeclarationKey,
+    allowedUrlSchemes: config?.allowedUrlSchemes ?? defaults.allowedUrlSchemes,
+    untypedDocumentBehavior: config?.untypedDocumentBehavior ?? defaults.untypedDocumentBehavior,
     referentialValidation:
       overrides.referentialValidation ??
       config?.referentialValidation ??
       defaults.referentialValidation,
-    resolverStrategy:
-      config?.resolver?.strategy ?? defaults.resolverStrategy,
-    outputFormat:
-      overrides.format ??
-      config?.output?.format ??
-      defaults.outputFormat,
+    resolverStrategy: config?.resolver?.strategy ?? defaults.resolverStrategy,
+    outputFormat: overrides.format ?? config?.output?.format ?? defaults.outputFormat,
   };
 }

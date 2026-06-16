@@ -1,13 +1,13 @@
-import { describe, expect, it } from 'vitest';
 import { readFile, rm, stat } from 'node:fs/promises';
 import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
 
 import {
-  runCreate,
   createExitCode,
+  runCreate,
   serializeDocument,
 } from '../../../src/integration/node-cli/create.js';
-import { defaultConfig, createTempProject } from './helpers.js';
+import { createTempProject, defaultConfig } from './helpers.js';
 
 const CONCEPT_NO_TEMPLATE = `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  title:\n    type: text\n\`\`\`\n`;
 
@@ -74,9 +74,7 @@ describe('runCreate', () => {
       expect(result.kind).toBe('created');
 
       const written = await readFile(join(dir, 'a.md'), 'utf-8');
-      expect(written).toBe(
-        '---\n_type: "[[Concept]]"\n---\n\n## Summary\n\nWrite here.\n',
-      );
+      expect(written).toBe('---\n_type: "[[Concept]]"\n---\n\n## Summary\n\nWrite here.\n');
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
@@ -87,11 +85,7 @@ describe('runCreate', () => {
       'types/Concept.md': CONCEPT_NO_TEMPLATE,
     });
     try {
-      const result = await runCreate(
-        defaultConfig(dir),
-        'concept',
-        'deeply/nested/dir/a.md',
-      );
+      const result = await runCreate(defaultConfig(dir), 'concept', 'deeply/nested/dir/a.md');
       expect(result.kind).toBe('created');
       const fileStat = await stat(join(dir, 'deeply/nested/dir/a.md'));
       expect(fileStat.isFile()).toBe(true);
@@ -121,11 +115,7 @@ describe('runCreate', () => {
       'types/Concept.md': CONCEPT_NO_TEMPLATE,
     });
     try {
-      const result = await runCreate(
-        defaultConfig(dir),
-        'concept',
-        '../escape.md',
-      );
+      const result = await runCreate(defaultConfig(dir), 'concept', '../escape.md');
       expect(result.kind).toBe('output-invalid');
       expect(createExitCode(result)).toBe(1);
     } finally {
@@ -216,12 +206,7 @@ describe('serializeDocument', () => {
   });
 
   it('preserves key insertion order deterministically', () => {
-    const out = serializeDocument(
-      { _type: '[[Concept]]', status: 'draft', title: 'Hi' },
-      '',
-    );
-    expect(out).toBe(
-      '---\n_type: "[[Concept]]"\nstatus: draft\ntitle: Hi\n---\n',
-    );
+    const out = serializeDocument({ _type: '[[Concept]]', status: 'draft', title: 'Hi' }, '');
+    expect(out).toBe('---\n_type: "[[Concept]]"\nstatus: draft\ntitle: Hi\n---\n');
   });
 });

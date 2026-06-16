@@ -7,7 +7,7 @@ type OutputState = {
   [ENABLED]: boolean;
 };
 
-let state: OutputState = { format: 'human', [ENABLED]: true };
+const state: OutputState = { format: 'human', [ENABLED]: true };
 
 export function setOutputFormat(format: OutputFormat): void {
   state.format = format;

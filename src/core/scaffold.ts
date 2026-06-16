@@ -10,9 +10,7 @@ export function scaffold(
 ): ScaffoldingResult {
   const properties: Record<string, unknown> = {};
 
-  for (const [key, propertySchema] of Object.entries(
-    typeDef.schema.properties,
-  )) {
+  for (const [key, propertySchema] of Object.entries(typeDef.schema.properties)) {
     if (!propertySchema) continue;
 
     if (Object.hasOwn(frontmatter, key)) continue;

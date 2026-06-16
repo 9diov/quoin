@@ -1,23 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  extractAtxHeadings,
-  parseTemplateSections,
-} from '../../src/core/section-parser.js';
+import { extractAtxHeadings, parseTemplateSections } from '../../src/core/section-parser.js';
 
 describe('extractAtxHeadings — levels and order', () => {
   it('returns ATX headings at every level with correct depth', () => {
     const md = `# One\n\n## Two\n\n### Three\n\n#### Four\n\n##### Five\n\n###### Six\n`;
     const headings = extractAtxHeadings(md);
     expect(headings.map((h) => h.level)).toEqual([1, 2, 3, 4, 5, 6]);
-    expect(headings.map((h) => h.heading)).toEqual([
-      'One',
-      'Two',
-      'Three',
-      'Four',
-      'Five',
-      'Six',
-    ]);
+    expect(headings.map((h) => h.heading)).toEqual(['One', 'Two', 'Three', 'Four', 'Five', 'Six']);
   });
 
   it('preserves source order', () => {

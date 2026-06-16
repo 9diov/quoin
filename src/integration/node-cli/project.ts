@@ -1,25 +1,22 @@
-import type { ParsedTypeDefinitionDocument } from '../../core/parser.js';
 import type { Resolver, TypeRegistry } from '../../core/integration.js';
+import type { ParsedTypeDefinitionDocument } from '../../core/parser.js';
 
 import type { EffectiveConfig } from './config.js';
 import {
   discoverMarkdownFiles,
+  type IngestedMarkdown,
   ingestMarkdownFiles,
   isTypeDefinitionCandidate,
-  type IngestedMarkdown,
 } from './ingestion.js';
 import {
   createResolver,
   createTypeRegistry,
-  parseTypeCandidates,
   type ParseFailure,
+  parseTypeCandidates,
 } from './lookup.js';
 
 export type IngestedDocument = Extract<IngestedMarkdown, { kind: 'document' }>;
-export type IngestFailure = Extract<
-  IngestedMarkdown,
-  { kind: 'ingest-failure' }
->;
+export type IngestFailure = Extract<IngestedMarkdown, { kind: 'ingest-failure' }>;
 
 /**
  * The full project-scoped Markdown universe, built once per command run.
@@ -38,14 +35,8 @@ export type ProjectUniverse = {
   resolver: Resolver;
 };
 
-export async function buildProjectUniverse(
-  config: EffectiveConfig,
-): Promise<ProjectUniverse> {
-  const allPaths = await discoverMarkdownFiles(
-    config.root,
-    config.include,
-    config.exclude,
-  );
+export async function buildProjectUniverse(config: EffectiveConfig): Promise<ProjectUniverse> {
+  const allPaths = await discoverMarkdownFiles(config.root, config.include, config.exclude);
 
   const ingestionResults = await ingestMarkdownFiles(config.root, allPaths);
 

@@ -1,9 +1,8 @@
 import { isValidWikiLinkShape, parseExternalLink } from '../link-grammar.js';
-import { isCanonicalDate, isIso8601WithTimezone } from '../primitive-grammar.js';
-import { isValueEmpty } from './emptiness.js';
-import { validationError } from './errors.js';
 import type { PropertyTypeName } from '../parser.js';
+import { isCanonicalDate, isIso8601WithTimezone } from '../primitive-grammar.js';
 import type { ValidationError } from '../validation.js';
+import { validationError } from './errors.js';
 
 export function validatePrimitive(
   value: unknown,
@@ -33,11 +32,10 @@ export function validatePrimitive(
 
 function validateText(value: unknown, propertyName: string): ValidationError | null {
   if (typeof value !== 'string') {
-    return validationError(
-      'property:wrong-type',
-      `Property "${propertyName}" must be a string.`,
-      { scope: 'property', property: propertyName },
-    );
+    return validationError('property:wrong-type', `Property "${propertyName}" must be a string.`, {
+      scope: 'property',
+      property: propertyName,
+    });
   }
   return null;
 }
@@ -55,11 +53,10 @@ function validateNumber(value: unknown, propertyName: string): ValidationError |
 
 function validateBoolean(value: unknown, propertyName: string): ValidationError | null {
   if (typeof value !== 'boolean') {
-    return validationError(
-      'property:wrong-type',
-      `Property "${propertyName}" must be a boolean.`,
-      { scope: 'property', property: propertyName },
-    );
+    return validationError('property:wrong-type', `Property "${propertyName}" must be a boolean.`, {
+      scope: 'property',
+      property: propertyName,
+    });
   }
   return null;
 }
@@ -125,7 +122,10 @@ function validateUrl(
   return null;
 }
 
-function extractScheme(value: unknown, result: { kind: 'invalid'; reason: string }): string | undefined {
+function extractScheme(
+  value: unknown,
+  result: { kind: 'invalid'; reason: string },
+): string | undefined {
   if (typeof value === 'string') {
     const reason = result.reason;
     if (typeof reason === 'string' && reason.startsWith('disallowed-scheme:')) {

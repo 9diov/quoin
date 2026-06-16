@@ -18,11 +18,10 @@ export function isCanonicalDate(s: string): boolean {
   return true;
 }
 
-const ISO_DATETIME_RE =
-  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
+const ISO_DATETIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?(Z|[+-]\d{2}:\d{2})$/;
 
 export function isIso8601WithTimezone(s: string): boolean {
   if (!ISO_DATETIME_RE.test(s)) return false;
   const ts = Date.parse(s);
-  return !isNaN(ts);
+  return !Number.isNaN(ts);
 }

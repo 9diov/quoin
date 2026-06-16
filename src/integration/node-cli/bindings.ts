@@ -39,9 +39,7 @@ export function resolveEffectiveTypeDeclaration(
     };
   }
 
-  const matches = bindings.filter((binding) =>
-    mm.isMatch(rootRelativePath, binding.match),
-  );
+  const matches = bindings.filter((binding) => mm.isMatch(rootRelativePath, binding.match));
 
   if (matches.length === 0) {
     return { kind: 'untyped' };

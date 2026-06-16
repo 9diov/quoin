@@ -46,11 +46,9 @@ export function parseSchemaYaml(yamlBody: string): SchemaParseResult {
   for (const key of Object.keys(parsed)) {
     if (!ALLOWED_TOP_LEVEL.has(key)) {
       errors.push(
-        schemaBlockError(
-          'parser:unknown-schema-key',
-          `Unknown top-level schema key \`${key}\`.`,
-          { key },
-        ),
+        schemaBlockError('parser:unknown-schema-key', `Unknown top-level schema key \`${key}\`.`, {
+          key,
+        }),
       );
     }
   }
@@ -65,13 +63,10 @@ export function parseSchemaYaml(yamlBody: string): SchemaParseResult {
     return { errors };
   }
 
-  const rawProperties = parsed['properties'];
+  const rawProperties = parsed.properties;
   if (!isMapping(rawProperties)) {
     errors.push(
-      schemaBlockError(
-        'parser:missing-properties',
-        '`properties` must be a YAML mapping.',
-      ),
+      schemaBlockError('parser:missing-properties', '`properties` must be a YAML mapping.'),
     );
     return { errors };
   }

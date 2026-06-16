@@ -1,12 +1,11 @@
-import { mkdtemp, writeFile, mkdir } from 'node:fs/promises';
-import { join, dirname } from 'node:path';
+import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-
+import { dirname, join } from 'node:path';
+import type { TypeBinding } from '../../../src/integration/node-cli/bindings.js';
 import {
   defaultEffectiveConfig,
   type EffectiveConfig,
 } from '../../../src/integration/node-cli/config.js';
-import type { TypeBinding } from '../../../src/integration/node-cli/bindings.js';
 
 /** An EffectiveConfig rooted at `root`, with per-test overrides on top. */
 export function defaultConfig(

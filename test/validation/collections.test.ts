@@ -1,13 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { validate } from '../../src/index.js';
-import {
-  makeTypeDef,
-  makeDocument,
-  expectPassing,
-  expectError,
-  makeResolver,
-  makeTypeRegistry,
-} from './helpers.js';
+import { expectError, expectPassing, makeDocument, makeResolver, makeTypeDef } from './helpers.js';
 
 describe('V030 list accumulates item-level errors', () => {
   it('returns per-item errors and only calls resolver on valid items', () => {

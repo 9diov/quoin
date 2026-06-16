@@ -1,10 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
-import { parseTypeDefinitionDocument, type Document } from '../../src/index.js';
-import {
-  createInMemoryHarness,
-  type RawMarkdownFixture,
-} from './harness.js';
+import { type Document, parseTypeDefinitionDocument } from '../../src/index.js';
+import { createInMemoryHarness, type RawMarkdownFixture } from './harness.js';
 
 function typeDocRaw(schemaYaml: string, templateBody?: string): string {
   const templateSection = templateBody
@@ -38,11 +35,7 @@ function levelTypeFixture(): RawMarkdownFixture {
   };
 }
 
-function authoredDocument(
-  path: string,
-  frontmatter: Record<string, unknown>,
-  body = '',
-): Document {
+function authoredDocument(path: string, frontmatter: Record<string, unknown>, body = ''): Document {
   return { path, frontmatter, body };
 }
 
@@ -73,10 +66,7 @@ describe('type discovery', () => {
       },
     });
 
-    expect(harness.discoveredTypeDefPaths).toEqual([
-      'types/Concept.md',
-      'types/Skill.md',
-    ]);
+    expect(harness.discoveredTypeDefPaths).toEqual(['types/Concept.md', 'types/Skill.md']);
     expect(parseCalls).toHaveLength(2);
     expect(parseCalls.map((call) => call.identity)).toEqual([
       { id: 'memory://types/Concept.md', name: 'concept' },

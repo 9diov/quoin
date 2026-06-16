@@ -1,7 +1,7 @@
+import { spawnSync } from 'node:child_process';
 import { mkdtempSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const repoRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
@@ -10,8 +10,7 @@ const npmCacheDir = mkdtempSync(join(tmpdir(), 'quoin-npm-cache-'));
 let tarballPath = '';
 
 function run(command, args, cwd = repoRoot) {
-  const effectiveArgs =
-    command === 'npm' ? ['--cache', npmCacheDir, ...args] : args;
+  const effectiveArgs = command === 'npm' ? ['--cache', npmCacheDir, ...args] : args;
   const result = spawnSync(command, effectiveArgs, {
     cwd,
     env: {

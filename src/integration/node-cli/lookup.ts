@@ -1,19 +1,14 @@
-import { posix, basename as nativeBasename } from 'node:path';
-
-import { parseTypeDefinitionDocument } from '../../core/parser.js';
+import { basename as nativeBasename, posix } from 'node:path';
 import type {
-  ParsedTypeDefinitionDocument,
-  ParseError,
-  ParserConfig,
-} from '../../core/parser.js';
-import type { Document } from '../../core/types.js';
-import type {
-  ResolveWikiLinkResult,
   Resolver,
-  TypeReferenceLookupResult,
+  ResolveWikiLinkResult,
   TypeDeclarationLookupResult,
+  TypeReferenceLookupResult,
   TypeRegistry,
 } from '../../core/integration.js';
+import type { ParsedTypeDefinitionDocument, ParseError, ParserConfig } from '../../core/parser.js';
+import { parseTypeDefinitionDocument } from '../../core/parser.js';
+import type { Document } from '../../core/types.js';
 
 import type { IngestedMarkdown } from './ingestion.js';
 
@@ -47,11 +42,7 @@ export function parseTypeCandidates(
 
   for (const candidate of candidates) {
     const identity = deriveIdentity(candidate.path);
-    const result = parseTypeDefinitionDocument(
-      candidate.raw,
-      identity,
-      parserConfig,
-    );
+    const result = parseTypeDefinitionDocument(candidate.raw, identity, parserConfig);
 
     if (result.kind === 'ok') {
       parsed.push(result.typeDef);
@@ -63,9 +54,7 @@ export function parseTypeCandidates(
   return { parsed, failures };
 }
 
-export function createResolver(
-  ingested: IngestedMarkdown[],
-): Resolver {
+export function createResolver(ingested: IngestedMarkdown[]): Resolver {
   const byBasename = new Map<string, Document[]>();
   const failedBasenames = new Map<string, string[]>();
 
@@ -147,10 +136,7 @@ export function createTypeRegistry(
   for (const failure of parseFailures) {
     const identity = deriveIdentity(failure.path);
     if (!failedByName.has(identity.name)) {
-      failedByName.set(
-        identity.name,
-        `Parse failed: ${failure.errors.length} error(s)`,
-      );
+      failedByName.set(identity.name, `Parse failed: ${failure.errors.length} error(s)`);
     }
   }
 

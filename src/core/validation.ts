@@ -1,6 +1,6 @@
-import type { Document } from './types.js';
-import type { ParsedTypeDefinitionDocument } from './parser.js';
 import type { Resolver, TypeRegistry } from './integration.js';
+import type { ParsedTypeDefinitionDocument } from './parser.js';
+import type { Document } from './types.js';
 
 import { resolveConfig } from './validation/config.js';
 import { validateProperty } from './validation/property.js';
@@ -86,9 +86,7 @@ export function validate(
   const errors: ValidationError[] = [];
   const warnings: ValidationWarning[] = [];
 
-  for (const [propertyName, propertySchema] of Object.entries(
-    typeDef.schema.properties,
-  )) {
+  for (const [propertyName, propertySchema] of Object.entries(typeDef.schema.properties)) {
     if (!propertySchema) continue;
     errors.push(
       ...validateProperty(
@@ -102,13 +100,9 @@ export function validate(
     );
   }
 
-  warnings.push(
-    ...validateReservedCollisions(typeDef.schema, resolvedConfig.integration),
-  );
+  warnings.push(...validateReservedCollisions(typeDef.schema, resolvedConfig.integration));
 
-  warnings.push(
-    ...validateSections(document.body, typeDef.templateBlock),
-  );
+  warnings.push(...validateSections(document.body, typeDef.templateBlock));
 
   return {
     passed: errors.length === 0,

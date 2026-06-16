@@ -1,5 +1,5 @@
-import type { Document } from './types.js';
 import type { ParsedTypeDefinitionDocument } from './parser.js';
+import type { Document } from './types.js';
 
 export type ResolveWikiLinkResult =
   | { kind: 'found'; document: Document }

@@ -102,11 +102,7 @@ describe('parseExternalLink — scheme allowlist', () => {
   });
 
   it('accepts ftp: when added to allowed schemes', () => {
-    const result = parseExternalLink('[ftp](ftp://example.com/path)', [
-      'http',
-      'https',
-      'ftp',
-    ]);
+    const result = parseExternalLink('[ftp](ftp://example.com/path)', ['http', 'https', 'ftp']);
     expect(result.kind).toBe('valid');
   });
 
@@ -139,13 +135,16 @@ describe('parseExternalLink — URL parse', () => {
 });
 
 describe('parseExternalLink — non-string input', () => {
-  it.each([null, undefined, 42, { text: 'x' }, ['[x](https://a.b)']])(
-    'rejects non-string input',
-    (value) => {
-      const result = parseExternalLink(value);
-      expect(result.kind).toBe('invalid');
-      if (result.kind !== 'invalid') return;
-      expect(result.reason).toBe('not-a-string');
-    },
-  );
+  it.each([
+    null,
+    undefined,
+    42,
+    { text: 'x' },
+    ['[x](https://a.b)'],
+  ])('rejects non-string input', (value) => {
+    const result = parseExternalLink(value);
+    expect(result.kind).toBe('invalid');
+    if (result.kind !== 'invalid') return;
+    expect(result.reason).toBe('not-a-string');
+  });
 });

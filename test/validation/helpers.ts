@@ -1,12 +1,10 @@
-import { describe, expect, it } from 'vitest';
-import { validate } from '../../src/index.js';
+import { expect } from 'vitest';
 import type {
-  ParsedTypeDefinitionDocument,
-  ValidationConfig,
-  Schema,
-  Resolver,
-  TypeRegistry,
   Document,
+  ParsedTypeDefinitionDocument,
+  Resolver,
+  Schema,
+  TypeRegistry,
   ValidationError,
   ValidationWarning,
 } from '../../src/index.js';
@@ -19,10 +17,7 @@ export function makeTypeDef(schema: Schema): ParsedTypeDefinitionDocument {
   };
 }
 
-export function makeDocument(
-  frontmatter: Record<string, unknown>,
-  body?: string,
-): Document {
+export function makeDocument(frontmatter: Record<string, unknown>, body?: string): Document {
   return {
     path: 'notes/concept.md',
     frontmatter,
@@ -92,7 +87,16 @@ export function expectWarning(
 }
 
 export function makeResolver(
-  results: Record<string, { kind: string; document?: Document; wikiLink?: string; reason?: string; candidates?: Document[] }>,
+  results: Record<
+    string,
+    {
+      kind: string;
+      document?: Document;
+      wikiLink?: string;
+      reason?: string;
+      candidates?: Document[];
+    }
+  >,
 ): Resolver & { calls: string[] } {
   const calls: string[] = [];
   const fn = ((wikiLink: string) => {
@@ -106,8 +110,27 @@ export function makeResolver(
 }
 
 export function makeTypeRegistry(
-  getByNameResults: Record<string, { kind: string; typeDef?: ParsedTypeDefinitionDocument; typeName?: string; candidates?: ParsedTypeDefinitionDocument[]; reason?: string }>,
-  getByDeclarationResults: Record<string, { kind: string; typeDef?: ParsedTypeDefinitionDocument; typeName?: string; value?: unknown; candidates?: ParsedTypeDefinitionDocument[]; reason?: string }>,
+  getByNameResults: Record<
+    string,
+    {
+      kind: string;
+      typeDef?: ParsedTypeDefinitionDocument;
+      typeName?: string;
+      candidates?: ParsedTypeDefinitionDocument[];
+      reason?: string;
+    }
+  >,
+  getByDeclarationResults: Record<
+    string,
+    {
+      kind: string;
+      typeDef?: ParsedTypeDefinitionDocument;
+      typeName?: string;
+      value?: unknown;
+      candidates?: ParsedTypeDefinitionDocument[];
+      reason?: string;
+    }
+  >,
 ): TypeRegistry & { getByNameCalls: unknown[]; getByDeclarationCalls: unknown[] } {
   const getByNameCalls: unknown[] = [];
   const getByDeclarationCalls: unknown[] = [];

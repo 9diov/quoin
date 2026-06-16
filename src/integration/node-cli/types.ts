@@ -1,11 +1,10 @@
 import type {
-  ParseError,
   ParsedTypeDefinitionDocument,
+  ParseError,
   PropertyTypeName,
 } from '../../core/parser.js';
-
-import { serializeEffectiveConfig, type EffectiveConfig } from './config.js';
 import type { TypeBinding } from './bindings.js';
+import { type EffectiveConfig, serializeEffectiveConfig } from './config.js';
 import { printHuman, printJson } from './output.js';
 import { buildProjectUniverse } from './project.js';
 
@@ -83,15 +82,15 @@ function summarize(typeDef: ParsedTypeDefinitionDocument): TypeSummary {
 }
 
 function detailOf(typeDef: ParsedTypeDefinitionDocument): TypeDetail {
-  const properties: TypeDetailProperty[] = Object.entries(
-    typeDef.schema.properties,
-  ).map(([name, schema]) => ({
-    name,
-    type: renderPropertyType(schema.type),
-    required: schema.required === true,
-    allowEmpty: schema['allow-empty'] === true,
-    hasDefault: 'default' in schema,
-  }));
+  const properties: TypeDetailProperty[] = Object.entries(typeDef.schema.properties).map(
+    ([name, schema]) => ({
+      name,
+      type: renderPropertyType(schema.type),
+      required: schema.required === true,
+      allowEmpty: schema['allow-empty'] === true,
+      hasDefault: 'default' in schema,
+    }),
+  );
 
   const sections = (typeDef.templateBlock?.sections ?? []).map((s) => ({
     heading: s.heading,
@@ -108,15 +107,10 @@ function detailOf(typeDef: ParsedTypeDefinitionDocument): TypeDetail {
   };
 }
 
-export async function runTypes(
-  config: EffectiveConfig,
-  detailName?: string,
-): Promise<TypesResult> {
+export async function runTypes(config: EffectiveConfig, detailName?: string): Promise<TypesResult> {
   const universe = await buildProjectUniverse(config);
 
-  const types = universe.parsedTypes
-    .map(summarize)
-    .sort((a, b) => a.id.localeCompare(b.id));
+  const types = universe.parsedTypes.map(summarize).sort((a, b) => a.id.localeCompare(b.id));
   const bindings = [...config.bindings];
   const bindingsByType = new Map<string, TypeBinding[]>();
   for (const binding of bindings) {
@@ -127,39 +121,40 @@ export async function runTypes(
       bindingsByType.set(binding.type, [binding]);
     }
   }
-  const bindingSummaries: BindingSummary[] = [...bindingsByType.entries()].map(
-    ([typeName, groupedBindings]) => {
-      const lookup = universe.typeRegistry.getByName(typeName);
-      switch (lookup.kind) {
-        case 'found':
-          return {
-            typeName,
-            status: 'found',
-            bindings: groupedBindings,
-            typeId: lookup.typeDef.id,
-          };
-        case 'not-found':
-          return {
-            typeName,
-            status: 'not-found',
-            bindings: groupedBindings,
-          };
-        case 'ambiguous':
-          return {
-            typeName,
-            status: 'ambiguous',
-            bindings: groupedBindings,
-            candidateIds: lookup.candidates.map((c) => c.id).sort(),
-          };
-        case 'unavailable':
-          return {
-            typeName,
-            status: 'unavailable',
-            bindings: groupedBindings,
-            reason: lookup.reason,
-          };
-      }
-    },
+  const toBindingSummary = (typeName: string, groupedBindings: TypeBinding[]): BindingSummary => {
+    const lookup = universe.typeRegistry.getByName(typeName);
+    switch (lookup.kind) {
+      case 'found':
+        return {
+          typeName,
+          status: 'found',
+          bindings: groupedBindings,
+          typeId: lookup.typeDef.id,
+        };
+      case 'not-found':
+        return {
+          typeName,
+          status: 'not-found',
+          bindings: groupedBindings,
+        };
+      case 'ambiguous':
+        return {
+          typeName,
+          status: 'ambiguous',
+          bindings: groupedBindings,
+          candidateIds: lookup.candidates.map((c) => c.id).sort(),
+        };
+      case 'unavailable':
+        return {
+          typeName,
+          status: 'unavailable',
+          bindings: groupedBindings,
+          reason: lookup.reason,
+        };
+    }
+  };
+  const bindingSummaries: BindingSummary[] = [...bindingsByType.entries()].map(([n, g]) =>
+    toBindingSummary(n, g),
   );
 
   const byName = new Map<string, ParsedTypeDefinitionDocument[]>();
@@ -237,12 +232,8 @@ export function formatTypesHuman(result: TypesResult): void {
   } else {
     printHuman('--- Types ---');
     for (const t of result.types) {
-      const template = t.hasTemplate
-        ? `, ${t.sectionCount} section(s)`
-        : ', no template';
-      printHuman(
-        `  ${t.name}  (${t.id})  ${t.propertyCount} property(ies)${template}`,
-      );
+      const template = t.hasTemplate ? `, ${t.sectionCount} section(s)` : ', no template';
+      printHuman(`  ${t.name}  (${t.id})  ${t.propertyCount} property(ies)${template}`);
     }
   }
 
@@ -312,18 +303,14 @@ function formatDetailHuman(detail: TypeDetailResult): void {
         printHuman('  (none)');
       }
       for (const s of detail.detail.sections) {
-        printHuman(
-          `  ${'#'.repeat(s.level)} ${s.heading}${s.required ? '  [required]' : ''}`,
-        );
+        printHuman(`  ${'#'.repeat(s.level)} ${s.heading}${s.required ? '  [required]' : ''}`);
       }
       break;
     case 'detail-not-found':
       printHuman(`Type "${detail.name}" not found.`);
       break;
     case 'detail-ambiguous':
-      printHuman(
-        `Type "${detail.name}" is ambiguous: ${detail.candidateIds.join(', ')}`,
-      );
+      printHuman(`Type "${detail.name}" is ambiguous: ${detail.candidateIds.join(', ')}`);
       break;
     case 'detail-unavailable':
       printHuman(`Type "${detail.name}" unavailable: ${detail.reason}`);
@@ -331,10 +318,7 @@ function formatDetailHuman(detail: TypeDetailResult): void {
   }
 }
 
-export function formatTypesJson(
-  result: TypesResult,
-  config: EffectiveConfig,
-): void {
+export function formatTypesJson(result: TypesResult, config: EffectiveConfig): void {
   printJson({
     command: 'types',
     summary: {

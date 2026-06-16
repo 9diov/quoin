@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { validate } from '../../src/index.js';
-import { makeTypeDef, makeDocument, expectPassing, expectError } from './helpers.js';
+import { expectError, expectPassing, makeDocument, makeTypeDef } from './helpers.js';
 
 describe('V001 required Property missing', () => {
   it('returns property:missing-required when a required field is absent', () => {
@@ -111,7 +111,10 @@ describe('V007 empty list fails with allow-empty false', () => {
   it('returns property:empty-not-allowed for empty list when allow-empty is false', () => {
     const typeDef = makeTypeDef({
       properties: {
-        skills: { type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } }, 'allow-empty': false },
+        skills: {
+          type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } },
+          'allow-empty': false,
+        },
       },
     });
 

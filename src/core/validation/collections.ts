@@ -1,12 +1,12 @@
-import type { ChoiceMember, ListItemType } from '../parser.js';
 import type { Resolver, TypeRegistry } from '../integration.js';
 import { isValidWikiLinkShape } from '../link-grammar.js';
-import { validationError } from './errors.js';
-import { resolveWikiLink } from './link.js';
-import { validateReferential } from './referential.js';
-import { validatePrimitive } from './primitives.js';
+import type { ChoiceMember, ListItemType } from '../parser.js';
 import type { ValidationError } from '../validation.js';
 import type { ResolvedConfig } from './config.js';
+import { validationError } from './errors.js';
+import { resolveWikiLink } from './link.js';
+import { validatePrimitive } from './primitives.js';
+import { validateReferential } from './referential.js';
 
 function describeItem(item: ListItemType): string {
   return item.kind === 'primitive' ? item.name : `[[${item.name}]]`;

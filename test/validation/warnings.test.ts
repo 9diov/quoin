@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { validate } from '../../src/index.js';
-import {
-  makeTypeDef,
-  makeDocument,
-  expectPassing,
-  expectWarning,
-} from './helpers.js';
+import { expectPassing, expectWarning, makeDocument, makeTypeDef } from './helpers.js';
 
 describe('V050 unknown Document Property is allowed', () => {
   it('passes when document has properties not in schema', () => {

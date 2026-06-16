@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { scaffold } from '../../src/index.js';
 import type { ParsedTypeDefinitionDocument, Schema } from '../../src/index.js';
+import { scaffold } from '../../src/index.js';
 
 function makeTypeDef(
   overrides: Partial<ParsedTypeDefinitionDocument> & { schema: Schema },
@@ -211,18 +211,18 @@ describe('array reference isolation', () => {
     });
 
     const result = scaffold({}, typeDef);
-    expect(result.properties['skills']).toEqual(defaultList);
+    expect(result.properties.skills).toEqual(defaultList);
 
     // Mutate the result
-    if (Array.isArray(result.properties['skills'])) {
-      (result.properties['skills'] as unknown[]).push('[[Rust]]');
+    if (Array.isArray(result.properties.skills)) {
+      (result.properties.skills as unknown[]).push('[[Rust]]');
     }
 
     // Original default is untouched
     expect(defaultList).toEqual(['[[TypeScript]]']);
 
     // Schema reference is untouched
-    const schemaDefault = typeDef.schema.properties['skills']?.default;
+    const schemaDefault = typeDef.schema.properties.skills?.default;
     expect(schemaDefault).toEqual(['[[TypeScript]]']);
   });
 });
@@ -234,7 +234,10 @@ describe('multiple properties', () => {
         properties: {
           title: { type: 'text', default: 'Untitled' },
           description: { type: 'text', required: true },
-          tags: { type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } }, default: ['[[Tag]]'] },
+          tags: {
+            type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } },
+            default: ['[[Tag]]'],
+          },
         },
       },
     });

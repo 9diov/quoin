@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { validate } from '../../src/index.js';
-import {
-  makeTypeDef,
-  makeDocument,
-  expectPassing,
-  expectError,
-  makeResolver,
-} from './helpers.js';
+import { expectError, expectPassing, makeDocument, makeResolver, makeTypeDef } from './helpers.js';
 
 describe('V020 wiki-link shape failure happens before Resolver', () => {
   it('returns property:wrong-type and never calls resolver', () => {

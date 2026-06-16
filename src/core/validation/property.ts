@@ -1,14 +1,14 @@
-import type { PropertySchema, PropertyTypeName } from '../parser.js';
 import type { Resolver, TypeRegistry } from '../integration.js';
 import { isValidWikiLinkShape } from '../link-grammar.js';
+import type { PropertySchema, PropertyTypeName } from '../parser.js';
+import type { ValidationError } from '../validation.js';
+import { validateChoice, validateList } from './collections.js';
+import type { ResolvedConfig } from './config.js';
 import { isValueEmpty } from './emptiness.js';
 import { validationError } from './errors.js';
-import { validatePrimitive } from './primitives.js';
-import { validateList, validateChoice } from './collections.js';
 import { resolveWikiLink } from './link.js';
+import { validatePrimitive } from './primitives.js';
 import { validateReferential } from './referential.js';
-import type { ValidationError } from '../validation.js';
-import type { ResolvedConfig } from './config.js';
 
 export function validateProperty(
   propertyName: string,
@@ -21,11 +21,10 @@ export function validateProperty(
   if (!(propertyName in frontmatter)) {
     if (schema.required) {
       return [
-        validationError(
-          'property:missing-required',
-          `Property "${propertyName}" is required.`,
-          { scope: 'property', property: propertyName },
-        ),
+        validationError('property:missing-required', `Property "${propertyName}" is required.`, {
+          scope: 'property',
+          property: propertyName,
+        }),
       ];
     }
     return [];
@@ -33,8 +32,7 @@ export function validateProperty(
 
   const value = frontmatter[propertyName];
   const allowEmpty =
-    schema['allow-empty'] ??
-    (typeof schema.type === 'object' && schema.type.kind === 'list');
+    schema['allow-empty'] ?? (typeof schema.type === 'object' && schema.type.kind === 'list');
 
   if (isValueEmpty(value)) {
     if (!allowEmpty) {
@@ -49,14 +47,7 @@ export function validateProperty(
     return [];
   }
 
-  return validateTypedValue(
-    value,
-    schema.type,
-    propertyName,
-    config,
-    resolver,
-    typeRegistry,
-  );
+  return validateTypedValue(value, schema.type, propertyName, config, resolver, typeRegistry);
 }
 
 function validateTypedValue(
@@ -68,12 +59,7 @@ function validateTypedValue(
   typeRegistry: TypeRegistry | undefined,
 ): ValidationError[] {
   if (typeof type === 'string') {
-    const primitiveError = validatePrimitive(
-      value,
-      type,
-      propertyName,
-      config.allowedUrlSchemes,
-    );
+    const primitiveError = validatePrimitive(value, type, propertyName, config.allowedUrlSchemes);
     if (primitiveError) {
       return [primitiveError];
     }
@@ -117,14 +103,7 @@ function validateTypedValue(
       return [];
     }
     case 'list':
-      return validateList(
-        value,
-        type.of,
-        propertyName,
-        config,
-        resolver,
-        typeRegistry,
-      );
+      return validateList(value, type.of, propertyName, config, resolver, typeRegistry);
     case 'choice':
       return validateChoice(value, type.members, propertyName);
   }

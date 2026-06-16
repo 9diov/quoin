@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { template } from '../../src/index.js';
 import type { ParsedTypeDefinitionDocument } from '../../src/index.js';
+import { template } from '../../src/index.js';
 
 function makeTypeDef(
   overrides: Partial<ParsedTypeDefinitionDocument>,

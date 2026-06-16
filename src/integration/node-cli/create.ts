@@ -4,19 +4,19 @@ import { stringify as stringifyYaml } from 'yaml';
 
 import { scaffold } from '../../core/scaffold.js';
 import { template } from '../../core/template.js';
-import { validate } from '../../core/validation.js';
+import type { Document } from '../../core/types.js';
 import type {
   ValidationConfig,
   ValidationError,
   ValidationWarning,
 } from '../../core/validation.js';
-import type { Document } from '../../core/types.js';
+import { validate } from '../../core/validation.js';
 
-import { serializeEffectiveConfig, type EffectiveConfig } from './config.js';
-import { printHuman, printJson } from './output.js';
-import { buildProjectUniverse } from './project.js';
+import { type EffectiveConfig, serializeEffectiveConfig } from './config.js';
 import type { ParseFailure } from './lookup.js';
+import { printHuman, printJson } from './output.js';
 import type { IngestFailure } from './project.js';
+import { buildProjectUniverse } from './project.js';
 
 export type CreateResult =
   | {
@@ -67,12 +67,9 @@ async function resolveOutputPath(
   config: EffectiveConfig,
   output: string,
 ): Promise<
-  | { ok: true; relativePath: string; absolutePath: string }
-  | { ok: false; result: CreateResult }
+  { ok: true; relativePath: string; absolutePath: string } | { ok: false; result: CreateResult }
 > {
-  const absolutePath = isAbsolute(output)
-    ? resolve(output)
-    : resolve(config.root, output);
+  const absolutePath = isAbsolute(output) ? resolve(output) : resolve(config.root, output);
 
   const relToRoot = relative(config.root, absolutePath);
   if (relToRoot.startsWith('..') || isAbsolute(relToRoot) || relToRoot === '') {
@@ -223,10 +220,7 @@ export async function runCreate(
  * Frontmatter keys are emitted in insertion order. A type with no Template
  * Block produces a frontmatter-only file.
  */
-export function serializeDocument(
-  frontmatter: Record<string, unknown>,
-  body: string,
-): string {
+export function serializeDocument(frontmatter: Record<string, unknown>, body: string): string {
   const yaml = stringifyYaml(frontmatter);
   let content = `---\n${yaml}---\n`;
   if (body.length > 0) {
@@ -284,10 +278,7 @@ export function formatCreateHuman(result: CreateResult): void {
   }
 }
 
-export function formatCreateJson(
-  result: CreateResult,
-  config: EffectiveConfig,
-): void {
+export function formatCreateJson(result: CreateResult, config: EffectiveConfig): void {
   printJson({
     command: 'create',
     result,

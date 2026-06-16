@@ -1,4 +1,4 @@
-import type { ValidationConfig, IntegrationName, UntypedDocumentBehavior } from '../validation.js';
+import type { IntegrationName, UntypedDocumentBehavior, ValidationConfig } from '../validation.js';
 
 export type ResolvedConfig = {
   typeDeclarationKey: string;

@@ -32,9 +32,7 @@ export async function discoverMarkdownFiles(
     dot: true,
   });
 
-  return entries
-    .map((p) => posix.normalize(p))
-    .sort();
+  return entries.map((p) => posix.normalize(p)).sort();
 }
 
 export async function ingestMarkdownFiles(
@@ -53,10 +51,7 @@ export async function discoverAndIngest(
   return ingestMarkdownFiles(root, paths);
 }
 
-async function ingestOne(
-  root: string,
-  relativePath: string,
-): Promise<IngestedMarkdown> {
+async function ingestOne(root: string, relativePath: string): Promise<IngestedMarkdown> {
   const absolutePath = join(root, relativePath);
 
   let raw: string;
@@ -97,18 +92,15 @@ async function ingestOne(
     } else {
       try {
         const parsed = parseYaml(trimmed);
-        if (
-          parsed !== null &&
-          typeof parsed === 'object' &&
-          !Array.isArray(parsed)
-        ) {
+        if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
           frontmatter = parsed as Record<string, unknown>;
         } else {
           return {
             kind: 'ingest-failure',
             path: relativePath,
             stage: 'frontmatter',
-            reason: 'Frontmatter must be a YAML mapping, got ' +
+            reason:
+              'Frontmatter must be a YAML mapping, got ' +
               (parsed === null ? 'null' : Array.isArray(parsed) ? 'array' : typeof parsed),
           };
         }
@@ -171,10 +163,7 @@ function splitFrontmatter(raw: string): {
   throw new Error('No closing --- delimiter found for frontmatter');
 }
 
-export function isTypeDefinitionCandidate(
-  document: Document,
-  typeDeclarationKey: string,
-): boolean {
+export function isTypeDefinitionCandidate(document: Document, typeDeclarationKey: string): boolean {
   return document.frontmatter[typeDeclarationKey] === 'type';
 }
 

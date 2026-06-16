@@ -1,8 +1,12 @@
-import { describe, expect, it, vi } from 'vitest';
 import { rm } from 'node:fs/promises';
+import { describe, expect, it, vi } from 'vitest';
 
-import { runValidate, expandTargets, formatValidateJson } from '../../../src/integration/node-cli/validate.js';
-import { binding, defaultConfig, createTempProject } from './helpers.js';
+import {
+  expandTargets,
+  formatValidateJson,
+  runValidate,
+} from '../../../src/integration/node-cli/validate.js';
+import { binding, createTempProject, defaultConfig } from './helpers.js';
 
 describe('expandTargets', () => {
   it('resolves explicit file target', async () => {
@@ -67,9 +71,7 @@ describe('expandTargets', () => {
   it('reports excluded file target', async () => {
     const dir = await createTempProject({ 'node_modules/pkg.md': 'pkg' });
     try {
-      const result = await expandTargets(dir, ['node_modules/pkg.md'], [
-        'node_modules/**',
-      ]);
+      const result = await expandTargets(dir, ['node_modules/pkg.md'], ['node_modules/**']);
       expect(result.paths).toHaveLength(0);
       expect(result.diagnostics[0]?.kind).toBe('target:excluded');
     } finally {
@@ -315,10 +317,7 @@ describe('runValidate', () => {
     });
     try {
       const config = defaultConfig(dir, {
-        bindings: [
-          binding('concept', 'notes/**/*.md'),
-          binding('article', '**/*.md'),
-        ],
+        bindings: [binding('concept', 'notes/**/*.md'), binding('article', '**/*.md')],
       });
       const result = await runValidate(config, []);
       expect(result.targets).toHaveLength(1);
@@ -335,18 +334,13 @@ describe('runValidate', () => {
     });
     try {
       const config = defaultConfig(dir, {
-        bindings: [
-          binding('concept', 'notes/**/*.md'),
-          binding('concept', '**/*.md'),
-        ],
+        bindings: [binding('concept', 'notes/**/*.md'), binding('concept', '**/*.md')],
       });
       const result = await runValidate(config, []);
       expect(result.targets).toHaveLength(1);
       expect(result.targets[0]!.kind).toBe('binding-type-not-found');
       if (result.targets[0]!.kind === 'binding-type-not-found') {
-        expect(result.targets[0]!.matchedBinding).toEqual(
-          binding('concept', 'notes/**/*.md'),
-        );
+        expect(result.targets[0]!.matchedBinding).toEqual(binding('concept', 'notes/**/*.md'));
       }
     } finally {
       await rm(dir, { recursive: true, force: true });
@@ -517,10 +511,7 @@ describe('runValidate', () => {
       const result = await runValidate(defaultConfig(dir), []);
       expect(result.typeParseFailures).toHaveLength(1);
       const targets = result.targets.filter(
-        (t) =>
-          t.kind === 'validated' ||
-          t.kind === 'skipped-untyped' ||
-          t.kind === 'warn-untyped',
+        (t) => t.kind === 'validated' || t.kind === 'skipped-untyped' || t.kind === 'warn-untyped',
       );
       const regularTarget = targets.find((t) => t.path === 'regular.md');
       expect(regularTarget).toBeDefined();
@@ -534,9 +525,7 @@ describe('runValidate', () => {
 
 describe('formatValidateJson', () => {
   it('includes summary counts and effectiveConfig in JSON output', async () => {
-    const output = await import(
-      '../../../src/integration/node-cli/output.js'
-    );
+    const output = await import('../../../src/integration/node-cli/output.js');
     const spy = vi.spyOn(output, 'printJson').mockImplementation(() => {});
 
     const config = defaultConfig('/test');
@@ -556,12 +545,8 @@ describe('formatValidateJson', () => {
     expect(payload.summary).toBeDefined();
     expect(payload.effectiveConfig).toBeDefined();
     expect((payload.summary as Record<string, unknown>).targets).toBe(0);
-    expect((payload.effectiveConfig as Record<string, unknown>).root).toBe(
-      '/test',
-    );
-    expect((payload.effectiveConfig as Record<string, unknown>).bindings).toEqual(
-      [],
-    );
+    expect((payload.effectiveConfig as Record<string, unknown>).root).toBe('/test');
+    expect((payload.effectiveConfig as Record<string, unknown>).bindings).toEqual([]);
 
     spy.mockRestore();
   });

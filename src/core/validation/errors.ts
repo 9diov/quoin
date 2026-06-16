@@ -1,5 +1,10 @@
-import type { ValidationError, ValidationErrorKind, ValidationLocation } from '../validation.js';
-import type { ValidationWarning, ValidationWarningKind } from '../validation.js';
+import type {
+  ValidationError,
+  ValidationErrorKind,
+  ValidationLocation,
+  ValidationWarning,
+  ValidationWarningKind,
+} from '../validation.js';
 
 export function validationError(
   kind: ValidationErrorKind,

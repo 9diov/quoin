@@ -1,29 +1,23 @@
+import type { Stats } from 'node:fs';
 import { stat } from 'node:fs/promises';
-import { join, relative, resolve, isAbsolute, posix } from 'node:path';
+import { isAbsolute, join, posix, relative, resolve } from 'node:path';
 import mm from 'micromatch';
-
-import { validate } from '../../core/validation.js';
 import type {
   ValidationConfig,
   ValidationResult,
   ValidationWarning,
 } from '../../core/validation.js';
-import type { Document } from '../../core/types.js';
-
-import { serializeEffectiveConfig, type EffectiveConfig } from './config.js';
+import { validate } from '../../core/validation.js';
 import { resolveEffectiveTypeDeclaration, type TypeBinding } from './bindings.js';
-import { printHuman, printJson } from './output.js';
+import { type EffectiveConfig, serializeEffectiveConfig } from './config.js';
 import {
   discoverMarkdownFiles,
   filterTypeDefinitionCandidates,
-  ingestMarkdownFiles,
   type IngestedMarkdown,
+  ingestMarkdownFiles,
 } from './ingestion.js';
-import {
-  createResolver,
-  createTypeRegistry,
-  parseTypeCandidates,
-} from './lookup.js';
+import { createResolver, createTypeRegistry, parseTypeCandidates } from './lookup.js';
+import { printHuman, printJson } from './output.js';
 
 export type ValidationTargetResult =
   | {
@@ -118,7 +112,7 @@ export async function expandTargets(
       continue;
     }
 
-    let fileStat;
+    let fileStat: Stats;
     try {
       fileStat = await stat(absolute);
     } catch {
@@ -157,25 +151,16 @@ export async function runValidate(
   config: EffectiveConfig,
   rawTargets: string[],
 ): Promise<ValidateResult> {
-  const ingestFailures: Extract<
-    IngestedMarkdown,
-    { kind: 'ingest-failure' }
-  >[] = [];
+  const ingestFailures: Extract<IngestedMarkdown, { kind: 'ingest-failure' }>[] = [];
   const ingestedDocs: Extract<IngestedMarkdown, { kind: 'document' }>[] = [];
   const typeParseFailures: { path: string; errors: unknown[] }[] = [];
   const targetDiagnostics: TargetDiagnostic[] = [];
   const targets: ValidationTargetResult[] = [];
 
-  const allResults = await discoverMarkdownFiles(
-    config.root,
-    config.include,
-    config.exclude,
-  );
+  const allResults = await discoverMarkdownFiles(config.root, config.include, config.exclude);
 
   const rawTargetPaths =
-    rawTargets.length > 0
-      ? (await expandTargets(config.root, rawTargets, config.exclude))
-      : null;
+    rawTargets.length > 0 ? await expandTargets(config.root, rawTargets, config.exclude) : null;
 
   const discoveredPaths = new Set(allResults);
   if (rawTargetPaths) {
@@ -196,10 +181,7 @@ export async function runValidate(
     }
   }
 
-  const candidates = filterTypeDefinitionCandidates(
-    ingestedDocs,
-    config.typeDeclarationKey,
-  );
+  const candidates = filterTypeDefinitionCandidates(ingestedDocs, config.typeDeclarationKey);
 
   const withRaw = candidates.map((c) => {
     const found = ingestedDocs.find((d) => d.path === c.path);
@@ -219,10 +201,7 @@ export async function runValidate(
   }
 
   const typeRegistry = createTypeRegistry(parsed, failures);
-  const resolver = createResolver([
-    ...ingestedDocs,
-    ...ingestFailures,
-  ]);
+  const resolver = createResolver([...ingestedDocs, ...ingestFailures]);
 
   let targetPaths: string[];
   if (rawTargetPaths) {
@@ -347,13 +326,7 @@ export async function runValidate(
         const lookup = typeRegistry.getByName(effective.typeName);
         switch (lookup.kind) {
           case 'found': {
-            const result = validate(
-              doc,
-              lookup.typeDef,
-              validationConfig,
-              resolver,
-              typeRegistry,
-            );
+            const result = validate(doc, lookup.typeDef, validationConfig, resolver, typeRegistry);
             targets.push({
               kind: 'validated',
               path,
@@ -398,8 +371,7 @@ export async function runValidate(
   const hasTypeParseFailures = typeParseFailures.length > 0;
   const hasTargetDiagnostics = targetDiagnostics.length > 0;
   const hasValidationErrors = targets.some(
-    (t) =>
-      t.kind === 'validated' && t.result.errors.length > 0,
+    (t) => t.kind === 'validated' && t.result.errors.length > 0,
   );
   const hasResolutionFailures = targets.some(
     (t) =>
@@ -514,9 +486,7 @@ export function formatValidateHuman(result: ValidateResult): void {
     }
   }
 
-  const passed = result.targets.filter(
-    (t) => t.kind === 'validated' && t.result.passed,
-  ).length;
+  const passed = result.targets.filter((t) => t.kind === 'validated' && t.result.passed).length;
   const failed = result.targets.filter(
     (t) =>
       (t.kind === 'validated' && !t.result.passed) ||
@@ -533,22 +503,15 @@ export function formatValidateHuman(result: ValidateResult): void {
     (t) => t.kind === 'skipped-untyped' || t.kind === 'warn-untyped',
   ).length;
 
-  printHuman(
-    `\nResults: ${passed} passed, ${failed} failed, ${skipped} skipped/untyped`,
-  );
+  printHuman(`\nResults: ${passed} passed, ${failed} failed, ${skipped} skipped/untyped`);
   printHuman(
     `Diagnostics: ${result.ingestFailures.length} ingest, ${result.typeParseFailures.length} parse, ${result.targetDiagnostics.length} target`,
   );
   printHuman(`Exit: ${result.exitCode}`);
 }
 
-export function formatValidateJson(
-  result: ValidateResult,
-  config: EffectiveConfig,
-): void {
-  const passed = result.targets.filter(
-    (t) => t.kind === 'validated' && t.result.passed,
-  ).length;
+export function formatValidateJson(result: ValidateResult, config: EffectiveConfig): void {
+  const passed = result.targets.filter((t) => t.kind === 'validated' && t.result.passed).length;
   const failed = result.targets.filter(
     (t) =>
       (t.kind === 'validated' && !t.result.passed) ||

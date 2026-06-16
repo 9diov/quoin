@@ -1,12 +1,13 @@
-import { describe, expect, it } from 'vitest';
-import { mkdtemp, writeFile, rm } from 'node:fs/promises';
-import { join } from 'node:path';
+import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
 
 import {
   ConfigLoadError,
   ConfigValidationError,
   defaultEffectiveConfig,
+  type EffectiveConfig,
   findConfigFile,
   loadConfigFile,
   resolveEffectiveConfig,
@@ -78,9 +79,7 @@ describe('loadConfigFile', () => {
 
     try {
       const config = await loadConfigFile(configPath);
-      expect(config.bindings).toEqual([
-        { type: 'concept', match: 'notes/**/*.md' },
-      ]);
+      expect(config.bindings).toEqual([{ type: 'concept', match: 'notes/**/*.md' }]);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
@@ -214,11 +213,7 @@ describe('resolveEffectiveConfig', () => {
   });
 
   it('uses config file directory as root when config loaded without explicit root', () => {
-    const result = resolveEffectiveConfig(
-      {},
-      '/my/project/quoin.config.jsonc',
-      '/some/other/cwd',
-    );
+    const result = resolveEffectiveConfig({}, '/my/project/quoin.config.jsonc', '/some/other/cwd');
     expect(result.root).toBe('/my/project');
   });
 
@@ -251,12 +246,9 @@ describe('resolveEffectiveConfig', () => {
   });
 
   it('--root overrides config file dir', () => {
-    const result = resolveEffectiveConfig(
-      {},
-      '/my/project/quoin.config.jsonc',
-      '/cwd',
-      { root: '/cli/root' },
-    );
+    const result = resolveEffectiveConfig({}, '/my/project/quoin.config.jsonc', '/cwd', {
+      root: '/cli/root',
+    });
     expect(result.root).toBe('/cli/root');
   });
 
@@ -268,21 +260,14 @@ describe('resolveEffectiveConfig', () => {
   });
 
   it('format: CLI override wins over config', () => {
-    const result = resolveEffectiveConfig(
-      { output: { format: 'human' } },
-      null,
-      '/cwd',
-      { format: 'json' },
-    );
+    const result = resolveEffectiveConfig({ output: { format: 'human' } }, null, '/cwd', {
+      format: 'json',
+    });
     expect(result.outputFormat).toBe('json');
   });
 
   it('format: config wins over default when no CLI override', () => {
-    const result = resolveEffectiveConfig(
-      { output: { format: 'json' } },
-      null,
-      '/cwd',
-    );
+    const result = resolveEffectiveConfig({ output: { format: 'json' } }, null, '/cwd');
     expect(result.outputFormat).toBe('json');
   });
 
@@ -292,21 +277,14 @@ describe('resolveEffectiveConfig', () => {
   });
 
   it('referential: CLI false overrides config true', () => {
-    const result = resolveEffectiveConfig(
-      { referentialValidation: true },
-      null,
-      '/cwd',
-      { referentialValidation: false },
-    );
+    const result = resolveEffectiveConfig({ referentialValidation: true }, null, '/cwd', {
+      referentialValidation: false,
+    });
     expect(result.referentialValidation).toBe(false);
   });
 
   it('referential: config value used when no CLI override', () => {
-    const result = resolveEffectiveConfig(
-      { referentialValidation: false },
-      null,
-      '/cwd',
-    );
+    const result = resolveEffectiveConfig({ referentialValidation: false }, null, '/cwd');
     expect(result.referentialValidation).toBe(false);
   });
 
@@ -332,9 +310,7 @@ describe('resolveEffectiveConfig', () => {
 
     expect(result.include).toEqual(['**/*.mdx']);
     expect(result.exclude).toEqual(['.cache/**']);
-    expect(result.bindings).toEqual([
-      { type: 'concept', match: 'notes/**/*.md' },
-    ]);
+    expect(result.bindings).toEqual([{ type: 'concept', match: 'notes/**/*.md' }]);
     expect(result.typeDeclarationKey).toBe('kind');
     expect(result.allowedUrlSchemes).toEqual(['https']);
     expect(result.untypedDocumentBehavior).toBe('warn');
@@ -371,7 +347,7 @@ describe('resolveEffectiveConfig', () => {
       }),
     );
 
-    let result;
+    let result: EffectiveConfig;
     try {
       const config = await loadConfigFile(configPath);
       result = resolveEffectiveConfig(config, null, '/cwd');
@@ -401,7 +377,7 @@ describe('resolveEffectiveConfig', () => {
     );
 
     const serialized = serializeEffectiveConfig(config);
-    expect(serialized['bindings']).toEqual([
+    expect(serialized.bindings).toEqual([
       { type: 'a', match: 'one/**/*.md' },
       { type: 'b', match: 'two/**/*.md' },
       { type: 'c', match: 'three/**/*.md' },

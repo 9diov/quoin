@@ -1,25 +1,25 @@
 import { parse as parseYaml } from 'yaml';
 
 import {
-  parseTypeDefinitionDocument,
-  scaffold,
-  template,
-  validate,
   type Document,
-  type ParseError,
   type ParsedTypeDefinitionDocument,
+  type ParseError,
   type ParserConfig,
-  type ResolveWikiLinkResult,
+  parseTypeDefinitionDocument,
   type Resolver,
+  type ResolveWikiLinkResult,
   type ScaffoldingResult,
+  scaffold,
   type TemplatingResult,
   type TypeDeclarationLookupResult,
   type TypeDefinitionDocumentIdentity,
   type TypeReferenceLookupResult,
   type TypeRegistry,
+  template,
   type ValidationConfig,
   type ValidationResult,
   type ValidationWarning,
+  validate,
 } from '../../src/index.js';
 
 export type RawMarkdownFixture = {

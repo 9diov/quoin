@@ -1,34 +1,28 @@
 #!/usr/bin/env node
 
-import { Command } from 'commander';
 import { resolve } from 'node:path';
-
+import { Command } from 'commander';
+import { handleCreate, handleTypes, handleValidate } from './commands.js';
 import {
   findConfigFile,
   loadConfigFile,
-  resolveEffectiveConfig,
   type NodeCliConfig,
   type OutputFormat,
+  resolveEffectiveConfig,
 } from './config.js';
 import { setOutputFormat } from './output.js';
-import { handleValidate, handleCreate, handleTypes } from './commands.js';
 
 const program = new Command();
 
 program
   .name('quoin')
-  .description(
-    'Validate and scaffold Markdown files with typed frontmatter schemas',
-  )
+  .description('Validate and scaffold Markdown files with typed frontmatter schemas')
   .version('0.1.0');
 
 program
   .option('--config <path>', 'path to config file (quoin.config.jsonc)')
   .option('--root <path>', 'project root directory (overrides config root)')
-  .option(
-    '--format <format>',
-    'output format: human (default) or json',
-  )
+  .option('--format <format>', 'output format: human (default) or json')
   .option('--no-referential-validation', 'disable referential validation');
 
 program
@@ -99,12 +93,7 @@ async function loadAndResolveConfig(
     overrides.referentialValidation = false;
   }
 
-  const effective = resolveEffectiveConfig(
-    config,
-    configFilePath,
-    cwd,
-    overrides,
-  );
+  const effective = resolveEffectiveConfig(config, configFilePath, cwd, overrides);
   setOutputFormat(effective.outputFormat);
   return effective;
 }

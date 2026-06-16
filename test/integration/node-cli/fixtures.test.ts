@@ -1,18 +1,16 @@
-import { describe, expect, it, afterEach } from 'vitest';
 import { readFileSync } from 'node:fs';
-import { rm } from 'node:fs/promises';
-import { readFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
+import { readFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { runValidate } from '../../../src/integration/node-cli/validate.js';
-import { runTypes } from '../../../src/integration/node-cli/types.js';
-import { runCreate, createExitCode } from '../../../src/integration/node-cli/create.js';
+import { fileURLToPath } from 'node:url';
+import { afterEach, describe, expect, it } from 'vitest';
 import {
+  type EffectiveConfig,
   loadConfigFile,
   resolveEffectiveConfig,
-  type EffectiveConfig,
 } from '../../../src/integration/node-cli/config.js';
+import { createExitCode, runCreate } from '../../../src/integration/node-cli/create.js';
+import { runTypes } from '../../../src/integration/node-cli/types.js';
+import { runValidate } from '../../../src/integration/node-cli/validate.js';
 import { defaultConfig } from './helpers.js';
 
 const FIXTURES_DIR = fileURLToPath(new URL('../../../fixtures/', import.meta.url));
@@ -37,9 +35,10 @@ type Entry = {
   expectBodyContains?: string;
 };
 
-const manifest = JSON.parse(
-  readFileSync(join(FIXTURES_DIR, 'manifest.json'), 'utf-8'),
-) as { scenarios: Entry[]; vaults: Entry[] };
+const manifest = JSON.parse(readFileSync(join(FIXTURES_DIR, 'manifest.json'), 'utf-8')) as {
+  scenarios: Entry[];
+  vaults: Entry[];
+};
 
 /** Build the EffectiveConfig exactly as the CLI would for a given fixture. */
 async function configFor(entry: Entry): Promise<EffectiveConfig> {
@@ -138,12 +137,8 @@ afterEach(async () => {
 
 describe('fixture manifest', () => {
   for (const entry of [...manifest.scenarios, ...manifest.vaults]) {
-    const ref =
-      entry.referentialValidation === false ? ' [--no-referential]' : '';
-    const tgt =
-      entry.targets && entry.targets.length > 0
-        ? ` [${entry.targets.join(',')}]`
-        : '';
+    const ref = entry.referentialValidation === false ? ' [--no-referential]' : '';
+    const tgt = entry.targets && entry.targets.length > 0 ? ` [${entry.targets.join(',')}]` : '';
     const label = `${entry.dir} :: ${entry.command}${ref}${tgt} -> exit ${entry.exitCode}`;
     it(label, async () => {
       if (entry.command === 'validate') await runValidateEntry(entry);

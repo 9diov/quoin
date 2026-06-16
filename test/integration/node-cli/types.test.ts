@@ -1,8 +1,8 @@
-import { describe, expect, it } from 'vitest';
 import { rm } from 'node:fs/promises';
+import { describe, expect, it } from 'vitest';
 
 import { runTypes } from '../../../src/integration/node-cli/types.js';
-import { binding, defaultConfig, createTempProject } from './helpers.js';
+import { binding, createTempProject, defaultConfig } from './helpers.js';
 
 const CONCEPT = `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  title:\n    type: text\n    required: true\n  tags:\n    type: list<text>\n\`\`\`\n\n## Template\n\n\`\`\`markdown\n## Summary <!-- required -->\n\`\`\`\n`;
 
@@ -17,10 +17,7 @@ describe('runTypes', () => {
     try {
       const result = await runTypes(defaultConfig(dir));
       expect(result.exitCode).toBe(0);
-      expect(result.types.map((t) => t.id)).toEqual([
-        'types/Concept.md',
-        'types/Skill.md',
-      ]);
+      expect(result.types.map((t) => t.id)).toEqual(['types/Concept.md', 'types/Skill.md']);
       const concept = result.types.find((t) => t.name === 'concept');
       expect(concept).toMatchObject({
         name: 'concept',
@@ -54,9 +51,7 @@ describe('runTypes', () => {
           bindings: [binding('concept', 'notes/**/*.md')],
         }),
       );
-      expect(result.bindings).toEqual([
-        binding('concept', 'notes/**/*.md'),
-      ]);
+      expect(result.bindings).toEqual([binding('concept', 'notes/**/*.md')]);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
@@ -81,10 +76,7 @@ describe('runTypes', () => {
           typeName: 'concept',
           status: 'found',
           typeId: 'types/Concept.md',
-          bindings: [
-            binding('concept', 'notes/**/*.md'),
-            binding('concept', 'ideas/**/*.md'),
-          ],
+          bindings: [binding('concept', 'notes/**/*.md'), binding('concept', 'ideas/**/*.md')],
         },
         {
           typeName: 'article',
@@ -151,13 +143,9 @@ describe('runTypes', () => {
       expect(result.detail?.kind).toBe('detail');
       if (result.detail?.kind === 'detail') {
         expect(result.detail.detail.name).toBe('concept');
-        const title = result.detail.detail.properties.find(
-          (p) => p.name === 'title',
-        );
+        const title = result.detail.detail.properties.find((p) => p.name === 'title');
         expect(title).toMatchObject({ type: 'text', required: true });
-        const tags = result.detail.detail.properties.find(
-          (p) => p.name === 'tags',
-        );
+        const tags = result.detail.detail.properties.find((p) => p.name === 'tags');
         expect(tags?.type).toBe('list<text>');
         expect(result.detail.detail.sections).toHaveLength(1);
         expect(result.detail.detail.sections[0]).toMatchObject({
@@ -189,10 +177,7 @@ describe('runTypes', () => {
       const result = await runTypes(defaultConfig(dir), 'concept');
       expect(result.detail?.kind).toBe('detail-ambiguous');
       if (result.detail?.kind === 'detail-ambiguous') {
-        expect(result.detail.candidateIds).toEqual([
-          'a/Concept.md',
-          'b/Concept.md',
-        ]);
+        expect(result.detail.candidateIds).toEqual(['a/Concept.md', 'b/Concept.md']);
       }
     } finally {
       await rm(dir, { recursive: true, force: true });

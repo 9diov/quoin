@@ -1,13 +1,9 @@
-import { unified } from 'unified';
-import remarkParse from 'remark-parse';
 import type { Code, Heading, Root, RootContent } from 'mdast';
+import remarkParse from 'remark-parse';
+import { unified } from 'unified';
 
 import type { ParseError } from '../parser.js';
-import {
-  documentError,
-  schemaBlockError,
-  templateBlockError,
-} from './errors.js';
+import { documentError, schemaBlockError, templateBlockError } from './errors.js';
 
 export type BlockExtractionResult = {
   schemaYaml?: string;
@@ -25,7 +21,7 @@ function isExactHeading(node: RootContent, label: 'Schema' | 'Template'): node i
   if (node.depth !== 2) return false;
   if (node.children.length !== 1) return false;
   const child = node.children[0];
-  if (!child || child.type !== 'text') return false;
+  if (child?.type !== 'text') return false;
   return child.value === label;
 }
 

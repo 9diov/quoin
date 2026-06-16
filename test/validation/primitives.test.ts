@@ -1,6 +1,6 @@
 import { describe, it } from 'vitest';
 import { validate } from '../../src/index.js';
-import { makeTypeDef, makeDocument, expectPassing, expectError } from './helpers.js';
+import { expectError, expectPassing, makeDocument, makeTypeDef } from './helpers.js';
 
 describe('V010 text accepts non-empty string', () => {
   it('passes for a non-empty string', () => {

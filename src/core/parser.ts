@@ -16,9 +16,7 @@ export type PrimitiveTypeName =
 
 export type TypeReference = { kind: 'type-ref'; name: string };
 
-export type ListItemType =
-  | { kind: 'primitive'; name: PrimitiveTypeName }
-  | TypeReference;
+export type ListItemType = { kind: 'primitive'; name: PrimitiveTypeName } | TypeReference;
 
 // Union member of a choice<...> type. v1 supports literal members only.
 // Primitive and type-ref member kinds are reserved for a future union extension
@@ -29,10 +27,7 @@ export type CollectionTypeName =
   | { kind: 'list'; of: ListItemType }
   | { kind: 'choice'; members: ChoiceMember[] };
 
-export type PropertyTypeName =
-  | PrimitiveTypeName
-  | TypeReference
-  | CollectionTypeName;
+export type PropertyTypeName = PrimitiveTypeName | TypeReference | CollectionTypeName;
 
 export type PropertySchema = {
   type: PropertyTypeName;
@@ -137,9 +132,7 @@ export function parseTypeDefinitionDocument(
   errors.push(...schemaResult.errors);
 
   if (schemaResult.schema) {
-    for (const [propertyKey, propertySchema] of Object.entries(
-      schemaResult.schema.properties,
-    )) {
+    for (const [propertyKey, propertySchema] of Object.entries(schemaResult.schema.properties)) {
       errors.push(...validateDefault(propertyKey, propertySchema, config));
     }
   }

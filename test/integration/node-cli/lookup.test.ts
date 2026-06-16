@@ -1,23 +1,13 @@
 import { describe, expect, it } from 'vitest';
-
+import type { ParsedTypeDefinitionDocument, ParserConfig } from '../../../src/core/parser.js';
+import type { Document } from '../../../src/core/types.js';
+import type { IngestedMarkdown } from '../../../src/integration/node-cli/ingestion.js';
 import {
-  deriveIdentity,
-  parseTypeCandidates,
   createResolver,
   createTypeRegistry,
-  type ParseFailure,
+  deriveIdentity,
+  parseTypeCandidates,
 } from '../../../src/integration/node-cli/lookup.js';
-import type {
-  ParsedTypeDefinitionDocument,
-  ParserConfig,
-} from '../../../src/core/parser.js';
-import type { Document } from '../../../src/core/types.js';
-import type {
-  ResolveWikiLinkResult,
-  TypeReferenceLookupResult,
-  TypeDeclarationLookupResult,
-} from '../../../src/core/integration.js';
-import type { IngestedMarkdown } from '../../../src/integration/node-cli/ingestion.js';
 
 function makeDocument(
   path: string,
@@ -44,10 +34,7 @@ function ingestionDoc(
   };
 }
 
-function ingestionFailure(
-  path: string,
-  reason: string,
-): IngestedMarkdown {
+function ingestionFailure(path: string, reason: string): IngestedMarkdown {
   return {
     kind: 'ingest-failure',
     path,
@@ -137,9 +124,7 @@ properties:
 
 describe('createResolver', () => {
   it('resolves a Wiki Link to a found document by basename', () => {
-    const ingested: IngestedMarkdown[] = [
-      ingestionDoc('notes/Concept.md', { title: 'Concept' }),
-    ];
+    const ingested: IngestedMarkdown[] = [ingestionDoc('notes/Concept.md', { title: 'Concept' })];
     const resolver = createResolver(ingested);
 
     const result = resolver('[[Concept]]');
@@ -179,9 +164,7 @@ describe('createResolver', () => {
   });
 
   it('returns unavailable when only match failed ingestion', () => {
-    const ingested: IngestedMarkdown[] = [
-      ingestionFailure('notes/Concept.md', 'YAML parse error'),
-    ];
+    const ingested: IngestedMarkdown[] = [ingestionFailure('notes/Concept.md', 'YAML parse error')];
     const resolver = createResolver(ingested);
 
     const result = resolver('[[Concept]]');
@@ -192,9 +175,7 @@ describe('createResolver', () => {
   });
 
   it('resolves by basename ignoring path prefixes', () => {
-    const ingested: IngestedMarkdown[] = [
-      ingestionDoc('skills/typescript/cool/TypeScript.md'),
-    ];
+    const ingested: IngestedMarkdown[] = [ingestionDoc('skills/typescript/cool/TypeScript.md')];
     const resolver = createResolver(ingested);
 
     const result = resolver('[[skills/TypeScript]]');
@@ -202,9 +183,7 @@ describe('createResolver', () => {
   });
 
   it('ignores fragments for lookup', () => {
-    const ingested: IngestedMarkdown[] = [
-      ingestionDoc('Concept.md'),
-    ];
+    const ingested: IngestedMarkdown[] = [ingestionDoc('Concept.md')];
     const resolver = createResolver(ingested);
 
     const result = resolver('[[Concept#section]]');
@@ -212,9 +191,7 @@ describe('createResolver', () => {
   });
 
   it('ignores display text for lookup', () => {
-    const ingested: IngestedMarkdown[] = [
-      ingestionDoc('Concept.md'),
-    ];
+    const ingested: IngestedMarkdown[] = [ingestionDoc('Concept.md')];
     const resolver = createResolver(ingested);
 
     const result = resolver('[[Concept|My Concept]]');
@@ -237,13 +214,8 @@ describe('createResolver', () => {
 });
 
 describe('createTypeRegistry', () => {
-  function parseTypeDoc(
-    path: string,
-    schemaYaml: string,
-  ): ParsedTypeDefinitionDocument {
-    const candidates = [
-      { path, raw: typeDocRaw(schemaYaml) },
-    ];
+  function parseTypeDoc(path: string, schemaYaml: string): ParsedTypeDefinitionDocument {
+    const candidates = [{ path, raw: typeDocRaw(schemaYaml) }];
     const result = parseTypeCandidates(candidates, parserConfig);
     if (result.parsed.length !== 1) {
       throw new Error(`Failed to parse type doc: ${path}`);
@@ -252,10 +224,7 @@ describe('createTypeRegistry', () => {
   }
 
   it('getByName resolves a type by canonical name', () => {
-    const concept = parseTypeDoc(
-      'types/Concept.md',
-      'properties:\n  title:\n    type: text',
-    );
+    const concept = parseTypeDoc('types/Concept.md', 'properties:\n  title:\n    type: text');
     const registry = createTypeRegistry([concept]);
 
     const result = registry.getByName('concept');
@@ -284,10 +253,7 @@ describe('createTypeRegistry', () => {
   });
 
   it('getByName is case-insensitive', () => {
-    const typeDef = parseTypeDoc(
-      'types/Concept.md',
-      'properties:\n  title:\n    type: text',
-    );
+    const typeDef = parseTypeDoc('types/Concept.md', 'properties:\n  title:\n    type: text');
     const registry = createTypeRegistry([typeDef]);
 
     const result = registry.getByName('Concept');
@@ -295,10 +261,7 @@ describe('createTypeRegistry', () => {
   });
 
   it('getByDeclaration resolves Wiki Link declaration', () => {
-    const skill = parseTypeDoc(
-      'types/Skill.md',
-      'properties:\n  description:\n    type: text',
-    );
+    const skill = parseTypeDoc('types/Skill.md', 'properties:\n  description:\n    type: text');
     const registry = createTypeRegistry([skill]);
 
     const result = registry.getByDeclaration('[[Skill]]');
@@ -309,10 +272,7 @@ describe('createTypeRegistry', () => {
   });
 
   it('getByDeclaration resolves bare type literal', () => {
-    const typeType = parseTypeDoc(
-      'types/Type.md',
-      'properties:\n  category:\n    type: text',
-    );
+    const typeType = parseTypeDoc('types/Type.md', 'properties:\n  category:\n    type: text');
     const registry = createTypeRegistry([typeType]);
 
     const result = registry.getByDeclaration('type');
@@ -356,10 +316,7 @@ describe('createTypeRegistry', () => {
   });
 
   it('getByDeclaration resolves Wiki Link ignoring path prefix', () => {
-    const skill = parseTypeDoc(
-      'types/Skill.md',
-      'properties:\n  description:\n    type: text',
-    );
+    const skill = parseTypeDoc('types/Skill.md', 'properties:\n  description:\n    type: text');
     const registry = createTypeRegistry([skill]);
 
     const result = registry.getByDeclaration('[[foo/bar/Skill]]');
@@ -382,18 +339,14 @@ describe('createTypeRegistry', () => {
   });
 
   it('getByName returns unavailable for broken type candidate', () => {
-    const registry = createTypeRegistry([], [
-      { path: 'types/Broken.md', errors: [] },
-    ]);
+    const registry = createTypeRegistry([], [{ path: 'types/Broken.md', errors: [] }]);
 
     const result = registry.getByName('broken');
     expect(result.kind).toBe('unavailable');
   });
 
   it('getByDeclaration returns unavailable for broken type candidate', () => {
-    const registry = createTypeRegistry([], [
-      { path: 'types/Skill.md', errors: [] },
-    ]);
+    const registry = createTypeRegistry([], [{ path: 'types/Skill.md', errors: [] }]);
 
     const result = registry.getByDeclaration('[[Skill]]');
     expect(result.kind).toBe('unavailable');

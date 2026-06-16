@@ -1,9 +1,8 @@
-import { unified } from 'unified';
-import remarkParse from 'remark-parse';
 import type { Heading, Html, PhrasingContent, Root } from 'mdast';
-
-import type { ParseError, Section } from './parser.js';
+import remarkParse from 'remark-parse';
+import { unified } from 'unified';
 import { sectionError } from './parser/errors.js';
+import type { ParseError, Section } from './parser.js';
 
 const REQUIRED_MARKER = /<!--\s*required\s*-->/;
 

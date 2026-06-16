@@ -1,3 +1,4 @@
+import { isValidExternalLinkShape, isValidWikiLinkShape } from '../link-grammar.js';
 import type {
   ListItemType,
   ParseError,
@@ -6,10 +7,6 @@ import type {
   PropertySchema,
   PropertyTypeName,
 } from '../parser.js';
-import {
-  isValidExternalLinkShape,
-  isValidWikiLinkShape,
-} from '../link-grammar.js';
 import { isCanonicalDate, isIso8601WithTimezone } from '../primitive-grammar.js';
 import { propertyError } from './errors.js';
 
@@ -61,12 +58,16 @@ function checkPrimitiveDefault(
       return null;
     case 'date':
       if (typeof value !== 'string' || !isCanonicalDate(value)) {
-        return defaultError(property, `Default must be a YYYY-MM-DD date string.`, { expected: 'date' });
+        return defaultError(property, `Default must be a YYYY-MM-DD date string.`, {
+          expected: 'date',
+        });
       }
       return null;
     case 'datetime':
       if (typeof value !== 'string' || !isIso8601WithTimezone(value)) {
-        return defaultError(property, `Default must be an ISO 8601 datetime with timezone.`, { expected: 'datetime' });
+        return defaultError(property, `Default must be an ISO 8601 datetime with timezone.`, {
+          expected: 'datetime',
+        });
       }
       return null;
     case 'wiki-link':
@@ -76,7 +77,11 @@ function checkPrimitiveDefault(
       return null;
     case 'url':
       if (!isValidExternalLinkShape(value, allowedSchemes)) {
-        return defaultError(property, `Default must be a Markdown External Link with an allowed scheme.`, { expected: 'url' });
+        return defaultError(
+          property,
+          `Default must be a Markdown External Link with an allowed scheme.`,
+          { expected: 'url' },
+        );
       }
       return null;
   }
@@ -105,10 +110,14 @@ export function validateDefault(
 
   if (isEmpty(type, value) && !allowEmpty) {
     return [
-      defaultError(property, `Default for \`${property}\` is empty but \`allow-empty\` is not set.`, {
-        reason: 'empty-not-allowed',
-        expected: typeLabel,
-      }),
+      defaultError(
+        property,
+        `Default for \`${property}\` is empty but \`allow-empty\` is not set.`,
+        {
+          reason: 'empty-not-allowed',
+          expected: typeLabel,
+        },
+      ),
     ];
   }
 
@@ -165,7 +174,12 @@ export function validateDefault(
       return [defaultError(property, `Default must be a string.`, { expected: 'enum', allowed })];
     }
     if (!allowed.includes(value)) {
-      return [defaultError(property, `Default must equal one of the declared enum values.`, { expected: 'enum', allowed })];
+      return [
+        defaultError(property, `Default must equal one of the declared enum values.`, {
+          expected: 'enum',
+          allowed,
+        }),
+      ];
     }
     return [];
   }

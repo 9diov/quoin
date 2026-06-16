@@ -19,16 +19,11 @@ const PRIMITIVE_TYPES = new Set<PrimitiveTypeName>([
   'url',
 ]);
 
-const ALLOWED_PROPERTY_SCHEMA_KEYS = new Set([
-  'type',
-  'required',
-  'allow-empty',
-  'default',
-]);
+const ALLOWED_PROPERTY_SCHEMA_KEYS = new Set(['type', 'required', 'allow-empty', 'default']);
 
 const CANONICAL_KEY = /^[a-z0-9]([a-z0-9_-]*[a-z0-9])?$/;
-const WIKI_LINK_RE = /^\[\[\s*([^\[\]]*?)\s*\]\]$/;
-const COLLECTION_RE = /^(list|choice)<([^]*)>$/;
+const WIKI_LINK_RE = /^\[\[\s*([^[\]]*?)\s*\]\]$/;
+const COLLECTION_RE = /^(list|choice)<([\s\S]*)>$/;
 
 export function isCanonicalPropertyKey(key: string): boolean {
   if (key === '_type') return true;
@@ -46,9 +41,7 @@ type ParseTypeError = {
 
 type ParseTypeResult = { type: PropertyTypeName } | ParseTypeError;
 
-function parseWikiLinkTarget(
-  raw: string,
-): { name: string } | ParseTypeError {
+function parseWikiLinkTarget(raw: string): { name: string } | ParseTypeError {
   const match = WIKI_LINK_RE.exec(raw);
   if (!match) {
     return { error: 'invalid-type-reference', details: { value: raw } };
@@ -218,10 +211,7 @@ export type PropertySchemaResult = {
   errors: ParseError[];
 };
 
-export function validatePropertySchema(
-  key: string,
-  raw: unknown,
-): PropertySchemaResult {
+export function validatePropertySchema(key: string, raw: unknown): PropertySchemaResult {
   const errors: ParseError[] = [];
 
   if (!isCanonicalPropertyKey(key)) {
@@ -270,14 +260,14 @@ export function validatePropertySchema(
     return { errors };
   }
 
-  const typeResult = parsePropertyType(raw['type']);
+  const typeResult = parsePropertyType(raw.type);
   if ('error' in typeResult) {
     if (typeResult.error === 'unknown-property-type') {
       errors.push(
         propertyError(
           'parser:unknown-property-type',
           key,
-          `Property \`${key}\` has unknown type ${JSON.stringify(raw['type'])}.`,
+          `Property \`${key}\` has unknown type ${JSON.stringify(raw.type)}.`,
           typeResult.details,
         ),
       );
@@ -306,7 +296,7 @@ export function validatePropertySchema(
   const schema: PropertySchema = { type: typeResult.type as PropertyTypeName };
 
   if ('required' in raw) {
-    if (typeof raw['required'] !== 'boolean') {
+    if (typeof raw.required !== 'boolean') {
       errors.push(
         propertyError(
           'parser:invalid-property-schema',
@@ -316,7 +306,7 @@ export function validatePropertySchema(
         ),
       );
     } else {
-      schema.required = raw['required'];
+      schema.required = raw.required;
     }
   }
 
@@ -336,7 +326,7 @@ export function validatePropertySchema(
   }
 
   if ('default' in raw) {
-    schema.default = raw['default'];
+    schema.default = raw.default;
   }
 
   return { schema, errors };

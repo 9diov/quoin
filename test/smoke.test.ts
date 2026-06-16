@@ -1,23 +1,16 @@
 import { describe, expect, it } from 'vitest';
-
-import {
-  parseTypeDefinitionDocument,
-  scaffold,
-  template,
-  validate,
-} from '../src/index.js';
 import type {
   CollectionTypeName,
   Document,
+  ParsedTypeDefinitionDocument,
   ParseError,
   ParseResult,
-  ParsedTypeDefinitionDocument,
   ParserConfig,
   PrimitiveTypeName,
   PropertySchema,
   PropertyTypeName,
-  ResolveWikiLinkResult,
   Resolver,
+  ResolveWikiLinkResult,
   ScaffoldingResult,
   Schema,
   Section,
@@ -33,11 +26,15 @@ import type {
   ValidationResult,
   ValidationWarning,
 } from '../src/index.js';
+import { parseTypeDefinitionDocument, scaffold, template, validate } from '../src/index.js';
 
 describe('Core types', () => {
   it('accepts literal values matching D2/D3/D4 shapes', () => {
     const primitive: PrimitiveTypeName = 'text';
-    const collection: CollectionTypeName = { kind: 'list', of: { kind: 'type-ref', name: 'skill' } };
+    const collection: CollectionTypeName = {
+      kind: 'list',
+      of: { kind: 'type-ref', name: 'skill' },
+    };
     const propertyType: PropertyTypeName = collection;
     const propertySchema: PropertySchema = {
       type: primitive,
@@ -141,7 +138,7 @@ describe('Core types', () => {
   it('exposes scaffold and template result shapes', () => {
     const scaffolding: ScaffoldingResult = { properties: { title: 'Untitled' } };
     const templating: TemplatingResult = { body: '## Definitions\n' };
-    expect(scaffolding.properties['title']).toBe('Untitled');
+    expect(scaffolding.properties.title).toBe('Untitled');
     expect(templating.body).toContain('Definitions');
   });
 });

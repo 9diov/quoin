@@ -1,11 +1,11 @@
 import { describe, it } from 'vitest';
 import { validate } from '../../src/index.js';
 import {
-  makeTypeDef,
-  makeDocument,
-  expectPassing,
   expectError,
+  expectPassing,
+  makeDocument,
   makeResolver,
+  makeTypeDef,
   makeTypeRegistry,
 } from './helpers.js';
 
@@ -125,10 +125,7 @@ describe('V042 unknown Type Reference', () => {
       },
     });
 
-    const typeRegistry = makeTypeRegistry(
-      { skill: { kind: 'not-found', typeName: 'skill' } },
-      {},
-    );
+    const typeRegistry = makeTypeRegistry({ skill: { kind: 'not-found', typeName: 'skill' } }, {});
 
     const result = validate(
       document,
@@ -435,7 +432,13 @@ describe('V049 type:ambiguous-declaration from getByDeclaration', () => {
 
     const typeRegistry = makeTypeRegistry(
       { skill: { kind: 'found', typeDef: skillTypeDef } },
-      { '[[Skill]]': { kind: 'ambiguous', typeName: 'skill', candidates: [skillTypeDef, levelTypeDef] } },
+      {
+        '[[Skill]]': {
+          kind: 'ambiguous',
+          typeName: 'skill',
+          candidates: [skillTypeDef, levelTypeDef],
+        },
+      },
     );
 
     const result = validate(

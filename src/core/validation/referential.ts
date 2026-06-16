@@ -1,7 +1,7 @@
 import type { TypeRegistry } from '../integration.js';
 import type { Document } from '../types.js';
-import { validationError } from './errors.js';
 import type { ValidationError } from '../validation.js';
+import { validationError } from './errors.js';
 
 export function validateReferential(
   wikiLink: string,
