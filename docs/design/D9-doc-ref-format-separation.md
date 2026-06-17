@@ -297,6 +297,13 @@ Integrations own target interpretation:
 
 TypeRegistry still resolves Type Definition Documents by canonical type name. `referenced-type` is already a type name, so it does not depend on the reference format.
 
+Type Declarations have two separable meanings:
+
+1. The Document conforms to a named type.
+2. That named type is backed by a Type Definition Document that can be resolved by TypeRegistry.
+
+In the current model, reference-shaped Type Declarations carry both meanings.
+
 `TypeRegistry.getByDeclaration(value)` must accept type declarations in both canonical formats:
 
 ```yaml
@@ -307,7 +314,22 @@ _type: "[[article]]"
 _type: "[](article)"
 ```
 
-Both declarations identify the `article` Type Definition Document.
+Both declarations mean:
+
+- This Document conforms to type `article`.
+- Type `article` is declared by a resolvable Type Definition Document.
+
+That second meaning is what enables Referential Validation to compare the target Document's resolved Type Definition Document with the `referenced-type` declared in the source schema.
+
+Future work may add bare Type Declarations:
+
+```yaml
+_type: article
+```
+
+A bare declaration would mean only that the Document conforms to type `article`. It would not, by itself, assert that `article` is declared by a Type Definition Document. That leaves room for alternate type-definition mechanisms, external registries, generated schemas, or integration-specific type catalogs.
+
+Bare Type Declarations are not part of this change. Until such a mechanism exists, `TypeRegistry.getByDeclaration('article')` should continue to return `invalid-declaration`.
 
 The bare sentinel remains unchanged:
 
@@ -382,4 +404,3 @@ Costs:
 - Parser schema validation becomes slightly more contextual because `format` and `referenced-type` are valid only for `doc-ref`.
 - Resolver contract needs a format-aware migration.
 - Existing docs and tests that treat `wiki-link` as a primitive need updating or compatibility aliases.
-
