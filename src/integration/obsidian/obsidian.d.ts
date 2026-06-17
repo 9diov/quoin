@@ -18,10 +18,40 @@ declare module 'obsidian' {
     detachLeavesOfType(type: string): void;
     getLeavesOfType(type: string): WorkspaceLeaf[];
     getRightLeaf(split: boolean): WorkspaceLeaf | null;
+    onLayoutReady(callback: () => void): void;
     revealLeaf(leaf: WorkspaceLeaf): void;
   }
 
+  export type EventRef = object;
+
+  export class TAbstractFile {
+    path: string;
+  }
+
+  export class TFile extends TAbstractFile {
+    extension: string;
+  }
+
+  export type CachedMetadata = {
+    frontmatter?: unknown;
+  };
+
+  export class MetadataCache {
+    getFileCache(file: TFile): CachedMetadata | null;
+    on(name: 'resolved', callback: () => void): EventRef;
+    on(name: 'changed', callback: (file: TFile) => void): EventRef;
+  }
+
+  export class Vault {
+    getMarkdownFiles(): TFile[];
+    read(file: TFile): Promise<string>;
+    on(name: 'create' | 'delete', callback: (file: TAbstractFile) => void): EventRef;
+    on(name: 'rename', callback: (file: TAbstractFile, oldPath: string) => void): EventRef;
+  }
+
   export class App {
+    metadataCache: MetadataCache;
+    vault: Vault;
     workspace: Workspace;
   }
 
@@ -33,6 +63,7 @@ declare module 'obsidian' {
     addSettingTab(tab: PluginSettingTab): void;
     addCommand(command: Command): void;
     registerView(type: string, viewCreator: (leaf: WorkspaceLeaf) => ItemView): void;
+    registerEvent(eventRef: EventRef): void;
   }
 
   export class Notice {

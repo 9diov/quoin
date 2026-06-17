@@ -1,15 +1,19 @@
 import { Notice, Plugin, type WorkspaceLeaf } from 'obsidian';
 
+import { ObsidianVaultTypeRegistry, registerObsidianTypeRegistryEvents } from './discovery.js';
 import { normalizeObsidianPluginSettings, type ObsidianPluginSettings } from './settings.js';
 import { QuoinSettingTab } from './settings-tab.js';
 import { QUOIN_VIEW_TYPE, QuoinSidebarView } from './view.js';
 
 export default class QuoinPlugin extends Plugin {
   settings: ObsidianPluginSettings = normalizeObsidianPluginSettings(undefined);
+  typeRegistry: ObsidianVaultTypeRegistry | null = null;
   private statusBarEl: HTMLElement | null = null;
 
   async onload(): Promise<void> {
     await this.loadSettings();
+    this.typeRegistry = new ObsidianVaultTypeRegistry(this.app, () => this.settings);
+    registerObsidianTypeRegistryEvents(this, this.typeRegistry);
 
     this.statusBarEl = this.addStatusBarItem();
     this.statusBarEl.setText('Quoin');
