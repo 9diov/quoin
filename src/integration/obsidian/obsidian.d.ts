@@ -38,6 +38,7 @@ declare module 'obsidian' {
 
   export class MetadataCache {
     getFileCache(file: TFile): CachedMetadata | null;
+    getFirstLinkpathDest(linkpath: string, sourcePath: string): TFile | null;
     on(name: 'resolved', callback: () => void): EventRef;
     on(name: 'changed', callback: (file: TFile) => void): EventRef;
   }

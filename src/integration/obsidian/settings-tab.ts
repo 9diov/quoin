@@ -3,6 +3,7 @@ import { Notice, PluginSettingTab, Setting } from 'obsidian';
 import type QuoinPlugin from './main.js';
 import {
   createPlaceholderBinding,
+  hasBlockingSettingsIssues,
   type ObsidianPluginSettings,
   type SettingsValidationIssue,
   updateBinding,
@@ -41,8 +42,11 @@ export class QuoinSettingTab extends PluginSettingTab {
 
   private async saveIfValid(): Promise<void> {
     const issues = validateObsidianPluginSettings(this.plugin.settings);
-    if (issues.length > 0) {
-      new Notice(issues[0]?.message ?? 'Quoin settings are invalid.');
+    if (hasBlockingSettingsIssues(issues)) {
+      new Notice(
+        issues.find((issue) => issue.severity === 'error')?.message ??
+          'Quoin settings are invalid.',
+      );
       this.display();
       return;
     }

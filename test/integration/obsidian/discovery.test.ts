@@ -169,6 +169,7 @@ function createFakeApp(files: FakeFile[]): FakeApp {
     },
     metadataCache: {
       getFileCache: (file: FakeFile) => ({ frontmatter: frontmatterByPath.get(file.path) }),
+      getFirstLinkpathDest: () => null,
       on: () => ({}),
     },
     workspace: {

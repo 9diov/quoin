@@ -146,6 +146,21 @@ describe('validateObsidianPluginSettings', () => {
     expect(issues).toContainEqual({
       path: 'bindings[0].match',
       message: 'Binding match must not be empty.',
+      severity: 'error',
+    });
+  });
+
+  it('blocks binding matches that escape the vault root after normalization', () => {
+    const issues = validateObsidianPluginSettings(
+      withSettings({
+        bindings: [{ type: 'concept', match: '../outside/**/*.md' }],
+      }),
+    );
+
+    expect(issues).toContainEqual({
+      path: 'bindings[0].match',
+      message: 'Binding match must stay inside the vault root.',
+      severity: 'error',
     });
   });
 
@@ -162,6 +177,22 @@ describe('validateObsidianPluginSettings', () => {
     expect(issues).toContainEqual({
       path: 'bindings[1]',
       message: 'Binding duplicates an earlier row.',
+      severity: 'error',
+    });
+  });
+
+  it('reports unknown binding types as non-blocking warnings when known types are supplied', () => {
+    const issues = validateObsidianPluginSettings(
+      withSettings({
+        bindings: [{ type: 'missing-type', match: 'notes/**/*.md' }],
+      }),
+      ['concept'],
+    );
+
+    expect(issues).toContainEqual({
+      path: 'bindings[0].type',
+      message: 'Binding references unknown type "missing-type".',
+      severity: 'warning',
     });
   });
 
@@ -177,11 +208,11 @@ describe('validateObsidianPluginSettings', () => {
       }),
     );
 
-    expect(issues.map((issue) => issue.path)).toEqual([
-      'typeDeclarationKey',
-      'allowedUrlSchemes[1]',
-      'debounce.activeFile',
-      'debounce.typeDefCascade',
+    expect(issues.map((issue) => [issue.path, issue.severity])).toEqual([
+      ['typeDeclarationKey', 'error'],
+      ['allowedUrlSchemes[1]', 'error'],
+      ['debounce.activeFile', 'error'],
+      ['debounce.typeDefCascade', 'error'],
     ]);
   });
 });

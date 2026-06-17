@@ -1,3 +1,5 @@
+import { posix } from 'node:path';
+
 import { isMapping } from '../../core/parser/object.js';
 import { isCanonicalIdentifier } from '../../core/parser/property-schema.js';
 import type { UntypedDocumentBehavior } from '../../core/validation.js';
@@ -22,6 +24,7 @@ export type ObsidianPluginSettings = {
 export type SettingsValidationIssue = {
   path: string;
   message: string;
+  severity: 'error' | 'warning';
 };
 
 export const DEFAULT_OBSIDIAN_PLUGIN_SETTINGS: ObsidianPluginSettings = {
@@ -108,13 +111,16 @@ export function normalizeObsidianPluginSettings(saved: unknown): ObsidianPluginS
 
 export function validateObsidianPluginSettings(
   settings: ObsidianPluginSettings,
+  knownTypeNames: readonly string[] = [],
 ): SettingsValidationIssue[] {
   const issues: SettingsValidationIssue[] = [];
+  const knownTypes = new Set(knownTypeNames.map((name) => name.toLowerCase()));
 
   if (settings.typeDeclarationKey.trim().length === 0) {
     issues.push({
       path: 'typeDeclarationKey',
       message: 'Type declaration key must not be empty.',
+      severity: 'error',
     });
   }
 
@@ -123,6 +129,7 @@ export function validateObsidianPluginSettings(
       issues.push({
         path: `allowedUrlSchemes[${index}]`,
         message: 'Allowed URL schemes must not contain empty values.',
+        severity: 'error',
       });
     }
   });
@@ -131,6 +138,7 @@ export function validateObsidianPluginSettings(
     issues.push({
       path: 'debounce.activeFile',
       message: 'Active file debounce must be zero or greater.',
+      severity: 'error',
     });
   }
 
@@ -138,6 +146,7 @@ export function validateObsidianPluginSettings(
     issues.push({
       path: 'debounce.typeDefCascade',
       message: 'Type definition cascade debounce must be zero or greater.',
+      severity: 'error',
     });
   }
 
@@ -148,6 +157,13 @@ export function validateObsidianPluginSettings(
       issues.push({
         path: `bindings[${index}].type`,
         message: 'Binding type must be a canonical type name.',
+        severity: 'error',
+      });
+    } else if (knownTypes.size > 0 && !knownTypes.has(binding.type)) {
+      issues.push({
+        path: `bindings[${index}].type`,
+        message: `Binding references unknown type "${binding.type}".`,
+        severity: 'warning',
       });
     }
 
@@ -155,6 +171,13 @@ export function validateObsidianPluginSettings(
       issues.push({
         path: `bindings[${index}].match`,
         message: 'Binding match must not be empty.',
+        severity: 'error',
+      });
+    } else if (bindingMatchEscapesVault(binding.match)) {
+      issues.push({
+        path: `bindings[${index}].match`,
+        message: 'Binding match must stay inside the vault root.',
+        severity: 'error',
       });
     }
 
@@ -163,12 +186,17 @@ export function validateObsidianPluginSettings(
       issues.push({
         path: `bindings[${index}]`,
         message: 'Binding duplicates an earlier row.',
+        severity: 'error',
       });
     }
     seen.add(duplicateKey);
   });
 
   return issues;
+}
+
+export function hasBlockingSettingsIssues(issues: SettingsValidationIssue[]): boolean {
+  return issues.some((issue) => issue.severity === 'error');
 }
 
 export function updateBinding(
@@ -179,6 +207,11 @@ export function updateBinding(
   const current = settings.bindings[index];
   if (current === undefined) return;
   settings.bindings[index] = { ...current, ...patch };
+}
+
+function bindingMatchEscapesVault(match: string): boolean {
+  const normalized = posix.normalize(match.trim().replaceAll('\\', '/'));
+  return posix.isAbsolute(normalized) || normalized === '..' || normalized.startsWith('../');
 }
 
 export function createPlaceholderBinding(existing: TypeBinding[]): TypeBinding {
