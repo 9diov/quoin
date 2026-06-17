@@ -1,6 +1,6 @@
 import fc from 'fast-check';
-import type { ParsedTypeDefinitionDocument, Schema } from '../../src/index.js';
 import { isCanonicalPropertyKey } from '../../src/core/parser/property-schema.js';
+import type { ParsedTypeDefinitionDocument, Schema } from '../../src/index.js';
 
 const alphaNumSlash = fc.constantFrom(
   ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/-_.'.split(''),
@@ -49,8 +49,7 @@ export const arbitraryWikiLink: fc.Arbitrary<string> = fc
     const parts: string[] = [];
     if (alias !== undefined) parts.push(`|${alias}`);
     if (heading !== undefined) parts.push(`#${heading}`);
-    if (blockId !== undefined && heading === undefined)
-      parts.push(`#^${blockId}`);
+    if (blockId !== undefined && heading === undefined) parts.push(`#^${blockId}`);
     return `[[${target}${parts.join('')}]]`;
   });
 
@@ -95,10 +94,7 @@ export const arbitraryAllowedSchemes: fc.Arbitrary<string[]> = fc
 export const arbitraryExternalLink: fc.Arbitrary<string> = fc
   .tuple(LINK_TEXT, fc.constantFrom('http', 'https', 'mailto'), URL_PATH)
   .map(([text, scheme, path]) => {
-    const url =
-      scheme === 'mailto'
-        ? 'mailto:user@example.com'
-        : `${scheme}://example.com/${path}`;
+    const url = scheme === 'mailto' ? 'mailto:user@example.com' : `${scheme}://example.com/${path}`;
     return `[${text}](${url})`;
   });
 
@@ -111,19 +107,14 @@ function isGregorianLeapYear(year: number): boolean {
 }
 
 export const arbitraryCanonicalDate: fc.Arbitrary<string> = fc
-  .tuple(
-    fc.integer({ min: 1, max: 9999 }),
-    fc.integer({ min: 1, max: 12 }),
-  )
+  .tuple(fc.integer({ min: 1, max: 9999 }), fc.integer({ min: 1, max: 12 }))
   .chain(([year, month]) =>
-    fc
-      .integer({ min: 1, max: daysInMonth(year, month) })
-      .map((day) => {
-        const y = String(year).padStart(4, '0');
-        const m = String(month).padStart(2, '0');
-        const d = String(day).padStart(2, '0');
-        return `${y}-${m}-${d}`;
-      }),
+    fc.integer({ min: 1, max: daysInMonth(year, month) }).map((day) => {
+      const y = String(year).padStart(4, '0');
+      const m = String(month).padStart(2, '0');
+      const d = String(day).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }),
   );
 
 const INVALID_DATE_KIND = fc.constantFrom(
@@ -136,43 +127,34 @@ const INVALID_DATE_KIND = fc.constantFrom(
   'garbage',
 ) as fc.Arbitrary<string>;
 
-export const arbitraryNonCanonicalDate: fc.Arbitrary<string> = INVALID_DATE_KIND.chain(
-  (kind) => {
-    switch (kind) {
-      case 'bad-format':
-        return fc
-          .tuple(
-            fc.integer({ min: 10000, max: 99999 }),
-            fc.integer({ min: 1, max: 12 }),
-            fc.integer({ min: 1, max: 28 }),
-          )
-          .map(
-            ([y, m, d]) =>
-              `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`,
-          );
-      case 'month-zero':
-        return fc
-          .integer({ min: 1, max: 28 })
-          .map((d) => `2023-00-${String(d).padStart(2, '0')}`);
-      case 'month-thirteen':
-        return fc
-          .integer({ min: 1, max: 28 })
-          .map((d) => `2023-13-${String(d).padStart(2, '0')}`);
-      case 'april-31':
-        return fc.constant('2023-04-31');
-      case 'feb-29-non-leap': {
-        const nonLeap = fc.integer({ min: 1, max: 9999 }).filter((y) => !isGregorianLeapYear(y));
-        return nonLeap.map((y) => `${y}-02-29`);
-      }
-      case 'day-zero':
-        return fc.constant('2023-06-00');
-      case 'garbage':
-        return fc.constantFrom('not-a-date', '', '2023', '2023-14-01');
-      default:
-        return fc.constant('not-a-date');
+export const arbitraryNonCanonicalDate: fc.Arbitrary<string> = INVALID_DATE_KIND.chain((kind) => {
+  switch (kind) {
+    case 'bad-format':
+      return fc
+        .tuple(
+          fc.integer({ min: 10000, max: 99999 }),
+          fc.integer({ min: 1, max: 12 }),
+          fc.integer({ min: 1, max: 28 }),
+        )
+        .map(([y, m, d]) => `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`);
+    case 'month-zero':
+      return fc.integer({ min: 1, max: 28 }).map((d) => `2023-00-${String(d).padStart(2, '0')}`);
+    case 'month-thirteen':
+      return fc.integer({ min: 1, max: 28 }).map((d) => `2023-13-${String(d).padStart(2, '0')}`);
+    case 'april-31':
+      return fc.constant('2023-04-31');
+    case 'feb-29-non-leap': {
+      const nonLeap = fc.integer({ min: 1, max: 9999 }).filter((y) => !isGregorianLeapYear(y));
+      return nonLeap.map((y) => `${y}-02-29`);
     }
-  },
-);
+    case 'day-zero':
+      return fc.constant('2023-06-00');
+    case 'garbage':
+      return fc.constantFrom('not-a-date', '', '2023', '2023-14-01');
+    default:
+      return fc.constant('not-a-date');
+  }
+});
 
 const CANONICAL_KEY_CHARS = 'abcdefghijklmnopqrstuvwxyz0123456789_-'.split('');
 
@@ -184,13 +166,7 @@ const CANONICAL_KEY_MID = fc.string({
   maxLength: 20,
 });
 
-const CANONICAL_KEY_START = fc.constantFrom(
-  ...'abcdefghijklmnopqrstuvwxyz0123456789'.split(''),
-);
-
-const CANONICAL_KEY_END = fc.constantFrom(
-  ...'abcdefghijklmnopqrstuvwxyz0123456789'.split(''),
-);
+const CANONICAL_KEY_START = fc.constantFrom(...'abcdefghijklmnopqrstuvwxyz0123456789'.split(''));
 
 export const arbitraryCanonicalPropertyKey: fc.Arbitrary<string> = fc
   .tuple(CANONICAL_KEY_START, CANONICAL_KEY_MID)
@@ -231,12 +207,9 @@ export const arbitraryNonCanonicalPropertyKey: fc.Arbitrary<string> = fc
   // actually holds for every value it emits.
   .filter((k) => !isCanonicalPropertyKey(k));
 
-const PRIMITIVE_TYPES = fc.constantFrom(
-  'text',
-  'number',
-  'boolean',
-  'date',
-) as fc.Arbitrary<'text' | 'number' | 'boolean' | 'date'>;
+const PRIMITIVE_TYPES = fc.constantFrom('text', 'number', 'boolean', 'date') as fc.Arbitrary<
+  'text' | 'number' | 'boolean' | 'date'
+>;
 
 export type GeneratedSchemaInfo = {
   typeDef: ParsedTypeDefinitionDocument;
