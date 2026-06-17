@@ -5,3 +5,4 @@ Implementation plans in this folder cover host integrations, CLI/runtime behavio
 Current plans:
 
 - [Node CLI plans](node-cli/README.md)
+- [Obsidian plugin plans](obsidian/README.md)
