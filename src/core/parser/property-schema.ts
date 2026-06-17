@@ -8,6 +8,7 @@ import type {
   TypeReference,
 } from '../parser.js';
 import { propertyError } from './errors.js';
+import { isMapping } from './object.js';
 
 const PRIMITIVE_TYPES = new Set<PrimitiveTypeName>([
   'text',
@@ -200,10 +201,6 @@ function parsePropertyType(raw: unknown): ParseTypeResult {
   }
 
   return { error: 'unknown-property-type', details: { value: trimmed } };
-}
-
-function isMapping(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
 }
 
 export type PropertySchemaResult = {

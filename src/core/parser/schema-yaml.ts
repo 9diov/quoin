@@ -2,6 +2,7 @@ import { parse as parseYaml } from 'yaml';
 
 import type { ParseError, PropertySchema, Schema } from '../parser.js';
 import { schemaBlockError } from './errors.js';
+import { isMapping } from './object.js';
 import { validatePropertySchema } from './property-schema.js';
 
 export type SchemaParseResult = {
@@ -10,10 +11,6 @@ export type SchemaParseResult = {
 };
 
 const ALLOWED_TOP_LEVEL = new Set(['properties']);
-
-function isMapping(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
 
 export function parseSchemaYaml(yamlBody: string): SchemaParseResult {
   let parsed: unknown;

@@ -1,0 +1,9 @@
+{
+  "id": "quoin",
+  "name": "Quoin",
+  "version": "0.1.0",
+  "minAppVersion": "1.0.0",
+  "description": "Validate Markdown Documents against Quoin Type Definition Documents.",
+  "author": "Quoin",
+  "isDesktopOnly": true
+}

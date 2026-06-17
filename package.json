@@ -25,7 +25,8 @@
     "node": ">=18"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json && node scripts/fix-cli-bin.mjs",
+    "build": "tsc -p tsconfig.build.json && node scripts/fix-cli-bin.mjs && npm run build:obsidian",
+    "build:obsidian": "node scripts/build-obsidian-plugin.mjs",
     "prepack": "npm run build",
     "smoke:pack": "node scripts/package-smoke-test.mjs",
     "typecheck": "tsc --noEmit",
@@ -45,6 +46,7 @@
     "fast-check": "^4.8.0",
     "tsx": "^4.22.4",
     "typescript": "^5.9.3",
+    "esbuild": "~0.28.0",
     "vitest": "^4.0.15"
   },
   "dependencies": {

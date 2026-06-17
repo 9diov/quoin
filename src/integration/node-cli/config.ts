@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { dirname, isAbsolute, join, resolve } from 'node:path';
 import { type ParseError, parse as parseJsonc, printParseErrorCode } from 'jsonc-parser';
 
+import { isCanonicalIdentifier } from '../../core/parser/property-schema.js';
 import type { UntypedDocumentBehavior } from '../../core/validation.js';
 import type { TypeBinding } from './bindings.js';
 
@@ -57,8 +58,6 @@ export class ConfigValidationError extends Error {
 }
 
 const CONFIG_FILE_NAME = 'quoin.config.jsonc';
-const CANONICAL_TYPE_NAME = /^[a-z0-9]([a-z0-9_-]*[a-z0-9])?$/;
-
 export function defaultEffectiveConfig(cwd: string): EffectiveConfig {
   return {
     root: resolve(cwd),
@@ -142,7 +141,7 @@ function validateBindings(value: unknown): TypeBinding[] {
     }
 
     const type = obj.type;
-    if (typeof type !== 'string' || !CANONICAL_TYPE_NAME.test(type)) {
+    if (typeof type !== 'string' || !isCanonicalIdentifier(type)) {
       throw new ConfigValidationError(
         `Config "bindings[${index}].type" must be a canonical type name.`,
       );
