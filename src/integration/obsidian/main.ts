@@ -1,4 +1,4 @@
-import { Notice, Plugin, type WorkspaceLeaf } from 'obsidian';
+import { Notice, Plugin, type TFile, type WorkspaceLeaf } from 'obsidian';
 
 import {
   type ActiveFileValidationState,
@@ -9,23 +9,34 @@ import { ObsidianVaultTypeRegistry, registerObsidianTypeRegistryEvents } from '.
 import { ObsidianBasenameIndex, registerObsidianBasenameIndexEvents } from './lookup.js';
 import { normalizeObsidianPluginSettings, type ObsidianPluginSettings } from './settings.js';
 import { QuoinSettingTab } from './settings-tab.js';
-import { QUOIN_VIEW_TYPE, QuoinSidebarView } from './view.js';
+import { enumerateVaultValidationTargets } from './vault-validation.js';
+import {
+  QUOIN_VIEW_TYPE,
+  type QuoinSidebarTab,
+  QuoinSidebarView,
+  type VaultValidationState,
+} from './view.js';
 
 export default class QuoinPlugin extends Plugin {
   settings: ObsidianPluginSettings = normalizeObsidianPluginSettings(undefined);
   typeRegistry: ObsidianVaultTypeRegistry | null = null;
   basenameIndex: ObsidianBasenameIndex | null = null;
   activeFileValidationState: ActiveFileValidationState = { kind: 'hidden' };
+  vaultValidationState: VaultValidationState = { kind: 'never', lastRun: null, rows: [] };
   private statusBarEl: HTMLElement | null = null;
   private activeFileValidationTimer: number | null = null;
   private activeFileValidationGeneration = 0;
+  private vaultValidationGeneration = 0;
+  private readonly sidebarViews = new Set<QuoinSidebarView>();
   private statusBarClickTarget: 'validation' | 'types' = 'validation';
 
   async onload(): Promise<void> {
     await this.loadSettings();
     this.typeRegistry = new ObsidianVaultTypeRegistry(this.app, () => this.settings);
     this.basenameIndex = new ObsidianBasenameIndex();
-    registerObsidianTypeRegistryEvents(this, this.typeRegistry);
+    registerObsidianTypeRegistryEvents(this, this.typeRegistry, () => {
+      this.refreshSidebarViews();
+    });
     registerObsidianBasenameIndexEvents(this, this.basenameIndex);
 
     this.statusBarEl = this.addStatusBarItem();
@@ -35,7 +46,7 @@ export default class QuoinPlugin extends Plugin {
     });
     this.renderStatusBar();
 
-    this.registerView(QUOIN_VIEW_TYPE, (leaf: WorkspaceLeaf) => new QuoinSidebarView(leaf));
+    this.registerView(QUOIN_VIEW_TYPE, (leaf: WorkspaceLeaf) => new QuoinSidebarView(leaf, this));
     this.addSettingTab(new QuoinSettingTab(this));
     this.registerCommands();
     this.registerActiveFileValidationEvents();
@@ -43,6 +54,7 @@ export default class QuoinPlugin extends Plugin {
 
   onunload(): void {
     this.clearActiveFileValidationTimer();
+    this.vaultValidationGeneration += 1;
     this.app.workspace.detachLeavesOfType(QUOIN_VIEW_TYPE);
     this.statusBarEl = null;
   }
@@ -57,6 +69,7 @@ export default class QuoinPlugin extends Plugin {
     // and parser config changes are reflected in the snapshot consumed below.
     await this.typeRegistry?.rebuild();
     this.scheduleActiveFileValidation();
+    this.refreshSidebarViews();
   }
 
   private registerCommands(): void {
@@ -80,8 +93,7 @@ export default class QuoinPlugin extends Plugin {
       id: 'validate-vault',
       name: 'Validate vault',
       callback: () => {
-        void this.activateView('validation');
-        new Notice('Quoin vault validation is not implemented yet.');
+        void this.activateView('validation').then(() => this.startVaultValidation());
       },
     });
 
@@ -102,10 +114,85 @@ export default class QuoinPlugin extends Plugin {
     });
   }
 
-  private async activateView(_tab: 'validation' | 'types'): Promise<void> {
+  registerSidebarView(view: QuoinSidebarView): void {
+    this.sidebarViews.add(view);
+  }
+
+  unregisterSidebarView(view: QuoinSidebarView): void {
+    this.sidebarViews.delete(view);
+  }
+
+  async startVaultValidation(): Promise<void> {
+    if (this.typeRegistry === null || this.basenameIndex === null) return;
+
+    const generation = ++this.vaultValidationGeneration;
+    const registryState = this.typeRegistry.getState();
+    const targetFiles = this.getVaultValidationTargets(registryState.typeCandidatePaths);
+
+    this.vaultValidationState = {
+      kind: 'running',
+      lastRun: this.vaultValidationState.lastRun,
+      completed: 0,
+      total: targetFiles.length,
+      rows: [],
+    };
+    this.refreshSidebarViews();
+
+    const rows: VaultValidationState['rows'] = [];
+
+    for (const file of targetFiles) {
+      if (generation !== this.vaultValidationGeneration) {
+        this.vaultValidationState = {
+          kind: 'cancelled',
+          lastRun: new Date(),
+          completed: rows.length,
+          total: targetFiles.length,
+          rows,
+        };
+        this.refreshSidebarViews();
+        return;
+      }
+
+      const state = await this.validateMarkdownFile(file);
+      rows.push({ path: file.path, state });
+      this.vaultValidationState = {
+        kind: 'running',
+        lastRun: this.vaultValidationState.lastRun,
+        completed: rows.length,
+        total: targetFiles.length,
+        rows: [...rows],
+      };
+      this.refreshSidebarViews();
+      await yieldToObsidian();
+    }
+
+    if (generation !== this.vaultValidationGeneration) return;
+
+    this.vaultValidationState = {
+      kind: 'completed',
+      lastRun: new Date(),
+      rows,
+    };
+    this.refreshSidebarViews();
+  }
+
+  cancelVaultValidation(): void {
+    if (this.vaultValidationState.kind !== 'running') return;
+    this.vaultValidationGeneration += 1;
+  }
+
+  async openMarkdownFile(path: string): Promise<void> {
+    const file = this.findMarkdownFile(path);
+    if (file === null) return;
+    const leaf = this.app.workspace.getLeaf?.(false) ?? this.app.workspace.getRightLeaf(false);
+    await leaf?.openFile(file);
+  }
+
+  private async activateView(tab: QuoinSidebarTab): Promise<void> {
     const existing = this.app.workspace.getLeavesOfType(QUOIN_VIEW_TYPE)[0];
     if (existing !== undefined) {
       this.app.workspace.revealLeaf(existing);
+      this.selectSidebarTab(tab);
       return;
     }
 
@@ -117,6 +204,7 @@ export default class QuoinPlugin extends Plugin {
       active: true,
     });
     this.app.workspace.revealLeaf(leaf);
+    this.selectSidebarTab(tab);
   }
 
   private registerActiveFileValidationEvents(): void {
@@ -135,12 +223,12 @@ export default class QuoinPlugin extends Plugin {
         const active = this.app.workspace.getActiveFile();
         if (active?.path === file.path) {
           this.scheduleActiveFileValidation();
-          return;
-        }
-
-        if (this.shouldRevalidateForTypeDefinitionChange(file.path)) {
+        } else if (this.shouldRevalidateForTypeDefinitionChange(file.path)) {
           this.scheduleActiveFileValidation(this.settings.debounce.typeDefCascade);
         }
+
+        void this.refreshVaultValidationRow(file);
+        this.refreshSidebarViews();
       }),
     );
   }
@@ -193,10 +281,57 @@ export default class QuoinPlugin extends Plugin {
 
     this.activeFileValidationState = state;
     this.renderStatusBar();
+    this.refreshSidebarViews();
 
     if (options.notify) {
       new Notice(this.activeValidationNoticeText());
     }
+  }
+
+  private async validateMarkdownFile(file: TFile): Promise<ActiveFileValidationState> {
+    if (this.typeRegistry === null || this.basenameIndex === null) return { kind: 'hidden' };
+
+    return validateActiveFile({
+      app: this.app,
+      file,
+      settings: this.settings,
+      typeRegistry: this.typeRegistry.getState().typeRegistry,
+      basenameIndex: this.basenameIndex,
+    });
+  }
+
+  private getVaultValidationTargets(typeCandidatePaths: string[]): TFile[] {
+    return enumerateVaultValidationTargets(this.app.vault.getMarkdownFiles(), typeCandidatePaths);
+  }
+
+  private async refreshVaultValidationRow(file: TFile): Promise<void> {
+    if (
+      this.vaultValidationState.kind === 'never' ||
+      this.vaultValidationState.kind === 'running'
+    ) {
+      return;
+    }
+
+    const rowIndex = this.vaultValidationState.rows.findIndex((row) => row.path === file.path);
+    if (rowIndex === -1) return;
+
+    const state = await this.validateMarkdownFile(file);
+    const rows = [...this.vaultValidationState.rows];
+    rows[rowIndex] = { path: file.path, state };
+    this.vaultValidationState = { ...this.vaultValidationState, rows };
+    this.refreshSidebarViews();
+  }
+
+  private findMarkdownFile(path: string): TFile | null {
+    return this.app.vault.getMarkdownFiles().find((file) => file.path === path) ?? null;
+  }
+
+  private selectSidebarTab(tab: QuoinSidebarTab): void {
+    for (const view of this.sidebarViews) view.selectTab(tab);
+  }
+
+  private refreshSidebarViews(): void {
+    for (const view of this.sidebarViews) view.render();
   }
 
   private activeValidationNoticeText(): string {
@@ -241,4 +376,8 @@ export default class QuoinPlugin extends Plugin {
     this.statusBarEl.setAttr('data-quoin-status', render.statusKind);
     this.statusBarClickTarget = render.clickTarget;
   }
+}
+
+function yieldToObsidian(): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, 0));
 }

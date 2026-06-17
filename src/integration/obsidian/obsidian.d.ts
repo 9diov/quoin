@@ -11,12 +11,14 @@ declare module 'obsidian' {
   };
 
   export class WorkspaceLeaf {
+    openFile(file: TFile): Promise<void>;
     setViewState(state: ViewState): Promise<void>;
   }
 
   export class Workspace {
     detachLeavesOfType(type: string): void;
     getActiveFile(): TFile | null;
+    getLeaf?(newLeaf?: boolean): WorkspaceLeaf;
     getLeavesOfType(type: string): WorkspaceLeaf[];
     getRightLeaf(split: boolean): WorkspaceLeaf | null;
     onLayoutReady(callback: () => void): void;

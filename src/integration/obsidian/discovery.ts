@@ -156,6 +156,7 @@ export class ObsidianVaultTypeRegistry {
 export function registerObsidianTypeRegistryEvents(
   plugin: Plugin,
   registry: ObsidianVaultTypeRegistry,
+  onStateChanged: () => void = () => undefined,
 ): void {
   let layoutReady = false;
   let metadataResolved = false;
@@ -164,7 +165,7 @@ export function registerObsidianTypeRegistryEvents(
   const maybeStartInitialDiscovery = (): void => {
     if (!layoutReady || !metadataResolved || initialDiscoveryStarted) return;
     initialDiscoveryStarted = true;
-    void registry.rebuild();
+    void registry.rebuild().then(onStateChanged);
   };
 
   plugin.app.workspace.onLayoutReady(() => {
@@ -181,14 +182,14 @@ export function registerObsidianTypeRegistryEvents(
 
   plugin.registerEvent(
     plugin.app.metadataCache.on('changed', (file) => {
-      void registry.refreshFile(file);
+      void registry.refreshFile(file).then(onStateChanged);
     }),
   );
 
   plugin.registerEvent(
     plugin.app.vault.on('create', (file) => {
       if (isTFile(file)) {
-        void registry.refreshFile(file);
+        void registry.refreshFile(file).then(onStateChanged);
       }
     }),
   );
@@ -196,9 +197,10 @@ export function registerObsidianTypeRegistryEvents(
   plugin.registerEvent(
     plugin.app.vault.on('rename', (file, oldPath) => {
       if (isTFile(file)) {
-        void registry.renameFile(file, oldPath);
+        void registry.renameFile(file, oldPath).then(onStateChanged);
       } else {
         registry.deleteFile({ path: oldPath });
+        onStateChanged();
       }
     }),
   );
@@ -206,6 +208,7 @@ export function registerObsidianTypeRegistryEvents(
   plugin.registerEvent(
     plugin.app.vault.on('delete', (file) => {
       registry.deleteFile(file);
+      onStateChanged();
     }),
   );
 }
