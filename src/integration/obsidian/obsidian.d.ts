@@ -16,9 +16,11 @@ declare module 'obsidian' {
 
   export class Workspace {
     detachLeavesOfType(type: string): void;
+    getActiveFile(): TFile | null;
     getLeavesOfType(type: string): WorkspaceLeaf[];
     getRightLeaf(split: boolean): WorkspaceLeaf | null;
     onLayoutReady(callback: () => void): void;
+    on(name: 'file-open', callback: (file: TFile | null) => void): EventRef;
     revealLeaf(leaf: WorkspaceLeaf): void;
   }
 
@@ -34,6 +36,10 @@ declare module 'obsidian' {
 
   export type CachedMetadata = {
     frontmatter?: unknown;
+    frontmatterPosition?: {
+      start: { offset: number };
+      end: { offset: number };
+    };
   };
 
   export class MetadataCache {

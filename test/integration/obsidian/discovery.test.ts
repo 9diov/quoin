@@ -174,8 +174,10 @@ function createFakeApp(files: FakeFile[]): FakeApp {
     },
     workspace: {
       detachLeavesOfType: () => undefined,
+      getActiveFile: () => null,
       getLeavesOfType: () => [],
       getRightLeaf: () => null,
+      on: () => ({}),
       onLayoutReady: () => undefined,
       revealLeaf: () => undefined,
     },
