@@ -5,6 +5,11 @@ declare module 'obsidian' {
     callback: () => void;
   };
 
+  export type Pos = {
+    line: number;
+    ch: number;
+  };
+
   export type ViewState = {
     type: string;
     active?: boolean;
@@ -18,11 +23,13 @@ declare module 'obsidian' {
   export class Workspace {
     detachLeavesOfType(type: string): void;
     getActiveFile(): TFile | null;
+    getActiveViewOfType?<T>(type: abstract new (...args: never[]) => T): T | null;
     getLeaf?(newLeaf?: boolean): WorkspaceLeaf;
     getLeavesOfType(type: string): WorkspaceLeaf[];
     getRightLeaf(split: boolean): WorkspaceLeaf | null;
     onLayoutReady(callback: () => void): void;
     on(name: 'file-open', callback: (file: TFile | null) => void): EventRef;
+    on(name: 'file-menu', callback: (menu: Menu, file: TAbstractFile) => void): EventRef;
     revealLeaf(leaf: WorkspaceLeaf): void;
   }
 
@@ -34,6 +41,10 @@ declare module 'obsidian' {
 
   export class TFile extends TAbstractFile {
     extension: string;
+  }
+
+  export class TFolder extends TAbstractFile {
+    children: TAbstractFile[];
   }
 
   export type CachedMetadata = {
@@ -52,6 +63,8 @@ declare module 'obsidian' {
   }
 
   export class Vault {
+    create?(path: string, contents: string): Promise<TFile>;
+    getAbstractFileByPath?(path: string): TAbstractFile | null;
     getMarkdownFiles(): TFile[];
     read(file: TFile): Promise<string>;
     on(name: 'create' | 'delete', callback: (file: TAbstractFile) => void): EventRef;
@@ -87,6 +100,47 @@ declare module 'obsidian' {
     onOpen(): Promise<void>;
     onClose(): Promise<void>;
   }
+
+  export class MarkdownView {
+    editor: Editor;
+  }
+
+  export class Editor {
+    offsetToPos(offset: number): Pos;
+    setCursor(pos: Pos): void;
+  }
+
+  export class FuzzySuggestModal<T> {
+    constructor(app: App);
+    setPlaceholder(placeholder: string): void;
+    open(): void;
+    getItems(): T[];
+    getItemText(item: T): string;
+    renderSuggestion(item: T, el: HTMLElement): void;
+    onChooseItem(item: T, evt: MouseEvent | KeyboardEvent): void;
+    onClose(): void;
+  }
+
+  export class Modal {
+    app: App;
+    contentEl: HTMLElement;
+    constructor(app: App);
+    open(): void;
+    close(): void;
+    onOpen(): void;
+    onClose(): void;
+  }
+
+  export class Menu {
+    addItem(callback: (item: MenuItem) => void): this;
+  }
+
+  export class MenuItem {
+    setTitle(title: string): this;
+    onClick(callback: () => void): this;
+  }
+
+  export function normalizePath(path: string): string;
 
   export class PluginSettingTab {
     app: App;

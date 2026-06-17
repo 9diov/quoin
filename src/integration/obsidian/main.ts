@@ -1,10 +1,11 @@
 import { Notice, Plugin, type TFile, type WorkspaceLeaf } from 'obsidian';
-
+import type { ValidationResult } from '../../core/validation.js';
 import {
   type ActiveFileValidationState,
   renderActiveFileStatus,
   validateActiveFile,
 } from './active-validation.js';
+import { registerCreateFlowMenus, startCreateFlow } from './create-flow.js';
 import { ObsidianVaultTypeRegistry, registerObsidianTypeRegistryEvents } from './discovery.js';
 import { ObsidianBasenameIndex, registerObsidianBasenameIndexEvents } from './lookup.js';
 import { normalizeObsidianPluginSettings, type ObsidianPluginSettings } from './settings.js';
@@ -49,6 +50,7 @@ export default class QuoinPlugin extends Plugin {
     this.registerView(QUOIN_VIEW_TYPE, (leaf: WorkspaceLeaf) => new QuoinSidebarView(leaf, this));
     this.addSettingTab(new QuoinSettingTab(this));
     this.registerCommands();
+    registerCreateFlowMenus(this);
     this.registerActiveFileValidationEvents();
   }
 
@@ -77,7 +79,7 @@ export default class QuoinPlugin extends Plugin {
       id: 'create-document-of-type',
       name: 'Create document of type...',
       callback: () => {
-        new Notice('Quoin create flow is not implemented yet.');
+        void startCreateFlow(this);
       },
     });
 
@@ -186,6 +188,34 @@ export default class QuoinPlugin extends Plugin {
     if (file === null) return;
     const leaf = this.app.workspace.getLeaf?.(false) ?? this.app.workspace.getRightLeaf(false);
     await leaf?.openFile(file);
+  }
+
+  async showValidationView(): Promise<void> {
+    await this.activateView('validation');
+  }
+
+  async showTypesView(): Promise<void> {
+    await this.activateView('types');
+  }
+
+  recordCreateValidationErrors(
+    path: string,
+    typeDef: { id: string; name: string },
+    result: ValidationResult,
+  ): void {
+    this.activeFileValidationState = {
+      kind: 'validated',
+      path,
+      typeId: typeDef.id,
+      typeName: typeDef.name,
+      result,
+    };
+    this.renderStatusBar();
+    this.refreshSidebarViews();
+  }
+
+  scheduleActiveValidationFromCreate(): void {
+    this.scheduleActiveFileValidation(0);
   }
 
   private async activateView(tab: QuoinSidebarTab): Promise<void> {
