@@ -1,8 +1,7 @@
-import { posix } from 'node:path';
-
 import { isMapping } from '../../core/parser/object.js';
 import { isCanonicalIdentifier } from '../../core/parser/property-schema.js';
 import type { UntypedDocumentBehavior } from '../../core/validation.js';
+import { bindingMatchEscapesVault } from './bindings.js';
 
 export type TypeBinding = {
   type: string;
@@ -207,11 +206,6 @@ export function updateBinding(
   const current = settings.bindings[index];
   if (current === undefined) return;
   settings.bindings[index] = { ...current, ...patch };
-}
-
-function bindingMatchEscapesVault(match: string): boolean {
-  const normalized = posix.normalize(match.trim().replaceAll('\\', '/'));
-  return posix.isAbsolute(normalized) || normalized === '..' || normalized.startsWith('../');
 }
 
 export function createPlaceholderBinding(existing: TypeBinding[]): TypeBinding {

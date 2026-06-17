@@ -1,0 +1,6 @@
+{
+  "bindings": [
+    { "type": "concept", "match": "bound/**/*.md" }
+  ],
+  "untypedDocumentBehavior": "warn"
+}

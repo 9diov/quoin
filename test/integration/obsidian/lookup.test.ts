@@ -130,6 +130,26 @@ describe('resolveObsidianEffectiveTypeDeclaration', () => {
       matchedBinding: { type: 'concept', match: 'notes/**/*.md' },
     });
   });
+
+  it('matches nested binding globs and preserves ambiguous binding results', () => {
+    const document = makeDocument('notes/nested/page.md', {});
+
+    expect(
+      resolveObsidianEffectiveTypeDeclaration(document, document.path, {
+        ...DEFAULT_OBSIDIAN_PLUGIN_SETTINGS,
+        bindings: [
+          { type: 'concept', match: 'notes/**/*.md' },
+          { type: 'source', match: '**/*.md' },
+        ],
+      }),
+    ).toEqual({
+      kind: 'ambiguous-binding',
+      candidates: [
+        { type: 'concept', match: 'notes/**/*.md' },
+        { type: 'source', match: '**/*.md' },
+      ],
+    });
+  });
 });
 
 function createFakeApp(files: FakeFile[]): FakeApp {

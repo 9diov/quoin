@@ -5,7 +5,7 @@ import type { ParsedTypeDefinitionDocument } from '../../core/parser.js';
 import type { Document } from '../../core/types.js';
 import type { ValidationResult } from '../../core/validation.js';
 import { validate } from '../../core/validation.js';
-import type { EffectiveTypeDeclaration, TypeBinding } from '../node-cli/bindings.js';
+import type { EffectiveTypeDeclaration, TypeBinding } from './bindings.js';
 import { deriveObsidianTypeIdentity, inspectTypeDefinitionCandidate } from './discovery.js';
 import type { ObsidianBasenameIndex } from './lookup.js';
 import { createObsidianResolver, resolveObsidianEffectiveTypeDeclaration } from './lookup.js';

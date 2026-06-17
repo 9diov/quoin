@@ -2,10 +2,7 @@ import type { App, Plugin, TAbstractFile, TFile } from 'obsidian';
 
 import type { Resolver } from '../../core/integration.js';
 import type { Document } from '../../core/types.js';
-import {
-  type EffectiveTypeDeclaration,
-  resolveEffectiveTypeDeclaration,
-} from '../node-cli/bindings.js';
+import { type EffectiveTypeDeclaration, resolveEffectiveTypeDeclaration } from './bindings.js';
 
 import type { ObsidianPluginSettings } from './settings.js';
 

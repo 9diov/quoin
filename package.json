@@ -27,6 +27,9 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json && node scripts/fix-cli-bin.mjs && npm run build:obsidian",
     "build:obsidian": "node scripts/build-obsidian-plugin.mjs",
+    "manual:obsidian:setup": "node scripts/setup-obsidian-manual-vault.mjs",
+    "manual:obsidian:reset": "node scripts/setup-obsidian-manual-vault.mjs --reset",
+    "manual:obsidian:watch": "node scripts/setup-obsidian-manual-vault.mjs --watch",
     "prepack": "npm run build",
     "smoke:pack": "node scripts/package-smoke-test.mjs",
     "typecheck": "tsc --noEmit",

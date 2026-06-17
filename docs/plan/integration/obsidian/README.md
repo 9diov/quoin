@@ -11,3 +11,4 @@ Current plans:
 - [P23 — Active-file validation and status bar](P23-active-file-validation-and-status-bar.md)
 - [P24 — Sidebar validation and types view](P24-sidebar-validation-and-types-view.md)
 - [P25 — Create flow and context menus](P25-create-flow-and-context-menus.md)
+- [P26 — Manual testing environment](P26-manual-testing-environment.md)
