@@ -11,5 +11,5 @@ properties:
     required: true
     default: Untitled source
   url:
-    type: url
+    type: text
 ```

@@ -32,9 +32,8 @@ Candidate properties:
 - **Cross-layer agreement.** For every string `s` and every primitive type `T`, the Parser's acceptance of `s` as a default of type `T` equals Validation's acceptance of `s` as a runtime value of type `T`. The two functions must never disagree.
 - **Date totality.** `isCanonicalDate(s)` returns `false` for any `s` not matching `^\d{4}-\d{2}-\d{2}$`; for matching `s`, it agrees with a reference implementation (e.g., the date is constructable and round-trips through formatting).
 - **Calendar edge cases.** Properties over `(year, month, day)` triples: Feb 29 accepted iff the year is a leap year by the Gregorian rule; April 31 always rejected; month 0 and month 13 always rejected.
-- **Wiki Link shape disjointness.** No string that satisfies `isValidWikiLinkShape` also satisfies `isValidExternalLinkShape`, and vice versa — the two link grammars carve disjoint subsets of strings.
-- **External-link parser determinism.** `parseExternalLink(s, schemes)` is a pure function of its inputs: same `(s, schemes)` always returns equal results across runs. Easy property, but it is the cleanest way to lock down Principle 8 at the unit level.
-- **Scheme allowlist.** For every valid external link with scheme `S`, `parseExternalLink` accepts it iff `S` is in `allowedSchemes` (case-insensitive). The current implementation lowercases the matched scheme; a property over arbitrary case ensures this stays true.
+- **Wiki Link trim rejection.** `isValidWikiLinkShape` rejects values with surrounding whitespace.
+- **Superseded external-link properties.** Earlier versions of this note proposed properties for `isValidExternalLinkShape`, `parseExternalLink`, and URL scheme allowlists. P27 removed the `url` primitive and the External Link grammar helpers, so those properties are no longer part of the first iteration.
 - **Trim invariance.** Both shape checks reject inputs with surrounding whitespace. Property: `isValid*(s) === false` whenever `s !== s.trim()`.
 
 These functions are also where a single regression has outsized blast radius — they're shared by every primitive-typed property in every Document.
@@ -156,7 +155,7 @@ A minimal first PR that demonstrates value without committing the project to a b
 2. Add `test/property/grammar.property.test.ts` covering Tier 1:
    - Wiki/external link disjointness.
    - Trim invariance for both link shape checks.
-   - `parseExternalLink` determinism (run-twice equality).
+   - Wiki Link trim rejection.
    - `isCanonicalDate` calendar edge cases.
 3. Add `test/property/parser.property.test.ts` covering one Tier 2 property:
    - Property-key validation matches the documented grammar.

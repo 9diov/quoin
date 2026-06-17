@@ -199,7 +199,7 @@ export function buildCreatedDocumentCandidate(args: {
   registryState: ObsidianTypeRegistryState;
   settings: Pick<
     QuoinPlugin['settings'],
-    'allowedUrlSchemes' | 'referentialValidation' | 'typeDeclarationKey' | 'untypedDocumentBehavior'
+    'referentialValidation' | 'typeDeclarationKey' | 'untypedDocumentBehavior'
   >;
   typeDef: ParsedTypeDefinitionDocument;
 }): CreatedDocumentCandidate {
@@ -224,7 +224,6 @@ export function buildCreatedDocumentCandidate(args: {
       typeDeclarationKey: args.settings.typeDeclarationKey,
       untypedDocumentBehavior: args.settings.untypedDocumentBehavior,
       referentialValidation: args.settings.referentialValidation,
-      allowedUrlSchemes: args.settings.allowedUrlSchemes,
       integration: 'obsidian',
     },
     createObsidianResolver(args.app, args.basenameIndex, args.outputPath),

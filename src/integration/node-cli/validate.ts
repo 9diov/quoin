@@ -190,7 +190,6 @@ export async function runValidate(
 
   const { parsed, failures } = parseTypeCandidates(withRaw, {
     typeDeclarationKey: config.typeDeclarationKey,
-    allowedUrlSchemes: config.allowedUrlSchemes,
   });
 
   for (const failure of failures) {
@@ -224,7 +223,6 @@ export async function runValidate(
     typeDeclarationKey: config.typeDeclarationKey,
     untypedDocumentBehavior: config.untypedDocumentBehavior,
     referentialValidation: config.referentialValidation,
-    allowedUrlSchemes: config.allowedUrlSchemes,
   };
 
   for (const path of targetPaths) {

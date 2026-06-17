@@ -17,7 +17,6 @@ const PRIMITIVE_TYPES = new Set<PrimitiveTypeName>([
   'date',
   'datetime',
   'wiki-link',
-  'url',
 ]);
 
 const ALLOWED_PROPERTY_SCHEMA_KEYS = new Set(['type', 'required', 'allow-empty', 'default']);

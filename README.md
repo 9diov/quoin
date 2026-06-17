@@ -62,7 +62,7 @@ properties:
     type: "list<[[skill]]>"
     allow-empty: false
   homepage:
-    type: url
+    type: text
   level:
     type: "[[level]]"
     required: true
@@ -90,7 +90,7 @@ Supported Property types:
 
 | Form | Example | Meaning |
 |---|---|---|
-| Primitive | `type: text` | One of `text`, `number`, `boolean`, `date`, `datetime`, `wiki-link`, `url`. |
+| Primitive | `type: text` | One of `text`, `number`, `boolean`, `date`, `datetime`, `wiki-link`. |
 | Typed reference | `type: "[[skill]]"` | A Wiki Link to a Document of type `skill`. |
 | List | `type: list<text>` / `type: "list<[[skill]]>"` | Ordered list whose items are primitives or typed references. |
 | Enum | `type: 'choice<"draft"\|"published">'` | Value must equal one of the listed quoted string literals exactly. |
@@ -113,7 +113,7 @@ Supported Constraints:
 - Empty scalar values fail by default; empty lists pass by default.
 - `number` and `boolean` do not coerce strings.
 - `date` and `datetime` are string-only; Integrations should avoid YAML date coercion before calling Core.
-- `url` validates Markdown External Link syntax and configured allowed URL schemes, with no network checks.
+- External links are ordinary `text` values in this phase; Quoin does not validate URL or Markdown link syntax.
 
 ## Template syntax
 
@@ -139,7 +139,7 @@ Required Sections are marked with `<!-- required -->`. Section matching is exact
 ## Link semantics
 
 - **Wiki Links** use `[[TargetDocument]]` and are resolved by an Integration-supplied Resolver during standard Validation.
-- **External Links** use standard Markdown link syntax, `[text](url)`, and are declared as `type: url`.
+- **External Links** use standard Markdown link syntax, `[text](url)`, and are currently declared as `type: text`.
 - **Referential Validation** is opt-in. It applies only to typed references — `type: "[[name]]"` and `list<[[name]]>` — checking whether linked Documents conform to declared Type References using an Integration-supplied TypeRegistry. Primitive `wiki-link`, `list<wiki-link>`, and `choice<"a"|"b"|"c">` carry no Type Reference and are never referentially validated.
 - Referential Validation is not transitive.
 

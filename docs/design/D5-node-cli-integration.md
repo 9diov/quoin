@@ -156,7 +156,6 @@ type NodeCliConfig = {
   include?: string[]
   exclude?: string[]
   typeDeclarationKey?: string
-  allowedUrlSchemes?: string[]
   untypedDocumentBehavior?: 'skip' | 'warn'
   referentialValidation?: boolean
   resolver?: {
@@ -181,7 +180,6 @@ const defaults = {
   include: ['**/*.md'],
   exclude: ['.git/**', 'node_modules/**'],
   typeDeclarationKey: '_type',
-  allowedUrlSchemes: ['http', 'https', 'mailto'],
   untypedDocumentBehavior: 'skip',
   referentialValidation: true,
   resolver: { strategy: 'basename' },
@@ -423,7 +421,6 @@ type EffectiveConfig = {
   include: string[]
   exclude: string[]
   typeDeclarationKey: string
-  allowedUrlSchemes: string[]
   untypedDocumentBehavior: 'skip' | 'warn'
   referentialValidation: boolean
   resolverStrategy: 'basename'

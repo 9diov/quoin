@@ -332,7 +332,6 @@ function validated(
       typeDeclarationKey: args.settings.typeDeclarationKey,
       untypedDocumentBehavior: args.settings.untypedDocumentBehavior,
       referentialValidation: args.settings.referentialValidation,
-      allowedUrlSchemes: args.settings.allowedUrlSchemes,
       integration: 'obsidian',
     },
     createObsidianResolver(args.app, args.basenameIndex, document.path),

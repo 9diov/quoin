@@ -17,7 +17,6 @@ type ValidationConfig = {
   typeDeclarationKey?: string           // default: '_type'
   untypedDocumentBehavior?: UntypedDocumentBehavior  // default: 'skip'
   referentialValidation?: boolean       // default: false
-  allowedUrlSchemes?: string[]          // default: ['http', 'https', 'mailto']
   integration?: IntegrationName         // enables Reserved Property checks
 }
 
@@ -135,7 +134,7 @@ Empty Property:
 
 `wiki-link` accepts only non-empty strings in canonical Wiki Link syntax. Core performs the syntax check before calling Resolver.
 
-`url` accepts only Markdown External Link syntax, `[text](url)`. The URL target must parse and its scheme must be present in `ValidationConfig.allowedUrlSchemes`. Core never performs network validation.
+External links and bare URLs are ordinary `text` values in this phase. Core does not validate URL or Markdown link syntax until a future text-refinement mechanism exists.
 
 ---
 
@@ -157,7 +156,7 @@ This is the same pipeline used per-item by `list<[[name]]>`, lifted to the singl
 
 1. Value must be a YAML array. Non-array → `property:wrong-type`.
 2. Per-item validation depends on `X`:
-   - **X is a primitive** (`{ kind: 'primitive'; name: P }`): each item is validated as primitive `P` using the same rules as a top-level primitive Property (text, number, boolean, date, datetime, `wiki-link` shape, or `url` shape + scheme). Item-level failures → `property:wrong-type` at `{ scope: 'property', property, index }`. No Link Resolution. No Referential Validation, even when `referentialValidation: true`.
+   - **X is a primitive** (`{ kind: 'primitive'; name: P }`): each item is validated as primitive `P` using the same rules as a top-level primitive Property (text, number, boolean, date, datetime, or `wiki-link` shape). Item-level failures → `property:wrong-type` at `{ scope: 'property', property, index }`. No Link Resolution. No Referential Validation, even when `referentialValidation: true`.
    - **X is a Type Reference** (`{ kind: 'type-ref'; name: N }`): each item must be a non-empty string with valid Wiki Link syntax, then resolved with Resolver, then (when `referentialValidation: true`) referentially validated against Type Reference `N` via TypeRegistry.
 
 `choice<"a"|"b"|"c">` (literal-enum in v1):

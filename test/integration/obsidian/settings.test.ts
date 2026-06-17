@@ -13,7 +13,6 @@ describe('normalizeObsidianPluginSettings', () => {
   it('returns the documented defaults for missing saved data', () => {
     expect(normalizeObsidianPluginSettings(undefined)).toEqual({
       typeDeclarationKey: '_type',
-      allowedUrlSchemes: ['http', 'https', 'mailto'],
       untypedDocumentBehavior: 'skip',
       referentialValidation: true,
       debounce: {
@@ -27,7 +26,6 @@ describe('normalizeObsidianPluginSettings', () => {
   it('merge-loads valid saved values over defaults', () => {
     const result = normalizeObsidianPluginSettings({
       typeDeclarationKey: 'kind',
-      allowedUrlSchemes: ['https'],
       untypedDocumentBehavior: 'warn',
       referentialValidation: false,
       debounce: {
@@ -38,7 +36,6 @@ describe('normalizeObsidianPluginSettings', () => {
 
     expect(result).toEqual({
       typeDeclarationKey: 'kind',
-      allowedUrlSchemes: ['https'],
       untypedDocumentBehavior: 'warn',
       referentialValidation: false,
       debounce: {
@@ -47,14 +44,6 @@ describe('normalizeObsidianPluginSettings', () => {
       },
       bindings: [{ type: 'concept', match: 'concepts/**/*.md' }],
     });
-  });
-
-  it('preserves deliberately empty allowed URL schemes', () => {
-    const result = normalizeObsidianPluginSettings({
-      allowedUrlSchemes: [],
-    });
-
-    expect(result.allowedUrlSchemes).toEqual([]);
   });
 
   it('ignores malformed saved values without throwing', () => {
@@ -72,7 +61,6 @@ describe('normalizeObsidianPluginSettings', () => {
 
     expect(result).toEqual({
       typeDeclarationKey: '_type',
-      allowedUrlSchemes: ['https'],
       untypedDocumentBehavior: 'skip',
       referentialValidation: true,
       debounce: {
@@ -200,7 +188,6 @@ describe('validateObsidianPluginSettings', () => {
     const issues = validateObsidianPluginSettings(
       withSettings({
         typeDeclarationKey: '',
-        allowedUrlSchemes: ['https', ''],
         debounce: {
           activeFile: -1,
           typeDefCascade: -1,
@@ -210,7 +197,6 @@ describe('validateObsidianPluginSettings', () => {
 
     expect(issues.map((issue) => [issue.path, issue.severity])).toEqual([
       ['typeDeclarationKey', 'error'],
-      ['allowedUrlSchemes[1]', 'error'],
       ['debounce.activeFile', 'error'],
       ['debounce.typeDefCascade', 'error'],
     ]);

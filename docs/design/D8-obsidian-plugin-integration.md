@@ -231,7 +231,6 @@ Settings are persisted through `plugin.saveData(...)` (Obsidian's standard `data
 ```typescript
 type ObsidianPluginSettings = {
   typeDeclarationKey: string                  // default '_type'
-  allowedUrlSchemes: string[]                 // default ['http', 'https', 'mailto']
   untypedDocumentBehavior: 'skip' | 'warn'    // default 'skip'
   referentialValidation: boolean              // default true — matches D5
   debounce: {

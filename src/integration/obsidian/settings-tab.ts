@@ -24,7 +24,6 @@ export class QuoinSettingTab extends PluginSettingTab {
     const issueByPath = new Map(issues.map((issue) => [issue.path, issue]));
 
     this.renderTypeDeclarationKey(issueByPath.get('typeDeclarationKey'));
-    this.renderAllowedUrlSchemes(issues);
     this.renderUntypedDocumentBehavior();
     this.renderReferentialValidation();
     this.renderDebounceNumber(
@@ -67,23 +66,6 @@ export class QuoinSettingTab extends PluginSettingTab {
         text.setValue(this.plugin.settings.typeDeclarationKey);
         text.onChange(async (value) => {
           this.plugin.settings.typeDeclarationKey = value;
-          await this.saveIfValid();
-        });
-      });
-  }
-
-  private renderAllowedUrlSchemes(issues: SettingsValidationIssue[]): void {
-    const schemeIssues = issues.filter((issue) => issue.path.startsWith('allowedUrlSchemes['));
-
-    new Setting(this.containerEl)
-      .setName('Allowed URL schemes')
-      .setDesc(
-        schemeIssues[0]?.message ?? 'Comma-separated URL schemes allowed for url Properties.',
-      )
-      .addText((text) => {
-        text.setValue(this.plugin.settings.allowedUrlSchemes.join(', '));
-        text.onChange(async (value) => {
-          this.plugin.settings.allowedUrlSchemes = value.split(',').map((scheme) => scheme.trim());
           await this.saveIfValid();
         });
       });

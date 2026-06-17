@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync, symlinkSync } from 'node:fs';
+import { mkdtempSync, readdirSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -34,8 +34,15 @@ function run(command, args, cwd = repoRoot) {
 try {
   run('npm', ['run', 'build']);
 
+  const beforePack = new Set(readdirSync(repoRoot));
   const tarballName = run('npm', ['pack', '--quiet']);
-  tarballPath = join(repoRoot, tarballName.split('\n').at(-1) ?? '');
+  const packedName =
+    tarballName.split('\n').filter(Boolean).at(-1) ??
+    readdirSync(repoRoot).find((entry) => !beforePack.has(entry) && entry.endsWith('.tgz'));
+  if (!packedName) {
+    throw new Error('npm pack did not report or create a package tarball');
+  }
+  tarballPath = join(repoRoot, packedName);
 
   run('tar', ['-xzf', tarballPath, '-C', tempDir]);
   symlinkSync(join(repoRoot, 'node_modules'), join(tempDir, 'package/node_modules'));

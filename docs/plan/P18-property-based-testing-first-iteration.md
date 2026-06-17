@@ -34,8 +34,7 @@ be removed without disturbing the rest of the suite.
   [D3 — Validation Semantics](../design/D3-validation-semantics.md) — the
   contracts the properties assert.
 - Current Core implementation under test:
-  - [link-grammar.ts](../../src/core/link-grammar.ts) — `isValidWikiLinkShape`,
-    `isValidExternalLinkShape`, `parseExternalLink`.
+  - [link-grammar.ts](../../src/core/link-grammar.ts) — `isValidWikiLinkShape`.
   - [primitive-grammar.ts](../../src/core/primitive-grammar.ts) —
     `isCanonicalDate`.
   - [parser.ts](../../src/core/parser.ts) and
@@ -62,8 +61,6 @@ Add `test/property/generators.ts` holding the arbitraries shared by the
 property files. For this iteration the set is intentionally small:
 
 - an arbitrary for valid Wiki Link strings (`[[name]]` shape).
-- an arbitrary for valid external link strings (scheme + remainder), and a
-  scheme allowlist arbitrary.
 - an arbitrary for canonical and non-canonical date strings, including
   calendar edge cases (Feb 29 in leap and non-leap years, April 31, month 0,
   month 13).
@@ -82,13 +79,8 @@ alongside any grammar change.
 
 Properties over the grammar predicates:
 
-- **Wiki/external link disjointness.** No string satisfies both
-  `isValidWikiLinkShape` and `isValidExternalLinkShape`.
-- **Trim invariance.** Both shape checks return `false` whenever
-  `s !== s.trim()`.
-- **`parseExternalLink` determinism.** Same `(s, schemes)` returns equal
-  results across two runs (run-twice equality), locking down Principle 8 at the
-  unit level.
+- **Wiki Link trim invariance.** `isValidWikiLinkShape` returns `false`
+  whenever `s !== s.trim()`.
 - **`isCanonicalDate` calendar edge cases.** Feb 29 accepted iff the year is a
   Gregorian leap year; April 31, month 0, and month 13 always rejected.
 

@@ -130,7 +130,6 @@ export class ObsidianVaultTypeRegistry {
 
     const result = parseTypeDefinitionDocument(raw, deriveObsidianTypeIdentity(file.path), {
       typeDeclarationKey: this.getSettings().typeDeclarationKey,
-      allowedUrlSchemes: this.getSettings().allowedUrlSchemes,
     });
 
     if (result.kind === 'ok') {

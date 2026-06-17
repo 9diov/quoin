@@ -53,51 +53,6 @@ export const arbitraryWikiLink: fc.Arbitrary<string> = fc
     return `[[${target}${parts.join('')}]]`;
   });
 
-const linkTextChars = fc.constantFrom(
-  ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 _-'.split(''),
-);
-
-// Link text must trim to something non-empty and must not contain `]`, which
-// would prematurely terminate the text bracket in parseExternalLink.
-const LINK_TEXT = fc
-  .string({ unit: linkTextChars, minLength: 1, maxLength: 20 })
-  .filter((t) => t.trim().length > 0 && !t.includes(']'));
-
-// URL path restricted to characters that keep `new URL(...)` happy and contain
-// no whitespace or parentheses (both rejected by parseExternalLink).
-const urlPathChars = fc.constantFrom(
-  ...'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_/'.split(''),
-);
-
-const URL_PATH = fc.string({ unit: urlPathChars, maxLength: 30 });
-
-export const arbitraryAllowedSchemes: fc.Arbitrary<string[]> = fc
-  .tuple(
-    fc.constant('https' as const),
-    fc.constant('http' as const),
-    fc.constant('mailto' as const),
-    fc.boolean(),
-    fc.boolean(),
-    fc.boolean(),
-  )
-  .map(([, , , includeHttp, includeMailto, includeExtra]) => {
-    const schemes = ['https'];
-    if (includeHttp) schemes.push('http');
-    if (includeMailto) schemes.push('mailto');
-    if (includeExtra) schemes.push('ftp');
-    return schemes;
-  });
-
-// Valid-by-construction external links across all default-allowed schemes.
-// http/https use a real host so `new URL(...)` succeeds; mailto is accepted on
-// shape alone by parseExternalLink.
-export const arbitraryExternalLink: fc.Arbitrary<string> = fc
-  .tuple(LINK_TEXT, fc.constantFrom('http', 'https', 'mailto'), URL_PATH)
-  .map(([text, scheme, path]) => {
-    const url = scheme === 'mailto' ? 'mailto:user@example.com' : `${scheme}://example.com/${path}`;
-    return `[${text}](${url})`;
-  });
-
 function daysInMonth(year: number, month: number): number {
   return new Date(year, month, 0).getDate();
 }

@@ -24,7 +24,6 @@ describe('defaultEffectiveConfig', () => {
       exclude: ['.git/**', 'node_modules/**'],
       bindings: [],
       typeDeclarationKey: '_type',
-      allowedUrlSchemes: ['http', 'https', 'mailto'],
       untypedDocumentBehavior: 'skip',
       referentialValidation: true,
       resolverStrategy: 'basename',
@@ -300,7 +299,6 @@ describe('resolveEffectiveConfig', () => {
         exclude: ['.cache/**'],
         bindings: [{ type: 'concept', match: 'notes/**/*.md' }],
         typeDeclarationKey: 'kind',
-        allowedUrlSchemes: ['https'],
         untypedDocumentBehavior: 'warn',
         resolver: { strategy: 'basename' },
       },
@@ -312,7 +310,6 @@ describe('resolveEffectiveConfig', () => {
     expect(result.exclude).toEqual(['.cache/**']);
     expect(result.bindings).toEqual([{ type: 'concept', match: 'notes/**/*.md' }]);
     expect(result.typeDeclarationKey).toBe('kind');
-    expect(result.allowedUrlSchemes).toEqual(['https']);
     expect(result.untypedDocumentBehavior).toBe('warn');
     expect(result.resolverStrategy).toBe('basename');
     expect(result.root).toBe('/cwd');
@@ -325,7 +322,6 @@ describe('resolveEffectiveConfig', () => {
     expect(result.exclude).toEqual(['.git/**', 'node_modules/**']);
     expect(result.bindings).toEqual([]);
     expect(result.typeDeclarationKey).toBe('_type');
-    expect(result.allowedUrlSchemes).toEqual(['http', 'https', 'mailto']);
     expect(result.untypedDocumentBehavior).toBe('skip');
     expect(result.referentialValidation).toBe(true);
     expect(result.resolverStrategy).toBe('basename');

@@ -21,7 +21,6 @@ export type ValidationConfig = {
   typeDeclarationKey?: string;
   untypedDocumentBehavior?: UntypedDocumentBehavior;
   referentialValidation?: boolean;
-  allowedUrlSchemes?: string[];
   integration?: IntegrationName;
 };
 

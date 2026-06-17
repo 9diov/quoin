@@ -1,4 +1,4 @@
-import { isValidWikiLinkShape, parseExternalLink } from '../link-grammar.js';
+import { isValidWikiLinkShape } from '../link-grammar.js';
 import type { PropertyTypeName } from '../parser.js';
 import { isCanonicalDate, isIso8601WithTimezone } from '../primitive-grammar.js';
 import type { ValidationError } from '../validation.js';
@@ -8,7 +8,6 @@ export function validatePrimitive(
   value: unknown,
   type: PropertyTypeName,
   propertyName: string,
-  allowedUrlSchemes: string[],
 ): ValidationError | null {
   if (typeof type === 'object') return null;
 
@@ -25,8 +24,6 @@ export function validatePrimitive(
       return validateDatetime(value, propertyName);
     case 'wiki-link':
       return validateWikiLinkShape(value, propertyName);
-    case 'url':
-      return validateUrl(value, propertyName, allowedUrlSchemes);
   }
 }
 
@@ -99,38 +96,4 @@ function validateWikiLinkShape(value: unknown, propertyName: string): Validation
     );
   }
   return null;
-}
-
-function validateUrl(
-  value: unknown,
-  propertyName: string,
-  allowedUrlSchemes: string[],
-): ValidationError | null {
-  const result = parseExternalLink(value, allowedUrlSchemes);
-  if (result.kind === 'invalid') {
-    return validationError(
-      'property:wrong-type',
-      `Property "${propertyName}" must be a valid Markdown External Link.`,
-      { scope: 'property', property: propertyName },
-      {
-        scheme: extractScheme(value, result),
-        allowedUrlSchemes,
-        reason: result.reason,
-      },
-    );
-  }
-  return null;
-}
-
-function extractScheme(
-  value: unknown,
-  result: { kind: 'invalid'; reason: string },
-): string | undefined {
-  if (typeof value === 'string') {
-    const reason = result.reason;
-    if (typeof reason === 'string' && reason.startsWith('disallowed-scheme:')) {
-      return reason.slice('disallowed-scheme:'.length);
-    }
-  }
-  return undefined;
 }

@@ -86,11 +86,27 @@ describe('V014 datetime requires timezone', () => {
   });
 });
 
-describe('V015 URL accepts Markdown External Link with allowed scheme', () => {
-  it('passes for valid markdown link', () => {
+describe('text accepts link-looking strings as ordinary text', () => {
+  it('passes for a bare URL string', () => {
     const typeDef = makeTypeDef({
       properties: {
-        homepage: { type: 'url' },
+        homepage: { type: 'text' },
+      },
+    });
+
+    const document = makeDocument({
+      _type: '[[Concept]]',
+      homepage: 'https://www.typescriptlang.org/',
+    });
+
+    const result = validate(document, typeDef, {});
+    expectPassing(result);
+  });
+
+  it('passes for a Markdown link string', () => {
+    const typeDef = makeTypeDef({
+      properties: {
+        homepage: { type: 'text' },
       },
     });
 
@@ -101,47 +117,5 @@ describe('V015 URL accepts Markdown External Link with allowed scheme', () => {
 
     const result = validate(document, typeDef, {});
     expectPassing(result);
-  });
-});
-
-describe('V016 URL rejects bare URL', () => {
-  it('returns property:wrong-type for bare URL without markdown syntax', () => {
-    const typeDef = makeTypeDef({
-      properties: {
-        homepage: { type: 'url' },
-      },
-    });
-
-    const document = makeDocument({
-      _type: '[[Concept]]',
-      homepage: 'https://www.typescriptlang.org/',
-    });
-
-    const result = validate(document, typeDef, {});
-    expectError(result, {
-      kind: 'property:wrong-type',
-      location: { scope: 'property', property: 'homepage' },
-    });
-  });
-});
-
-describe('V017 URL rejects disallowed configured scheme', () => {
-  it('returns property:wrong-type when scheme is not in allowedUrlSchemes', () => {
-    const typeDef = makeTypeDef({
-      properties: {
-        homepage: { type: 'url' },
-      },
-    });
-
-    const document = makeDocument({
-      _type: '[[Concept]]',
-      homepage: '[Email](mailto:person@example.com)',
-    });
-
-    const result = validate(document, typeDef, { allowedUrlSchemes: ['https'] });
-    expectError(result, {
-      kind: 'property:wrong-type',
-      location: { scope: 'property', property: 'homepage' },
-    });
   });
 });

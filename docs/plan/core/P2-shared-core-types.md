@@ -20,7 +20,7 @@ All types declared and re-exported from `src/index.ts`.
 
 ### From D2 — Type and Schema Contracts
 
-- `PrimitiveTypeName` — union of `'text' | 'number' | 'boolean' | 'date' | 'datetime' | 'wiki-link' | 'url'`
+- `PrimitiveTypeName` — union of `'text' | 'number' | 'boolean' | 'date' | 'datetime' | 'wiki-link'`
 - `CollectionTypeName` — discriminated union of `{ kind: 'list'; of: string }` and `{ kind: 'choice'; of: string }`
 - `PropertyTypeName` — `PrimitiveTypeName | CollectionTypeName`
 - `PropertySchema` — `{ type; required?; 'allow-empty'?; default? }`
@@ -28,7 +28,7 @@ All types declared and re-exported from `src/index.ts`.
 - `Section` — `{ level; heading; required; defaultContent }`
 - `TemplateBlock` — `{ sections: Section[] }`
 - `TypeDefinitionDocumentIdentity` — `{ id; name }`
-- `ParserConfig` — `{ allowedUrlSchemes? }`
+- `ParserConfig` — `{ typeDeclarationKey? }`
 - `ParsedTypeDefinitionDocument` — `{ id; name; schema; templateBlock? }`
 - `ParseErrorKind` — full union from D2
 - `ParseLocation` — discriminated union of `document`, `block`, `property`, `section` scopes
@@ -42,7 +42,7 @@ All types declared and re-exported from `src/index.ts`.
 
 - `IntegrationName` — union of supported Integration identifiers
 - `UntypedDocumentBehavior` — `'skip' | 'warn'`
-- `ValidationConfig` — `{ typeDeclarationKey?; untypedDocumentBehavior?; referentialValidation?; allowedUrlSchemes?; integration? }`
+- `ValidationConfig` — `{ typeDeclarationKey?; untypedDocumentBehavior?; referentialValidation?; integration? }`
 - `ValidationErrorKind` — full union from D3
 - `ValidationWarningKind` — full union from D3
 - `ValidationLocation` — discriminated union of `config`, `property`, `section` scopes; `property` carries optional `index`; `section` carries `level`

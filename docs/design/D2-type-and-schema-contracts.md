@@ -12,7 +12,6 @@ type PrimitiveTypeName =
   | 'date'
   | 'datetime'
   | 'wiki-link'
-  | 'url'
 
 type TypeReference = { kind: 'type-ref'; name: string }   // [[name]] usage
 
@@ -71,7 +70,6 @@ type TypeDefinitionDocumentIdentity = {
 }
 
 type ParserConfig = {
-  allowedUrlSchemes?: string[]  // default: ['http', 'https', 'mailto']
   typeDeclarationKey?: string   // default: '_type'
 }
 
@@ -347,7 +345,6 @@ When `default` is present, Parser validates it against the same local type and e
 - No TypeRegistry calls.
 - Primitive defaults must satisfy the primitive's local shape (string for `text`, finite number for `number`, etc.).
 - Wiki Link defaults must have valid Wiki Link shape.
-- URL defaults must have valid External Link shape and allowed scheme under ParserConfig.
 - Top-level `[[name]]` defaults must be a single valid Wiki Link.
 - `list<X>` defaults must be an array; each item must satisfy X's local shape:
   - When X is a primitive, each item is validated as that primitive.
@@ -363,7 +360,7 @@ This keeps Scaffolding from emitting values that immediately fail local Property
 
 A `type:` value in a Property schema is one of:
 
-- A `PrimitiveTypeName` bare identifier — `text`, `number`, `boolean`, `date`, `datetime`, `wiki-link`, `url`.
+- A `PrimitiveTypeName` bare identifier — `text`, `number`, `boolean`, `date`, `datetime`, `wiki-link`.
 - A bare Wiki Link `[[name]]` — declares the Property holds a Wiki Link to a Document of type *name*. Parsed as `{ kind: 'type-ref'; name }`.
 - `list<X>` — a list whose item type is `X`.
 - `choice<"a"|"b"|"c">` — a literal enum: the value must equal one of the listed quoted string literals exactly.
@@ -507,46 +504,6 @@ Shape rules:
 - Surrounding whitespace is rejected.
 
 Resolver receives the original raw string.
-
-### External Link shape
-
-`url` values use a constrained Markdown External Link shape:
-
-```markdown
-[text](url)
-```
-
-Rules:
-
-- Link text must be non-empty after trimming.
-- Link text may contain Markdown formatting, but not an unescaped `]`.
-- URL target must be non-empty.
-- URL target must contain no whitespace.
-- URL target must contain no raw parentheses.
-- Markdown link titles are not supported initially.
-- Surrounding whitespace is rejected.
-- URL target must parse and its scheme must be allowed by Validation Config.
-- Core never performs network validation.
-
-Accepted:
-
-```markdown
-[Docs](https://example.com)
-[**Docs**](https://example.com)
-[`API`](https://example.com)
-```
-
-Rejected:
-
-```markdown
-[](https://example.com)
-[   ](https://example.com)
-[Docs](https://example.com "Example docs")
-[Spec](https://example.com/path(foo))
- [Docs](https://example.com) 
-```
-
----
 
 ## Section parsing
 

@@ -141,18 +141,17 @@ Per-value type detection runs each value through this ordered ladder. The first 
 - YAML number → `number`.
 - YAML list → `list<T>`, where `T` is computed recursively over items (see "List items" below).
 - String matching the literal Wiki Link form (per D2; bare `[[name]]` only) → `wiki-link`.
-- String matching the D2 URL rule (`http://`, `https://`, `mailto:` by default; configurable via Parser's `allowedUrlSchemes` in a future revision) → `url`.
 - String matching D2's ISO-8601 datetime regex (`/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?(Z|[+-]\d{2}:\d{2})$/`) → `datetime`.
 - String matching `YYYY-MM-DD` exactly → `date`.
 - Any other string → `text`.
 
-The lattice's partial order: `wiki-link < text`, `url < text`, `datetime < text`, `date < text`. All primitives sit below `text`. There is no relation between `boolean`, `number`, and the string-derived primitives — disagreement across those buckets is a hard conflict with no lub.
+The lattice's partial order: `wiki-link < text`, `datetime < text`, `date < text`. All primitives sit below `text`. There is no relation between `boolean`, `number`, and the string-derived primitives — disagreement across those buckets is a hard conflict with no lub.
 
 Aggregation rule per property:
 
 - All non-empty observations land in the lattice. Take the lub.
 - If every observation is the same primitive → that primitive.
-- If observations span the string-derived primitives (`date`, `datetime`, `wiki-link`, `url`, `text`) → the lub widens to `text`. This is *not* a conflict; it is the intended widening. The user can narrow by hand.
+- If observations span the string-derived primitives (`date`, `datetime`, `wiki-link`, `text`) → the lub widens to `text`. This is *not* a conflict; it is the intended widening. The user can narrow by hand.
 - If observations cross the string/number/boolean/list boundary → `kind: 'conflict'`.
 
 #### List items
@@ -329,7 +328,7 @@ When a scalar property is observed only as empty across all input Documents, the
 
 BOM characters are stripped from input without surfacing the normalisation: "BOMs are stripped silently." DP7 requires that host-specific input conventions be surfaced explicitly rather than silently absorbed. A caller that passes BOM-prefixed content receives no signal that the input was modified before inference ran.
 
-**DP9 — Hardcoded URL detection policy** (type-detection ladder, `allowedUrlSchemes`)
+**DP9 — URL-looking strings widen to text**
 
-The URL detection step matches `http://`, `https://`, and `mailto:` by default and acknowledges the policy is "configurable via Parser's `allowedUrlSchemes` in a future revision" — meaning it is not currently configurable. DP9 requires that features depending on judgment or host-specific taste either expose their policy explicitly or be deferred. A hardcoded, unexposed policy is neither.
+URL-looking strings are inferred as `text` until a future text-refinement mechanism exists. This avoids a hardcoded URL detection policy and keeps inference aligned with D2's primitive set.
 - ADR-0008 (Type Definition Document self-identifies via frontmatter): preserved. The rendered output begins with `_type: type` under the configured Type Declaration key, and the input-filtering step uses the same marker to exclude existing Type Definition Documents from the inference set.

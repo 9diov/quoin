@@ -10,5 +10,5 @@ properties:
     type: text
     required: true
   link:
-    type: url
+    type: text
 ```

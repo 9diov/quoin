@@ -1,4 +1,4 @@
-import { isValidExternalLinkShape, isValidWikiLinkShape } from '../link-grammar.js';
+import { isValidWikiLinkShape } from '../link-grammar.js';
 import type {
   ListItemType,
   ParseError,
@@ -38,7 +38,6 @@ function checkPrimitiveDefault(
   property: string,
   value: unknown,
   name: PrimitiveTypeName,
-  allowedSchemes: string[],
 ): ParseError | null {
   switch (name) {
     case 'text':
@@ -75,15 +74,6 @@ function checkPrimitiveDefault(
         return defaultError(property, `Default must be a Wiki Link.`, { expected: 'wiki-link' });
       }
       return null;
-    case 'url':
-      if (!isValidExternalLinkShape(value, allowedSchemes)) {
-        return defaultError(
-          property,
-          `Default must be a Markdown External Link with an allowed scheme.`,
-          { expected: 'url' },
-        );
-      }
-      return null;
   }
 }
 
@@ -105,8 +95,8 @@ export function validateDefault(
   const value = schema.default;
   const type = schema.type;
   const allowEmpty = schema['allow-empty'] === true;
-  const allowedSchemes = config.allowedUrlSchemes ?? ['http', 'https', 'mailto'];
   const typeLabel = describeType(type);
+  void config;
 
   if (isEmpty(type, value) && !allowEmpty) {
     return [
@@ -126,7 +116,7 @@ export function validateDefault(
   }
 
   if (typeof type === 'string') {
-    const err = checkPrimitiveDefault(property, value, type, allowedSchemes);
+    const err = checkPrimitiveDefault(property, value, type);
     return err ? [err] : [];
   }
 
@@ -145,7 +135,7 @@ export function validateDefault(
     if (type.of.kind === 'primitive') {
       const primitiveName = type.of.name;
       value.forEach((item, index) => {
-        const err = checkPrimitiveDefault(property, item, primitiveName, allowedSchemes);
+        const err = checkPrimitiveDefault(property, item, primitiveName);
         if (err) {
           errors.push({
             ...err,

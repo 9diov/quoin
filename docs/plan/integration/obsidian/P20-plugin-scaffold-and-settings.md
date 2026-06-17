@@ -27,7 +27,6 @@ This phase does not need to scan Markdown files or call Core.
 - settings save path through `plugin.saveData(...)`
 - flat `PluginSettingTab` for:
   - `typeDeclarationKey`
-  - `allowedUrlSchemes`
   - `untypedDocumentBehavior`
   - `referentialValidation`
   - `debounce.activeFile`
@@ -51,7 +50,6 @@ Implement the D8 settings shape:
 ```typescript
 type ObsidianPluginSettings = {
   typeDeclarationKey: string
-  allowedUrlSchemes: string[]
   untypedDocumentBehavior: 'skip' | 'warn'
   referentialValidation: boolean
   debounce: {
@@ -65,7 +63,6 @@ type ObsidianPluginSettings = {
 Defaults:
 
 - `typeDeclarationKey = '_type'`
-- `allowedUrlSchemes = ['http', 'https', 'mailto']`
 - `untypedDocumentBehavior = 'skip'`
 - `referentialValidation = true`
 - `debounce.activeFile = 300`

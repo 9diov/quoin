@@ -10,6 +10,6 @@ properties:
     type: text
     required: true
   url:
-    type: url
+    type: text
     required: true
 ```

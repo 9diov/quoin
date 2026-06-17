@@ -36,12 +36,7 @@ export function validateList(
     const entry = value[i];
 
     if (item.kind === 'primitive') {
-      const primitiveError = validatePrimitive(
-        entry,
-        item.name,
-        propertyName,
-        config.allowedUrlSchemes,
-      );
+      const primitiveError = validatePrimitive(entry, item.name, propertyName);
       if (primitiveError) {
         errors.push({
           ...primitiveError,

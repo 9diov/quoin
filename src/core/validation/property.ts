@@ -59,7 +59,7 @@ function validateTypedValue(
   typeRegistry: TypeRegistry | undefined,
 ): ValidationError[] {
   if (typeof type === 'string') {
-    const primitiveError = validatePrimitive(value, type, propertyName, config.allowedUrlSchemes);
+    const primitiveError = validatePrimitive(value, type, propertyName);
     if (primitiveError) {
       return [primitiveError];
     }

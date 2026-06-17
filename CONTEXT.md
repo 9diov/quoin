@@ -37,7 +37,7 @@ A Property value in the form `[[TargetDocument]]` — an internal reference to a
 _Avoid_: Internal link, wikilink, link
 
 **External Link**:
-A Property value in the form `[text](url)` — a standard Markdown hyperlink to an external resource. Declared as `type: url` in a schema. Distinct from a Wiki Link and not used as a Type Reference.
+A Property value in the form `[text](url)` — a standard Markdown hyperlink to an external resource. Currently modeled as `type: text`; not a primitive type and not used as a Type Reference.
 _Avoid_: URL, hyperlink, link
 
 **Constraint**:
@@ -93,7 +93,7 @@ The opt-in Validation stage after Link Resolution — checking that the target D
 _Avoid_: Deep validation, type validation, reference checking
 
 **Validation Config**:
-The configuration that controls Validation behaviour across an Integration. Includes: whether Untyped Documents produce a warning or are skipped silently; which Integration's Reserved Properties are active; allowed URL schemes; whether Referential Validation is enabled; and the Type Declaration key (defaults to `_type`, configurable if the Integration has already claimed that key for another purpose).
+The configuration that controls Validation behaviour across an Integration. Includes: whether Untyped Documents produce a warning or are skipped silently; which Integration's Reserved Properties are active; whether Referential Validation is enabled; and the Type Declaration key (defaults to `_type`, configurable if the Integration has already claimed that key for another purpose).
 _Avoid_: Settings, options, configuration
 
 **Type Declaration**:

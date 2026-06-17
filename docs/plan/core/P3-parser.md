@@ -97,7 +97,6 @@ When `default` is present, validate it locally against the declared type using t
 - `date` default must match `YYYY-MM-DD`.
 - `datetime` default must be an ISO 8601 datetime with timezone.
 - `wiki-link` default must pass Wiki Link shape validation.
-- `url` default must pass External Link shape validation and use an allowed scheme under `ParserConfig.allowedUrlSchemes` (default `['http', 'https', 'mailto']`).
 - Top-level `[[name]]` default must be a single valid Wiki Link.
 - `list<X>` default must be an array. When `X` is a primitive, each item is validated as that primitive. When `X` is a Type Reference, each item must be a valid Wiki Link.
 - `choice<"a"|"b"|"c">` default must be a string equal to one of the declared literal members' `value` exactly (case-sensitive). Otherwise → `parser:invalid-default` with `details.expected: 'enum'` and `details.allowed: string[]`.

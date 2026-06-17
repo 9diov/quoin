@@ -14,7 +14,6 @@ Unless a case says otherwise:
 
 - `typeDeclarationKey` defaults to `_type`.
 - `referentialValidation` defaults to `false`.
-- `allowedUrlSchemes` defaults to `['http', 'https', 'mailto']`.
 - Schemas are open by default.
 - The Integration has already resolved the root Document Type Declaration and passed the correct Type Definition Document to `validate`.
 
@@ -35,7 +34,7 @@ properties:
   level:
     type: "[[level]]"
   homepage:
-    type: url
+    type: text
   priority:
     type: number
   published:
@@ -421,14 +420,37 @@ Expected error:
 }
 ```
 
-### V015 URL accepts Markdown External Link with allowed scheme
+### V015 text accepts bare URL string
 
 Schema:
 
 ```yaml
 properties:
   homepage:
-    type: url
+    type: text
+```
+
+Document frontmatter:
+
+```yaml
+_type: "[[Concept]]"
+homepage: "https://www.typescriptlang.org/"
+```
+
+Expected:
+
+```ts
+{ passed: true, errors: [], warnings: [] }
+```
+
+### V016 text accepts Markdown External Link string
+
+Schema:
+
+```yaml
+properties:
+  homepage:
+    type: text
 ```
 
 Document frontmatter:
@@ -442,65 +464,6 @@ Expected:
 
 ```ts
 { passed: true, errors: [], warnings: [] }
-```
-
-### V016 URL rejects bare URL
-
-Schema:
-
-```yaml
-properties:
-  homepage:
-    type: url
-```
-
-Document frontmatter:
-
-```yaml
-_type: "[[Concept]]"
-homepage: "https://www.typescriptlang.org/"
-```
-
-Expected error:
-
-```ts
-{
-  kind: 'property:wrong-type',
-  location: { scope: 'property', property: 'homepage' }
-}
-```
-
-### V017 URL rejects disallowed configured scheme
-
-Config:
-
-```ts
-{ allowedUrlSchemes: ['https'] }
-```
-
-Schema:
-
-```yaml
-properties:
-  homepage:
-    type: url
-```
-
-Document frontmatter:
-
-```yaml
-_type: "[[Concept]]"
-homepage: "[Email](mailto:person@example.com)"
-```
-
-Expected error:
-
-```ts
-{
-  kind: 'property:wrong-type',
-  location: { scope: 'property', property: 'homepage' },
-  details: { scheme: 'mailto', allowedUrlSchemes: ['https'] }
-}
 ```
 
 ## Wiki Links And Link Resolution

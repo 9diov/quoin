@@ -116,7 +116,6 @@ Quoin finds all `.md` files under the current directory, resolves each document'
 | `date` | `type: date` | Date string (`YYYY-MM-DD`) |
 | `datetime` | `type: datetime` | Datetime string |
 | `wiki-link` | `type: wiki-link` | `[[TargetDocument]]` |
-| `url` | `type: url` | `[text](https://...)` |
 | Typed reference | `type: "[[skill]]"` | Wiki Link to a document of type `skill` |
 | List | `type: list<text>` | Ordered list of primitives |
 | Typed list | `type: "list<[[skill]]>"` | Ordered list of typed Wiki Links |
@@ -236,9 +235,6 @@ Quoin works with zero configuration. For project-specific settings, create a `qu
 
   // Key used for type declarations (default: "_type")
   "typeDeclarationKey": "_type",
-
-  // Allowed URL schemes for `url` properties
-  "allowedUrlSchemes": ["http", "https", "mailto"],
 
   // What to do with documents that have no _type: "skip" or "warn"
   "untypedDocumentBehavior": "skip",

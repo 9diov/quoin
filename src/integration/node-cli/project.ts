@@ -58,7 +58,6 @@ export async function buildProjectUniverse(config: EffectiveConfig): Promise<Pro
     candidateDocs.map((d) => ({ path: d.path, raw: d.raw })),
     {
       typeDeclarationKey: config.typeDeclarationKey,
-      allowedUrlSchemes: config.allowedUrlSchemes,
     },
   );
 

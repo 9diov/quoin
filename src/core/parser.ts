@@ -5,14 +5,7 @@ import { validateIdentity } from './parser/identity.js';
 import { parseSchemaYaml } from './parser/schema-yaml.js';
 import { parseTemplateSections } from './section-parser.js';
 
-export type PrimitiveTypeName =
-  | 'text'
-  | 'number'
-  | 'boolean'
-  | 'date'
-  | 'datetime'
-  | 'wiki-link'
-  | 'url';
+export type PrimitiveTypeName = 'text' | 'number' | 'boolean' | 'date' | 'datetime' | 'wiki-link';
 
 export type TypeReference = { kind: 'type-ref'; name: string };
 
@@ -58,7 +51,6 @@ export type TypeDefinitionDocumentIdentity = {
 };
 
 export type ParserConfig = {
-  allowedUrlSchemes?: string[];
   typeDeclarationKey?: string;
 };
 

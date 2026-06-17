@@ -89,7 +89,6 @@ type TypeDefinitionDocumentIdentity = {
 }
 
 type ParserConfig = {
-  allowedUrlSchemes?: string[]
   typeDeclarationKey?: string
 }
 ```
@@ -98,7 +97,7 @@ type ParserConfig = {
 
 Raw Markdown alone is not enough to derive stable identity because path, URI, host-specific aliases, and matching behavior belong to the Integration.
 
-ParserConfig lets Parser validate URL defaults against the same URL scheme policy the Integration will later use during Validation. If omitted, `allowedUrlSchemes` defaults to `['http', 'https', 'mailto']`. `typeDeclarationKey` defaults to `'_type'` and should match the value passed in ValidationConfig so Parser and Validation agree on which frontmatter key carries the Type Declaration.
+`typeDeclarationKey` defaults to `'_type'` and should match the value passed in ValidationConfig so Parser and Validation agree on which frontmatter key carries the Type Declaration.
 
 ---
 

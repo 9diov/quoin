@@ -7,7 +7,7 @@ _type: type
 ```yaml
 properties:
   url:
-    type: url
+    type: text
   status:
     type: text
     default: unread

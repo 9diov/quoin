@@ -10,7 +10,6 @@ export type TypeBinding = {
 
 export type ObsidianPluginSettings = {
   typeDeclarationKey: string;
-  allowedUrlSchemes: string[];
   untypedDocumentBehavior: UntypedDocumentBehavior;
   referentialValidation: boolean;
   debounce: {
@@ -28,7 +27,6 @@ export type SettingsValidationIssue = {
 
 export const DEFAULT_OBSIDIAN_PLUGIN_SETTINGS: ObsidianPluginSettings = {
   typeDeclarationKey: '_type',
-  allowedUrlSchemes: ['http', 'https', 'mailto'],
   untypedDocumentBehavior: 'skip',
   referentialValidation: true,
   debounce: {
@@ -48,11 +46,6 @@ function booleanOrDefault(value: unknown, fallback: boolean): boolean {
 
 function numberOrDefault(value: unknown, fallback: number): number {
   return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
-}
-
-function stringArrayOrDefault(value: unknown, fallback: string[]): string[] {
-  if (!Array.isArray(value)) return [...fallback];
-  return value.filter((entry): entry is string => typeof entry === 'string');
 }
 
 function untypedBehaviorOrDefault(
@@ -78,7 +71,6 @@ export function normalizeObsidianPluginSettings(saved: unknown): ObsidianPluginS
   if (!isMapping(saved)) {
     return {
       ...defaults,
-      allowedUrlSchemes: [...defaults.allowedUrlSchemes],
       debounce: { ...defaults.debounce },
       bindings: [],
     };
@@ -88,7 +80,6 @@ export function normalizeObsidianPluginSettings(saved: unknown): ObsidianPluginS
 
   return {
     typeDeclarationKey: stringOrDefault(saved.typeDeclarationKey, defaults.typeDeclarationKey),
-    allowedUrlSchemes: stringArrayOrDefault(saved.allowedUrlSchemes, defaults.allowedUrlSchemes),
     untypedDocumentBehavior: untypedBehaviorOrDefault(
       saved.untypedDocumentBehavior,
       defaults.untypedDocumentBehavior,
@@ -122,16 +113,6 @@ export function validateObsidianPluginSettings(
       severity: 'error',
     });
   }
-
-  settings.allowedUrlSchemes.forEach((scheme, index) => {
-    if (scheme.trim().length === 0) {
-      issues.push({
-        path: `allowedUrlSchemes[${index}]`,
-        message: 'Allowed URL schemes must not contain empty values.',
-        severity: 'error',
-      });
-    }
-  });
 
   if (settings.debounce.activeFile < 0) {
     issues.push({

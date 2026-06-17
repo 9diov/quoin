@@ -17,7 +17,7 @@ This phase is mostly **refactor + tests**, not new behavior. The Parser does not
 
 P3 pulled most of P4's deliverables forward to unblock its own work:
 
-- `src/core/link-grammar.ts` — `isValidWikiLinkShape`, `parseExternalLink`, `isValidExternalLinkShape` with allowed-scheme + URL parse checks.
+- `src/core/link-grammar.ts` — `isValidWikiLinkShape`.
 - `src/core/section-parser.ts` — `parseTemplateSections`: mdast-based ATX walk with Setext filtering, required-marker detection, duplicate-required tracking, `defaultContent` slicing.
 
 What's still missing for P5:
@@ -137,4 +137,4 @@ test/parser/
 
 ## Follow-up
 
-After P4, continue with [P5 — Validation](P5-validation.md) (TBD). P5 consumes `extractAtxHeadings` for body Section checks and `isValidWikiLinkShape` / `parseExternalLink` for value-level Validation of present, non-empty Property values before Resolver is called.
+After P4, continue with [P5 — Validation](P5-validation.md) (TBD). P5 consumes `extractAtxHeadings` for body Section checks and `isValidWikiLinkShape` for Wiki Link value-level Validation of present, non-empty Property values before Resolver is called.

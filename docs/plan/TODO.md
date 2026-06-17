@@ -15,6 +15,8 @@
 
 * [ ] (Implementation) Land the property-based testing first iteration described in [P18](P18-property-based-testing-first-iteration.md)
   Output: `test/property/**`, `fast-check` dev dependencies
+* [ ] (Implementation) Remove the misleading `url` primitive described in [P27](P27-remove-url-primitive.md)
+  Output: docs, core/parser/validation config, integrations, tests, and fixtures updated to treat external links as `text`
 * [ ] (Design) Design the future `repair()` capability referenced in [D1](../design/D1-architecture.md)
   Output: repair design doc
 * [ ] (Planning) Break `infer` implementation into numbered execution plans

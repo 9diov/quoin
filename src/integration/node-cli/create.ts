@@ -168,7 +168,6 @@ export async function runCreate(
     typeDeclarationKey: config.typeDeclarationKey,
     untypedDocumentBehavior: config.untypedDocumentBehavior,
     referentialValidation: config.referentialValidation,
-    allowedUrlSchemes: config.allowedUrlSchemes,
   };
 
   const validation = validate(

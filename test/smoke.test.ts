@@ -51,7 +51,7 @@ describe('Core types', () => {
     };
     const templateBlock: TemplateBlock = { body: '## Definitions\n', sections: [section] };
     const identity: TypeDefinitionDocumentIdentity = { id: 'types/Skill.md', name: 'skill' };
-    const parserConfig: ParserConfig = { allowedUrlSchemes: ['https'] };
+    const parserConfig: ParserConfig = { typeDeclarationKey: '_type' };
     const typeDef: ParsedTypeDefinitionDocument = {
       id: identity.id,
       name: identity.name,
@@ -83,7 +83,6 @@ describe('Core types', () => {
       typeDeclarationKey: '_type',
       untypedDocumentBehavior: 'warn',
       referentialValidation: true,
-      allowedUrlSchemes: ['https'],
       integration: 'obsidian',
     };
     const propertyLocation: ValidationLocation = {

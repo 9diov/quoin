@@ -92,5 +92,5 @@ npm run cli -- --root fixtures/scenarios/referential-mismatch --no-referential-v
 - **Wiki Link resolution is basename match, case-insensitive but not
   space/hyphen-normalized.** `[[Event Sourcing]]` resolves to `Event Sourcing.md`,
   not `event-sourcing.md`.
-- **The `url` type wants a Markdown external link**, e.g. `"[label](https://…)"`,
-  not a bare URL.
+- External links are currently plain `text`; Quoin does not validate URL or
+  Markdown link syntax in this phase.

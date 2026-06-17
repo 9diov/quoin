@@ -16,7 +16,7 @@ Implement `validate` so that every test case in [validation.md](../../test-cases
 - [ADR-0008 — Type Definition Document self-identifies via frontmatter](../../adr/0008-type-definition-document-self-identifies-via-frontmatter.md)
 - [P2 — Shared Core Types](P2-shared-core-types.md) — types already landed in `validation.ts`
 - [P3 — Parser](P3-parser.md) — `ParsedTypeDefinitionDocument` and helpers this phase consumes
-- [P4 — Link and Section grammar helpers](P4-link-and-section-grammar.md) — `isValidWikiLinkShape`, `parseExternalLink`, `extractAtxHeadings`
+- [P4 — Link and Section grammar helpers](P4-link-and-section-grammar.md) — `isValidWikiLinkShape`, `extractAtxHeadings`
 
 ## Deliverables
 
@@ -59,7 +59,6 @@ Unknown Properties in `document.frontmatter` (not declared in the schema) are si
 - **`date`**: accepts only strings matching `YYYY-MM-DD`. Loose validation: `/^\d{4}-\d{2}-\d{2}$/` with valid month (01–12) and day within calendar month. Any other shape → `property:wrong-type`.
 - **`datetime`**: accepts only ISO 8601 datetime strings with timezone. Minimum: must parse with `new Date()` and the parsed result's UTC offset must not rely on local timezone inference. Practical check: string must match `/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?(\.\d+)?(Z|[+-]\d{2}:\d{2})$/` and `!isNaN(new Date(value).getTime())`. Any other shape → `property:wrong-type`.
 - **`wiki-link`**: accepts only non-empty strings passing `isValidWikiLinkShape`. Shape failures → `property:wrong-type`. Link Resolution runs only after shape passes.
-- **`url`**: accepts only Markdown External Link syntax (`[text](url)`) passing `parseExternalLink` with `config.allowedUrlSchemes`. Shape/scheme failures → `property:wrong-type`. Core never performs network validation.
 
 ### Typed reference validation
 
@@ -75,7 +74,7 @@ Unknown Properties in `document.frontmatter` (not declared in the schema) are si
 
 1. Value must be a YAML array. Non-array → `property:wrong-type`.
 2. Per-item validation depends on `X`:
-   - **Primitive (`{ kind: 'primitive'; name: P }`)**: each item is validated by `validatePrimitive(item, P, allowedUrlSchemes)`. Failures → `property:wrong-type` at `{ scope: 'property', property, index }`. No Link Resolution. No Referential Validation, regardless of `config.referentialValidation`.
+   - **Primitive (`{ kind: 'primitive'; name: P }`)**: each item is validated by `validatePrimitive(item, P)`. Failures → `property:wrong-type` at `{ scope: 'property', property, index }`. No Link Resolution. No Referential Validation, regardless of `config.referentialValidation`.
    - **Type Reference (`{ kind: 'type-ref'; name: N }`)**: each item must be a non-empty string passing `isValidWikiLinkShape`. Failures → `property:wrong-type` with index. Items that pass shape proceed to Link Resolution and (when `referentialValidation: true`) Referential Validation against `N`.
 
 **`choice<"a"|"b"|"c">` (`{ kind: 'choice'; members: M[] }` where each member is `{ kind: 'literal'; value }`):**
@@ -204,7 +203,6 @@ type ResolvedConfig = {
   typeDeclarationKey: string;
   untypedDocumentBehavior: UntypedDocumentBehavior;
   referentialValidation: boolean;
-  allowedUrlSchemes: string[];
   integration: IntegrationName | undefined;
 };
 
@@ -212,12 +210,11 @@ const DEFAULT_CONFIG: ResolvedConfig = {
   typeDeclarationKey: '_type',
   untypedDocumentBehavior: 'skip',
   referentialValidation: false,
-  allowedUrlSchemes: ['http', 'https', 'mailto'],
   integration: undefined,
 };
 ```
 
-Merge passed config with defaults. `undefined` fields inherit defaults. `allowedUrlSchemes` is normalised to lowercase at entry.
+Merge passed config with defaults. `undefined` fields inherit defaults.
 
 ## File layout
 
@@ -244,7 +241,7 @@ The `validation/` subdirectory is an internal split. Only `validate` (in `valida
 
 1. Add `validation/config.ts` — config defaults and merge. Trivial; start here to unblock later steps.
 2. Add `validation/emptiness.ts` — `isValueEmpty(value, allowEmptyList): boolean`. Covers `null`, whitespace-only strings, empty string, empty array (respecting `allowEmptyList`).
-3. Add `validation/primitives.ts` — `validatePrimitive(value, type, allowedUrlSchemes)` for text, number, boolean, date, datetime, wiki-link (shape only), url (parse + scheme). Returns `ValidationError | null`. Reuses `isValidWikiLinkShape` and `parseExternalLink` from P3/P4.
+3. Add `validation/primitives.ts` — `validatePrimitive(value, type)` for text, number, boolean, date, datetime, wiki-link (shape only). Returns `ValidationError | null`. Reuses `isValidWikiLinkShape` from P3/P4.
 4. Add `validation/link.ts` — `resolveWikiLink(wikiLink, resolver, location)`. Calls resolver, maps `ResolveWikiLinkResult` to `ValidationError | null`. Returns `config:missing-dependency` if resolver is undefined.
 5. Add `validation/referential.ts` — `validateReferential(wikiLink, typeRefName, targetDocument, typeRegistry, typeDeclarationKey, location)`. Calls `getByName`, extracts target declaration, calls `getByDeclaration`, compares `id`. Maps all lookup results to `ValidationError | null`.
 6. Add `validation/collections.ts` — `validateList(value, typeRefName, config, resolver, typeRegistry)` and `validateChoice(value, typeRefName, config, resolver, typeRegistry)`. Item-level loops with per-item indexing and error accumulation. Delegates to `primitives.ts` for raw value checks, `link.ts` for resolution, `referential.ts` for opt-in validation.

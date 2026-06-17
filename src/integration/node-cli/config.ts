@@ -16,7 +16,6 @@ export type NodeCliConfig = {
   exclude?: string[];
   bindings?: TypeBinding[];
   typeDeclarationKey?: string;
-  allowedUrlSchemes?: string[];
   untypedDocumentBehavior?: UntypedDocumentBehavior;
   referentialValidation?: boolean;
   resolver?: {
@@ -33,7 +32,6 @@ export type EffectiveConfig = {
   exclude: string[];
   bindings: TypeBinding[];
   typeDeclarationKey: string;
-  allowedUrlSchemes: string[];
   untypedDocumentBehavior: UntypedDocumentBehavior;
   referentialValidation: boolean;
   resolverStrategy: ResolverStrategy;
@@ -65,7 +63,6 @@ export function defaultEffectiveConfig(cwd: string): EffectiveConfig {
     exclude: ['.git/**', 'node_modules/**'],
     bindings: [],
     typeDeclarationKey: '_type',
-    allowedUrlSchemes: ['http', 'https', 'mailto'],
     untypedDocumentBehavior: 'skip',
     referentialValidation: true,
     resolverStrategy: 'basename',
@@ -81,7 +78,6 @@ export function serializeEffectiveConfig(config: EffectiveConfig): Record<string
     exclude: config.exclude,
     bindings: config.bindings,
     typeDeclarationKey: config.typeDeclarationKey,
-    allowedUrlSchemes: config.allowedUrlSchemes,
     untypedDocumentBehavior: config.untypedDocumentBehavior,
     referentialValidation: config.referentialValidation,
     resolverStrategy: config.resolverStrategy,
@@ -191,9 +187,6 @@ function parseConfig(raw: unknown): NodeCliConfig {
   const typeDeclarationKey = coerceString(obj.typeDeclarationKey);
   if (typeDeclarationKey !== undefined) result.typeDeclarationKey = typeDeclarationKey;
 
-  const allowedUrlSchemes = coerceStringArray(obj.allowedUrlSchemes);
-  if (allowedUrlSchemes !== undefined) result.allowedUrlSchemes = allowedUrlSchemes;
-
   const untypedBehavior = obj.untypedDocumentBehavior;
   if (isValidUntypedBehavior(untypedBehavior)) result.untypedDocumentBehavior = untypedBehavior;
 
@@ -285,7 +278,6 @@ export function resolveEffectiveConfig(
     exclude: config?.exclude ?? defaults.exclude,
     bindings: config?.bindings ?? defaults.bindings,
     typeDeclarationKey: config?.typeDeclarationKey ?? defaults.typeDeclarationKey,
-    allowedUrlSchemes: config?.allowedUrlSchemes ?? defaults.allowedUrlSchemes,
     untypedDocumentBehavior: config?.untypedDocumentBehavior ?? defaults.untypedDocumentBehavior,
     referentialValidation:
       overrides.referentialValidation ??

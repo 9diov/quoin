@@ -387,19 +387,21 @@ describe('defaultContent is not mutated', () => {
   });
 });
 
-describe('URL defaults reject unparseable targets', () => {
-  it('rejects malformed http URL', () => {
-    const body = `## Schema\n\n\`\`\`yaml\nproperties:\n  docs:\n    type: url\n    default: "[docs](https://exa[mple.com)"\n\`\`\`\n`;
+describe('url is not a primitive type', () => {
+  it('rejects top-level type: url as unknown', () => {
+    const body = `## Schema\n\n\`\`\`yaml\nproperties:\n  docs:\n    type: url\n\`\`\`\n`;
     const errors = expectErrors(parse(body));
-    const err = findError(errors, 'parser:invalid-default');
+    const err = findError(errors, 'parser:unknown-property-type');
     expect(err).toBeDefined();
-    expect(err?.details?.expected).toBe('url');
+    expect(err?.details).toEqual({ value: 'url' });
   });
 
-  it('accepts a well-formed https URL', () => {
-    const body = `## Schema\n\n\`\`\`yaml\nproperties:\n  docs:\n    type: url\n    default: "[docs](https://example.com)"\n\`\`\`\n`;
-    const result = parse(body);
-    expect(result.kind).toBe('ok');
+  it('rejects list<url> as neither primitive nor Type Reference', () => {
+    const body = `## Schema\n\n\`\`\`yaml\nproperties:\n  docs:\n    type: list<url>\n\`\`\`\n`;
+    const errors = expectErrors(parse(body));
+    const err = findError(errors, 'parser:invalid-type-reference');
+    expect(err).toBeDefined();
+    expect(err?.details).toEqual({ value: 'url', reason: 'expected-wiki-link-or-primitive' });
   });
 });
 
