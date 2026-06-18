@@ -1,11 +1,7 @@
 import { rm } from 'node:fs/promises';
 import { describe, expect, it, vi } from 'vitest';
-
-import {
-  formatTypesHuman,
-  formatTypesJson,
-  runTypes,
-} from '../../../src/integration/node-cli/types.js';
+import { formatTypesHuman, formatTypesJson } from '../../../src/integration/node-cli/types.js';
+import { runTypes } from '../../../src/integration/node-lib/types.js';
 import { binding, createTempProject, defaultConfig } from './helpers.js';
 
 const CONCEPT = `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  title:\n    type: text\n    required: true\n  tags:\n    type: list<text>\n\`\`\`\n\n## Template\n\n\`\`\`markdown\n## Summary <!-- required -->\n\`\`\`\n`;

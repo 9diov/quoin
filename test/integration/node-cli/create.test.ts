@@ -1,14 +1,12 @@
 import { readFile, rm, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
-
+import { formatCreateHuman, formatCreateJson } from '../../../src/integration/node-cli/create.js';
 import {
   createExitCode,
-  formatCreateHuman,
-  formatCreateJson,
   runCreate,
   serializeDocument,
-} from '../../../src/integration/node-cli/create.js';
+} from '../../../src/integration/node-lib/create.js';
 import { createTempProject, defaultConfig } from './helpers.js';
 
 const CONCEPT_NO_TEMPLATE = `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  title:\n    type: text\n\`\`\`\n`;

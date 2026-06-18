@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import type { ParsedTypeDefinitionDocument, ParserConfig } from '../../../src/core/parser.js';
 import type { Document } from '../../../src/core/types.js';
-import type { IngestedMarkdown } from '../../../src/integration/node-cli/ingestion.js';
+import type { IngestedMarkdown } from '../../../src/integration/node-lib/ingestion.js';
 import {
   createResolver,
   createTypeRegistry,
   deriveIdentity,
   parseTypeCandidates,
-} from '../../../src/integration/node-cli/lookup.js';
+} from '../../../src/integration/node-lib/lookup.js';
 
 function makeDocument(
   path: string,

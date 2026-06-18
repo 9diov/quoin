@@ -43,3 +43,20 @@ export type {
   ValidationWarningKind,
 } from './core/validation.js';
 export { validate } from './core/validation.js';
+export type {
+  CreateResult as NodeCreateResult,
+  EffectiveConfig as NodeEffectiveConfig,
+  NodeLibConfig,
+  TypesResult as NodeTypesResult,
+  ValidateResult as NodeValidateResult,
+} from './integration/node-lib/index.js';
+export {
+  createExitCode as createNodeDocumentExitCode,
+  defaultEffectiveConfig as defaultNodeConfig,
+  findConfigFile as findNodeConfigFile,
+  loadConfigFile as loadNodeConfigFile,
+  resolveEffectiveConfig as resolveNodeConfig,
+  runCreate as runNodeCreate,
+  runTypes as runNodeTypes,
+  runValidate as runNodeValidate,
+} from './integration/node-lib/index.js';

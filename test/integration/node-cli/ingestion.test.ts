@@ -10,7 +10,7 @@ import {
   type IngestedMarkdown,
   ingestMarkdownFiles,
   isTypeDefinitionCandidate,
-} from '../../../src/integration/node-cli/ingestion.js';
+} from '../../../src/integration/node-lib/ingestion.js';
 
 async function createTempProject(files: Record<string, string | null>): Promise<string> {
   const dir = await mkdtemp(join(tmpdir(), 'mts-ingest-'));

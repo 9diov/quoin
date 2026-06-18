@@ -7,10 +7,10 @@ import {
   type EffectiveConfig,
   loadConfigFile,
   resolveEffectiveConfig,
-} from '../../../src/integration/node-cli/config.js';
-import { createExitCode, runCreate } from '../../../src/integration/node-cli/create.js';
-import { runTypes } from '../../../src/integration/node-cli/types.js';
-import { runValidate } from '../../../src/integration/node-cli/validate.js';
+} from '../../../src/integration/node-lib/config.js';
+import { createExitCode, runCreate } from '../../../src/integration/node-lib/create.js';
+import { runTypes } from '../../../src/integration/node-lib/types.js';
+import { runValidate } from '../../../src/integration/node-lib/validate.js';
 import { defaultConfig } from './helpers.js';
 
 const FIXTURES_DIR = fileURLToPath(new URL('../../../fixtures/', import.meta.url));

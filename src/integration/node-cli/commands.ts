@@ -1,4 +1,4 @@
-import type { EffectiveConfig } from './config.js';
+import type { EffectiveConfig } from '../node-lib/config.js';
 import { createExitCode, formatCreateHuman, formatCreateJson, runCreate } from './create.js';
 import { formatTypesHuman, formatTypesJson, runTypes } from './types.js';
 import { formatValidateHuman, formatValidateJson, runValidate } from './validate.js';

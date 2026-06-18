@@ -1,0 +1,418 @@
+import type { Stats } from 'node:fs';
+import { stat } from 'node:fs/promises';
+import { isAbsolute, join, posix, relative, resolve } from 'node:path';
+import mm from 'micromatch';
+import type {
+  ValidationConfig,
+  ValidationResult,
+  ValidationWarning,
+} from '../../core/validation.js';
+import { validate } from '../../core/validation.js';
+import { resolveEffectiveTypeDeclaration, type TypeBinding } from './bindings.js';
+import type { EffectiveConfig } from './config.js';
+import {
+  discoverMarkdownFiles,
+  filterTypeDefinitionCandidates,
+  type IngestedMarkdown,
+  ingestMarkdownFiles,
+} from './ingestion.js';
+import { createResolver, createTypeRegistry, parseTypeCandidates } from './lookup.js';
+import { createTimingRecorder, type Timing } from './timing.js';
+
+export type ValidationTargetResult =
+  | {
+      kind: 'validated';
+      path: string;
+      result: ValidationResult;
+      typeId: string;
+      typeName: string;
+    }
+  | { kind: 'skipped-untyped'; path: string }
+  | { kind: 'warn-untyped'; path: string; warning: ValidationWarning }
+  | { kind: 'invalid-type-declaration'; path: string; value: unknown }
+  | {
+      kind: 'type-not-found';
+      path: string;
+      declaration: unknown;
+      typeName: string;
+    }
+  | {
+      kind: 'type-ambiguous';
+      path: string;
+      declaration: unknown;
+      typeName: string;
+      candidateIds: string[];
+    }
+  | {
+      kind: 'type-unavailable';
+      path: string;
+      declaration: unknown;
+      reason: string;
+    }
+  | { kind: 'ambiguous-binding'; path: string; candidates: TypeBinding[] }
+  | {
+      kind: 'binding-type-not-found';
+      path: string;
+      matchedBinding: TypeBinding;
+      typeName: string;
+    }
+  | {
+      kind: 'binding-type-ambiguous';
+      path: string;
+      matchedBinding: TypeBinding;
+      typeName: string;
+      candidateIds: string[];
+    }
+  | {
+      kind: 'binding-type-unavailable';
+      path: string;
+      matchedBinding: TypeBinding;
+      reason: string;
+    };
+
+export type TargetDiagnostic =
+  | { kind: 'target:outside-root'; input: string }
+  | { kind: 'target:unsupported-kind'; input: string }
+  | { kind: 'target:excluded'; input: string }
+  | { kind: 'target:not-found'; input: string };
+
+export type ValidateResult = {
+  targets: ValidationTargetResult[];
+  targetDiagnostics: TargetDiagnostic[];
+  ingestFailures: Extract<IngestedMarkdown, { kind: 'ingest-failure' }>[];
+  typeParseFailures: { path: string; errors: unknown[] }[];
+  exitCode: number;
+  timing: Timing;
+};
+
+function isExcluded(relativePath: string, exclude: string[]): boolean {
+  return mm.isMatch(relativePath, exclude);
+}
+
+function isMarkdownFile(filePath: string): boolean {
+  return filePath.endsWith('.md');
+}
+
+export async function expandTargets(
+  root: string,
+  rawTargets: string[],
+  exclude: string[],
+): Promise<{
+  paths: string[];
+  diagnostics: TargetDiagnostic[];
+}> {
+  const paths: string[] = [];
+  const diagnostics: TargetDiagnostic[] = [];
+
+  for (const raw of rawTargets) {
+    const absolute = isAbsolute(raw) ? resolve(raw) : resolve(root, raw);
+
+    const relToRoot = relative(root, absolute);
+    if (relToRoot.startsWith('..') || isAbsolute(relToRoot)) {
+      diagnostics.push({ kind: 'target:outside-root', input: raw });
+      continue;
+    }
+
+    let fileStat: Stats;
+    try {
+      fileStat = await stat(absolute);
+    } catch {
+      diagnostics.push({ kind: 'target:not-found', input: raw });
+      continue;
+    }
+
+    if (fileStat.isFile()) {
+      if (!isMarkdownFile(absolute)) {
+        diagnostics.push({ kind: 'target:unsupported-kind', input: raw });
+        continue;
+      }
+      if (isExcluded(relToRoot, exclude)) {
+        diagnostics.push({ kind: 'target:excluded', input: raw });
+        continue;
+      }
+      paths.push(posix.normalize(relToRoot));
+    } else if (fileStat.isDirectory()) {
+      const entries = await discoverMarkdownFiles(absolute, ['**/*.md'], []);
+      for (const entry of entries) {
+        const relPath = posix.normalize(join(relToRoot, entry));
+        if (!isExcluded(relPath, exclude)) {
+          paths.push(relPath);
+        }
+      }
+    } else {
+      diagnostics.push({ kind: 'target:unsupported-kind', input: raw });
+    }
+  }
+
+  const unique = [...new Set(paths)].sort();
+  return { paths: unique, diagnostics };
+}
+
+export async function runValidate(
+  config: EffectiveConfig,
+  rawTargets: string[],
+): Promise<ValidateResult> {
+  const timing = createTimingRecorder();
+  const ingestFailures: Extract<IngestedMarkdown, { kind: 'ingest-failure' }>[] = [];
+  const ingestedDocs: Extract<IngestedMarkdown, { kind: 'document' }>[] = [];
+  const typeParseFailures: { path: string; errors: unknown[] }[] = [];
+  const targetDiagnostics: TargetDiagnostic[] = [];
+  const targets: ValidationTargetResult[] = [];
+
+  const discoveryPhase = timing.startPhase();
+  const allResults = await discoverMarkdownFiles(config.root, config.include, config.exclude);
+  timing.endPhase('discovery', discoveryPhase);
+
+  const rawTargetPaths =
+    rawTargets.length > 0 ? await expandTargets(config.root, rawTargets, config.exclude) : null;
+
+  const discoveredPaths = new Set(allResults);
+  if (rawTargetPaths) {
+    for (const path of rawTargetPaths.paths) {
+      discoveredPaths.add(path);
+    }
+  }
+
+  const allPaths = [...discoveredPaths].sort();
+
+  const ingestionPhase = timing.startPhase();
+  const ingestionResults = await ingestMarkdownFiles(config.root, allPaths);
+  timing.endPhase('ingestion', ingestionPhase);
+
+  for (const result of ingestionResults) {
+    if (result.kind === 'ingest-failure') {
+      ingestFailures.push(result);
+    } else {
+      ingestedDocs.push(result);
+    }
+  }
+
+  const candidates = filterTypeDefinitionCandidates(ingestedDocs, config.typeDeclarationKey);
+
+  const withRaw = candidates.map((c) => {
+    const found = ingestedDocs.find((d) => d.path === c.path);
+    return { path: c.path, raw: found?.raw ?? '' };
+  });
+
+  const parsingPhase = timing.startPhase();
+  const { parsed, failures } = parseTypeCandidates(withRaw, {
+    typeDeclarationKey: config.typeDeclarationKey,
+  });
+  timing.endPhase('parsing', parsingPhase);
+
+  for (const failure of failures) {
+    typeParseFailures.push({
+      path: failure.path,
+      errors: failure.errors,
+    });
+  }
+
+  const typeRegistry = createTypeRegistry(parsed, failures);
+  const resolver = createResolver([...ingestedDocs, ...ingestFailures]);
+
+  let targetPaths: string[];
+  if (rawTargetPaths) {
+    for (const diag of rawTargetPaths.diagnostics) {
+      targetDiagnostics.push(diag);
+    }
+    targetPaths = rawTargetPaths.paths;
+  } else {
+    const typeCandidatePaths = new Set(candidates.map((c) => c.path));
+    for (const failure of failures) {
+      typeCandidatePaths.add(failure.path);
+    }
+    targetPaths = ingestedDocs
+      .map((d) => d.path)
+      .filter((p) => !typeCandidatePaths.has(p))
+      .sort();
+  }
+
+  const validationConfig: ValidationConfig = {
+    typeDeclarationKey: config.typeDeclarationKey,
+    untypedDocumentBehavior: config.untypedDocumentBehavior,
+    referentialValidation: config.referentialValidation,
+  };
+
+  const validationPhase = timing.startPhase();
+  for (const path of targetPaths) {
+    const ingested = ingestedDocs.find((d) => d.path === path);
+    if (!ingested) continue;
+
+    const doc = ingested.document;
+    const effective = resolveEffectiveTypeDeclaration(
+      doc,
+      path,
+      config.bindings,
+      config.typeDeclarationKey,
+    );
+
+    switch (effective.kind) {
+      case 'untyped':
+        if (config.untypedDocumentBehavior === 'warn') {
+          targets.push({
+            kind: 'warn-untyped',
+            path,
+            warning: {
+              kind: 'document:untyped',
+              message: `Document "${path}" has no Type Declaration at "${config.typeDeclarationKey}".`,
+              location: { scope: 'config' },
+              details: { path, key: config.typeDeclarationKey },
+            },
+          });
+        } else {
+          targets.push({ kind: 'skipped-untyped', path });
+        }
+        break;
+      case 'ambiguous-binding':
+        targets.push({
+          kind: 'ambiguous-binding',
+          path,
+          candidates: effective.candidates,
+        });
+        break;
+      case 'frontmatter': {
+        const declResult = typeRegistry.getByDeclaration(effective.value);
+
+        switch (declResult.kind) {
+          case 'found': {
+            const result = validate(
+              doc,
+              declResult.typeDef,
+              validationConfig,
+              resolver,
+              typeRegistry,
+            );
+            targets.push({
+              kind: 'validated',
+              path,
+              result,
+              typeId: declResult.typeDef.id,
+              typeName: declResult.typeDef.name,
+            });
+            break;
+          }
+          case 'invalid-declaration':
+            targets.push({
+              kind: 'invalid-type-declaration',
+              path,
+              value: declResult.value,
+            });
+            break;
+          case 'missing-declaration':
+            targets.push({ kind: 'skipped-untyped', path });
+            break;
+          case 'not-found':
+            targets.push({
+              kind: 'type-not-found',
+              path,
+              declaration: effective.value,
+              typeName: declResult.typeName,
+            });
+            break;
+          case 'ambiguous':
+            targets.push({
+              kind: 'type-ambiguous',
+              path,
+              declaration: effective.value,
+              typeName: declResult.typeName,
+              candidateIds: declResult.candidates.map((c) => c.id),
+            });
+            break;
+          case 'unavailable':
+            targets.push({
+              kind: 'type-unavailable',
+              path,
+              declaration: effective.value,
+              reason: declResult.reason,
+            });
+            break;
+        }
+        break;
+      }
+      case 'binding': {
+        const lookup = typeRegistry.getByName(effective.typeName);
+        switch (lookup.kind) {
+          case 'found': {
+            const result = validate(doc, lookup.typeDef, validationConfig, resolver, typeRegistry);
+            targets.push({
+              kind: 'validated',
+              path,
+              result,
+              typeId: lookup.typeDef.id,
+              typeName: lookup.typeDef.name,
+            });
+            break;
+          }
+          case 'not-found':
+            targets.push({
+              kind: 'binding-type-not-found',
+              path,
+              matchedBinding: effective.matchedBinding,
+              typeName: lookup.typeName,
+            });
+            break;
+          case 'ambiguous':
+            targets.push({
+              kind: 'binding-type-ambiguous',
+              path,
+              matchedBinding: effective.matchedBinding,
+              typeName: lookup.typeName,
+              candidateIds: lookup.candidates.map((c) => c.id),
+            });
+            break;
+          case 'unavailable':
+            targets.push({
+              kind: 'binding-type-unavailable',
+              path,
+              matchedBinding: effective.matchedBinding,
+              reason: lookup.reason,
+            });
+            break;
+        }
+        break;
+      }
+    }
+  }
+  timing.endPhase('validation', validationPhase);
+
+  const hasIngestFailures = ingestFailures.length > 0;
+  const hasTypeParseFailures = typeParseFailures.length > 0;
+  const hasTargetDiagnostics = targetDiagnostics.length > 0;
+  const hasValidationErrors = targets.some(
+    (t) => t.kind === 'validated' && t.result.errors.length > 0,
+  );
+  const hasResolutionFailures = targets.some(
+    (t) =>
+      t.kind === 'invalid-type-declaration' ||
+      t.kind === 'type-not-found' ||
+      t.kind === 'type-ambiguous' ||
+      t.kind === 'type-unavailable' ||
+      t.kind === 'ambiguous-binding' ||
+      t.kind === 'binding-type-not-found' ||
+      t.kind === 'binding-type-ambiguous' ||
+      t.kind === 'binding-type-unavailable',
+  );
+
+  const exitCode =
+    hasIngestFailures ||
+    hasTypeParseFailures ||
+    hasTargetDiagnostics ||
+    hasValidationErrors ||
+    hasResolutionFailures
+      ? 1
+      : 0;
+
+  return {
+    targets,
+    targetDiagnostics,
+    ingestFailures: ingestFailures.map((f) => ({
+      kind: f.kind,
+      path: f.path,
+      stage: f.stage,
+      reason: f.reason,
+    })) as Extract<IngestedMarkdown, { kind: 'ingest-failure' }>[],
+    typeParseFailures,
+    exitCode,
+    timing: timing.finish(),
+  };
+}

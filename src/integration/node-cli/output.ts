@@ -1,4 +1,4 @@
-import type { OutputFormat } from './config.js';
+import type { OutputFormat } from '../node-lib/config.js';
 
 const ENABLED = Symbol('outputEnabled');
 

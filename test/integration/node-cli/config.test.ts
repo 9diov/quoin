@@ -12,7 +12,7 @@ import {
   loadConfigFile,
   resolveEffectiveConfig,
   serializeEffectiveConfig,
-} from '../../../src/integration/node-cli/config.js';
+} from '../../../src/integration/node-lib/config.js';
 
 describe('defaultEffectiveConfig', () => {
   it('fills all fields with expected defaults rooted at cwd', () => {

@@ -2,14 +2,14 @@
 
 import { resolve } from 'node:path';
 import { Command } from 'commander';
-import { handleCreate, handleTypes, handleValidate } from './commands.js';
 import {
   findConfigFile,
   loadConfigFile,
   type NodeCliConfig,
   type OutputFormat,
   resolveEffectiveConfig,
-} from './config.js';
+} from '../node-lib/config.js';
+import { handleCreate, handleTypes, handleValidate } from './commands.js';
 import { setOutputFormat } from './output.js';
 
 const program = new Command();

@@ -11,6 +11,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
+    },
+    "./node-lib": {
+      "types": "./dist/integration/node-lib/index.d.ts",
+      "import": "./dist/integration/node-lib/index.js"
     }
   },
   "bin": {

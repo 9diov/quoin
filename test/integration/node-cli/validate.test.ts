@@ -1,12 +1,10 @@
 import { rm } from 'node:fs/promises';
 import { describe, expect, it, vi } from 'vitest';
-
 import {
-  expandTargets,
   formatValidateHuman,
   formatValidateJson,
-  runValidate,
 } from '../../../src/integration/node-cli/validate.js';
+import { expandTargets, runValidate } from '../../../src/integration/node-lib/validate.js';
 import { binding, createTempProject, defaultConfig } from './helpers.js';
 
 function expectTimingShape(
