@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P11 — Filesystem Discovery And Ingestion
 
 ## Goal

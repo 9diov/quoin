@@ -1,3 +1,8 @@
+---
+_type: "[[design-doc]]"
+status: "active"
+---
+
 # D6 — Path-Glob Type Bindings
 
 ## Overview

@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # Core Implementation Plan
 
 ## Readiness

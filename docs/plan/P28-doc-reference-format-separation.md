@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P28 — Doc Reference Format Separation
 
 ## Goal

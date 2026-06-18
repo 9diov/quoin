@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P24 — Sidebar Validation And Types View
 
 ## Goal

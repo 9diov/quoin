@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P17 — Build Package For npm Distribution
 
 ## Goal

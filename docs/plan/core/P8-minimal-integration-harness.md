@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P8 — Minimal Integration Harness
 
 > **Note:** [P28](../P28-doc-reference-format-separation.md) supersedes the harness's Resolver wiring. The harness Resolver now accepts `{ value, format?, sourceDocumentPath }` and returns `{ kind, value, format, … }` results.

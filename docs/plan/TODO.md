@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "in-progress"
+---
+
 ## Convention
 
 * [~] - WIP

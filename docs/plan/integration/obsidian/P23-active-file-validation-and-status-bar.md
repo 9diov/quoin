@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P23 — Active-File Validation And Status Bar
 
 ## Goal

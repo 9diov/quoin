@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P2 — Shared Core Types
 
 > **Note:** [P28](../P28-doc-reference-format-separation.md) supersedes the type list below. `wiki-link` is no longer a `PrimitiveTypeName`; `DocReference` is exported by the Core and used in `PropertyTypeName` / `ListItemType`.

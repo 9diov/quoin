@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P3 — Parser
 
 > **Note:** [P28](../P28-doc-reference-format-separation.md) supersedes how Parser emits internal-reference Properties. `type: doc-ref` (with optional `format`/`referenced-type`), `type: "[[name]]"`, and `type: "[](name)"` all normalize to canonical `DocReference` shapes. `type: wiki-link` is a compatibility alias.

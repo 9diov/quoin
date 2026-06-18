@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P21 — Vault Discovery And TypeRegistry
 
 ## Goal

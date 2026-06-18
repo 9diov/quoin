@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # Core Plans
 
 Implementation plans in this folder cover the pure Core implementation.

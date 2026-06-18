@@ -1,3 +1,8 @@
+---
+_type: "[[research-note]]"
+status: "active"
+---
+
 # R3 — Obsidian Plugin API Surface for Quoin
 
 ## Goal

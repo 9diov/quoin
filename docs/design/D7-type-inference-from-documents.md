@@ -1,3 +1,8 @@
+---
+_type: "[[design-doc]]"
+status: "active"
+---
+
 # D7 — Type Inference from Documents
 
 > **Note:** [D9 — Doc Reference Format Separation](D9-doc-ref-format-separation.md) supersedes how inferred reference Properties are emitted. Inferred schemas should emit `type: doc-ref` (optionally with `format`/`referenced-type`) rather than `type: wiki-link`.

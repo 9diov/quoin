@@ -1,8 +1,9 @@
+---
+_type: "[[design-doc]]"
+status: "draft"
+---
+
 # D9 — Doc Reference Format Separation
-
-## Status
-
-Draft.
 
 ## Problem
 

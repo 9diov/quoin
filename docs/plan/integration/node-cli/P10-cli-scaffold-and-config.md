@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P10 — CLI Scaffold And Config
 
 ## Goal

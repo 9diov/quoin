@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P25 — Create Flow And Context Menus
 
 ## Goal

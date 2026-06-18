@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P22 — Obsidian Resolver And Bindings
 
 ## Goal

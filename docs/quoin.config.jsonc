@@ -1,0 +1,14 @@
+{
+  // Dogfood Quoin against the repository docs without forcing frontmatter
+  // edits into the existing corpus.
+  "bindings": [
+    { "type": "adr", "match": "adr/**/*.md" },
+    { "type": "branding-note", "match": "branding/**/*.md" },
+    { "type": "design-doc", "match": "design/**/*.md" },
+    { "type": "manual-page", "match": "manual/**/*.md" },
+    { "type": "plan-doc", "match": "plan/**/*.md" },
+    { "type": "public-page", "match": "public/**/*.md" },
+    { "type": "research-note", "match": "research/**/*.md" },
+    { "type": "test-suite", "match": "test-cases/**/*.md" }
+  ]
+}

@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P15 — Path-Glob Type Bindings
 
 ## Goal

@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P19 — Obsidian Plugin Implementation Plan
 
 ## Readiness

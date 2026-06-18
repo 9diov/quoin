@@ -36,7 +36,8 @@
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
     "format": "biome format --write .",
-    "check": "npm run lint && npm run typecheck && npm run test",
+    "quoin": "node --import tsx src/integration/node-cli/index.ts --config docs/quoin.config.jsonc validate",
+    "check": "npm run lint && npm run typecheck && npm run quoin && npm run test",
     "test": "vitest run",
     "test:watch": "vitest",
     "cli": "tsx src/integration/node-cli/index.ts"

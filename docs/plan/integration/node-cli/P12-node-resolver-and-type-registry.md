@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P12 — Node Resolver And TypeRegistry
 
 ## Goal

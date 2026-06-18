@@ -1,8 +1,9 @@
-# D11 — Configuration Presets
+---
+_type: "[[design-doc]]"
+status: "draft"
+---
 
-## Status
-
-Draft.
+# D11 — Node CLI Config Preset
 
 ## Problem
 

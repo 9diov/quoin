@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P5 — Validation
 
 > **Note:** [P28](../P28-doc-reference-format-separation.md) supersedes how Validation handles internal references. `doc-ref` values (scalar and list-item) are routed through a format-aware branch; `document.path` is passed to the Resolver; `referencedType` (not a `TypeReference` shape) drives Referential Validation.

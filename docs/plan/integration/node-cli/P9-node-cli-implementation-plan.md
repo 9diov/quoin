@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P9 — Node CLI Implementation Plan
 
 ## Readiness

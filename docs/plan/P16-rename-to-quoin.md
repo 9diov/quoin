@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P16 — Rename project to Quoin
 
 ## Goal

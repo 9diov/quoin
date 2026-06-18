@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # Integration Plans
 
 Implementation plans in this folder cover host integrations, CLI/runtime behavior, and other work outside the pure Core.

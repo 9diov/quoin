@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P29 — Obsidian Markdown-Link Resolution
 
 ## Goal

@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P26 — Manual Testing Environment
 
 ## Goal

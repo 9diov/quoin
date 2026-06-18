@@ -1,3 +1,8 @@
+---
+_type: "[[design-doc]]"
+status: "active"
+---
+
 # D3 — Validation Semantics
 
 > **Note:** [D9 — Doc Reference Format Separation](D9-doc-ref-format-separation.md) supersedes this document's validation paths for internal references. Validation routes scalar and list-item `doc-ref` values through a format-aware branch (not the primitive switch), passes the source `document.path` to the Resolver, and invokes the TypeRegistry only when `referencedType` is present. Resolution error kinds keep their current names (`resolve:broken-wiki-link`, etc.) for this phase.

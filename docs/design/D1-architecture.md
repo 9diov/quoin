@@ -1,3 +1,12 @@
+---
+_type: "[[design-doc]]"
+status: "active"
+related:
+  - "[D2 — Type and Schema Contracts](D2-type-and-schema-contracts.md)"
+  - "[D3 — Validation Semantics](D3-validation-semantics.md)"
+  - "[D4 — Integration Contracts](D4-integration-contracts.md)"
+---
+
 # D1 — Architecture
 
 ## Overview
@@ -85,11 +94,3 @@ Repairing is a distinct Concern from Scaffolding and Templating with its own sem
 | Read/write files | — | owns all I/O |
 
 Detailed lookup contracts: [D4 — Integration Contracts](D4-integration-contracts.md).
-
----
-
-## Related design docs
-
-- [D2 — Type and Schema Contracts](D2-type-and-schema-contracts.md)
-- [D3 — Validation Semantics](D3-validation-semantics.md)
-- [D4 — Integration Contracts](D4-integration-contracts.md)

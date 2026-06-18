@@ -1,3 +1,8 @@
+---
+_type: "[[research-note]]"
+status: "active"
+---
+
 # R2 — Property-Based Testing for Quoin
 
 ## Goal

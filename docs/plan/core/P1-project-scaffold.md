@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P1 — Project Scaffold
 
 ## Goal
@@ -90,4 +95,3 @@ Package scripts:
 ## Follow-up
 
 After this phase, continue with Phase 2: shared Core types.
-

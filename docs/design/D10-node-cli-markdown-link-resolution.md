@@ -1,8 +1,9 @@
+---
+_type: "[[design-doc]]"
+status: "draft"
+---
+
 # D10 — Node CLI Markdown-Link Resolution
-
-## Status
-
-Draft.
 
 ## Problem
 
@@ -16,7 +17,8 @@ supported `doc-ref` format. Each Integration owns target interpretation:
 - The Node CLI resolves `markdown-link` strictly: targets are normalized
   against `sourceDocumentPath`, leading `/` is treated as project-root, and a
   lookup against the in-project path map either succeeds or returns
-  `not-found`.
+  `not-found`. It already strips fragments and percent-decodes targets before
+  path lookup.
 
 That asymmetry is intentional — each Integration matches its host
 environment. But it creates a concrete problem for users whose vault is
@@ -26,8 +28,6 @@ bite hardest are the ones Obsidian users write by reflex:
 
 - `[X](foo)` (no `.md` extension) — Obsidian appends `.md` and resolves;
   Node CLI does not.
-- `[X](foo%20bar.md)` (percent-encoded space) — Obsidian decodes; Node CLI
-  takes the literal path.
 - `[X](foo)` for a uniquely-named bare target — Obsidian shortest-path
   matches; Node CLI requires the full path.
 
@@ -60,7 +60,7 @@ who depend on strict path semantics.
 
 ## Decision
 
-Add three composable resolver behaviors to the Node CLI configuration,
+Add two composable resolver behaviors to the Node CLI configuration,
 each individually toggleable, all defaulting to off. Group them under a
 new `resolver` config object:
 
@@ -68,14 +68,14 @@ new `resolver` config object:
 {
   "resolver": {
     "markdownLinkExtensionFallback": false,
-    "markdownLinkPercentDecode": false,
     "markdownLinkShortestPathFallback": false
   }
 }
 ```
 
 Each knob narrows or relaxes one specific step of markdown-link resolution.
-The strict P28 behavior is recovered when all knobs are off.
+The current shipped behavior is recovered when all knobs are off: strict
+path-based lookup, plus unconditional fragment stripping and percent-decoding.
 
 ### `markdownLinkExtensionFallback`
 
@@ -90,19 +90,6 @@ always fail Node CLI validation.
 Scope: applies only after the path has been normalized against
 `sourceDocumentPath`. Does not change how `/`-prefixed or `../`-prefixed
 targets are normalized.
-
-### `markdownLinkPercentDecode`
-
-When on: percent-decodes the link target before normalization.
-`foo%20bar.md` becomes `foo bar.md`.
-
-Rationale: many Markdown editors emit percent-encoded targets when filenames
-contain spaces or non-ASCII characters. Obsidian decodes; the Node CLI
-should be able to as well.
-
-Scope: applies to the target string only — both before and after fragment
-stripping, the decoded form is used. Does not affect link shape validation
-in the Core grammar.
 
 ### `markdownLinkShortestPathFallback`
 
@@ -122,14 +109,14 @@ Obsidian (Obsidian picks one deterministically).
 
 ## Presets
 
-Preset handling lives at the configuration-shell layer, not inside the
-resolver. See [D11 — Configuration Presets](D11-config-presets.md) for the
-top-level preset mechanism and the `obsidian-compatible` preset that
-expands to all three knobs defined here.
+Preset handling, if added, lives at the configuration-shell layer, not inside
+the resolver. See [D11 — Node CLI Config Preset](D11-node-cli-config-preset.md) for a
+possible top-level preset mechanism. If such a preset ships, it should expand
+to the knobs defined here, not to fragment stripping or percent-decoding,
+because those are already unconditional Node CLI behaviors.
 
-D10 only contributes the knobs themselves. No `resolver.preset` field
-exists; users opt in via the top-level `preset: obsidian-compatible` or by
-setting the individual booleans directly.
+D10 only contributes the knobs themselves. No `resolver.preset` field exists
+in this design.
 
 ## Configuration shape
 
@@ -139,7 +126,6 @@ property:
 ```typescript
 type ResolverConfig = {
   markdownLinkExtensionFallback?: boolean;
-  markdownLinkPercentDecode?: boolean;
   markdownLinkShortestPathFallback?: boolean;
 };
 
@@ -149,21 +135,16 @@ type NodeCliConfig = {
 };
 ```
 
-Resolution precedence is the standard layering ([D11](D11-config-presets.md)
-defines the cross-subsystem rules): defaults → top-level preset expansion
-→ explicit config fields → CLI flags.
+Resolution precedence, if these knobs ship, should follow the standard config
+layering used by the CLI. D11 proposes one possible cross-subsystem preset
+model; D10 does not depend on D11 being implemented first.
 
 CLI flags map one-to-one to the booleans:
 
 - `--resolver-markdown-link-extension-fallback` /
   `--no-resolver-markdown-link-extension-fallback`
-- `--resolver-markdown-link-percent-decode` /
-  `--no-resolver-markdown-link-percent-decode`
 - `--resolver-markdown-link-shortest-path-fallback` /
   `--no-resolver-markdown-link-shortest-path-fallback`
-
-The top-level `--preset obsidian-compatible` flag from D11 turns all three
-on; individual flags above can override that selectively.
 
 ## Diagnostics
 
@@ -190,7 +171,7 @@ out of scope here; that would be a separate design exercise.
 ## Compatibility
 
 - Default behavior is unchanged from P28: strict path-precise resolution,
-  all knobs off.
+  all knobs off, with fragment stripping and percent-decoding already built in.
 - Existing fixtures and tests continue to pass with no configuration
   changes.
 - A new `resolver` configuration field with all sub-fields optional is
@@ -223,8 +204,8 @@ out of scope here; that would be a separate design exercise.
 
 Positive:
 
-- Users who validate Obsidian vaults in CI can do so without rewriting
-  every bare-name or percent-encoded link.
+- Users who validate Obsidian vaults in CI can do so without rewriting every
+  bare-name link.
 - Composable knobs let users adopt one behavior at a time, easing migration
   and limiting blast radius.
 - Strict behavior remains the default — non-Obsidian users see no change.
@@ -234,7 +215,7 @@ Positive:
 
 Costs:
 
-- Three more configuration knobs to document and test, plus the preset.
+- Two more configuration knobs to document and test, plus any future preset.
 - The "obsidian-compatible" preset can drift from Obsidian's actual
   resolution as Obsidian evolves. The `compatible` framing in the name and
   in the docs is intentional but real users may still file

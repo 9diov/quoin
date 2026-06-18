@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P20 — Plugin Scaffold And Settings
 
 ## Goal

@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "in-progress"
+---
+
 # Implementation Plans
 
 Implementation plans translate design docs into ordered work.

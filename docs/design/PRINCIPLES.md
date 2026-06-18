@@ -1,3 +1,8 @@
+---
+_type: "[[design-doc]]"
+status: "active"
+---
+
 # Design Principles
 
 These principles govern Quoin's design. New features, ADRs, and integration contracts should conform to them. When a principle and a specific design decision conflict, the conflict is a signal to revisit one of them explicitly.

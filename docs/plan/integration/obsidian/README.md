@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # Obsidian Plugin Plans
 
 Implementation plans in this folder cover the Obsidian plugin integration described by [D8 — Obsidian Plugin Integration](../../../design/D8-obsidian-plugin-integration.md).

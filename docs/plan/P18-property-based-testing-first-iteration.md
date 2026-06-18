@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P18 — Property-Based Testing First Iteration
 
 ## Goal

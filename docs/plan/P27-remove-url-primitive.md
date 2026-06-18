@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "proposed"
+---
+
 # P27 — Remove `url` Primitive Type
 
 ## Goal

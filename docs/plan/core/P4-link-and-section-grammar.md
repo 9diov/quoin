@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # P4 — Link and Section grammar helpers
 
 ## Goal

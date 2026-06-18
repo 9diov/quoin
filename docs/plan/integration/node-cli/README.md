@@ -1,3 +1,8 @@
+---
+_type: "[[plan-doc]]"
+status: "done"
+---
+
 # Node CLI Plans
 
 Implementation plans in this folder cover the Node-based CLI integration described by [D5 — Node CLI Integration](../../../design/D5-node-cli-integration.md).

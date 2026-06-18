@@ -1,3 +1,8 @@
+---
+_type: "[[research-note]]"
+status: "active"
+---
+
 # R1 — Human-Readable CLI Output
 
 ## Goal
