@@ -1,16 +1,13 @@
 import { mkdir, stat, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, posix, relative, resolve } from 'node:path';
-import { stringify as stringifyYaml } from 'yaml';
-
-import { scaffold } from '../../core/scaffold.js';
-import { template } from '../../core/template.js';
-import type { Document } from '../../core/types.js';
 import type {
   ValidationConfig,
   ValidationError,
   ValidationWarning,
 } from '../../core/validation.js';
-import { validate } from '../../core/validation.js';
+import { buildCreateCandidate } from '../common/create-candidate.js';
+
+export { serializeDocument } from '../common/frontmatter.js';
 
 import type { EffectiveConfig } from './config.js';
 import type { ParseFailure } from './lookup.js';
@@ -50,13 +47,6 @@ export type CreateResult = CreateResultBase & { timing: Timing };
 /** The only successful outcome exits 0; every other outcome exits 1. */
 export function createExitCode(result: CreateResult): number {
   return result.kind === 'created' ? 0 : 1;
-}
-
-/** Derive the Wiki Link display identity from a type-definition file id. */
-function declarationFromTypeId(typeId: string): string {
-  const ext = posix.extname(typeId);
-  const base = posix.basename(typeId, ext);
-  return `[[${base}]]`;
 }
 
 /**
@@ -161,39 +151,24 @@ export async function runCreate(
     return withTiming(outputResolution.result);
   }
 
-  // Synthesize frontmatter from only the configured declaration key, then layer
-  // scaffolded defaults on top (declaration first for deterministic output).
-  const declaration = declarationFromTypeId(typeDef.id);
-  const baseFrontmatter = { [config.typeDeclarationKey]: declaration };
-  const scaffolded = scaffold(baseFrontmatter, typeDef);
-  const frontmatter: Record<string, unknown> = {
-    ...baseFrontmatter,
-    ...scaffolded.properties,
-  };
-
-  const body = template(typeDef).body;
-
-  const candidate: Document = {
-    path: outputResolution.relativePath,
-    frontmatter,
-    body,
-  };
-  timing.endPhase('synthesis', synthesisPhase);
-
   const validationConfig: ValidationConfig = {
     typeDeclarationKey: config.typeDeclarationKey,
     untypedDocumentBehavior: config.untypedDocumentBehavior,
     referentialValidation: config.referentialValidation,
   };
 
-  const validationPhase = timing.startPhase();
-  const validation = validate(
-    candidate,
+  const candidate = buildCreateCandidate({
+    outputPath: outputResolution.relativePath,
     typeDef,
+    typeDeclarationKey: config.typeDeclarationKey,
     validationConfig,
-    universe.resolver,
-    universe.typeRegistry,
-  );
+    resolver: universe.resolver,
+    typeRegistry: universe.typeRegistry,
+  });
+  timing.endPhase('synthesis', synthesisPhase);
+
+  const validationPhase = timing.startPhase();
+  const validation = candidate.validation;
   timing.endPhase('validation', validationPhase);
 
   if (validation.errors.length > 0) {
@@ -205,7 +180,7 @@ export async function runCreate(
     });
   }
 
-  const content = serializeDocument(frontmatter, body);
+  const content = candidate.contents;
 
   const writePhase = timing.startPhase();
   try {
@@ -229,25 +204,7 @@ export async function runCreate(
     path: outputResolution.relativePath,
     typeId: typeDef.id,
     typeName: typeDef.name,
-    declaration,
+    declaration: candidate.declaration,
     warnings: validation.warnings,
   });
-}
-
-/**
- * Serialize frontmatter + body into a deterministic Markdown document.
- *
- * Frontmatter keys are emitted in insertion order. A type with no Template
- * Block produces a frontmatter-only file.
- */
-export function serializeDocument(frontmatter: Record<string, unknown>, body: string): string {
-  const yaml = stringifyYaml(frontmatter);
-  let content = `---\n${yaml}---\n`;
-  if (body.length > 0) {
-    content += `\n${body}`;
-    if (!content.endsWith('\n')) {
-      content += '\n';
-    }
-  }
-  return content;
 }

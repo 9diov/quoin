@@ -4,6 +4,7 @@ import fg from 'fast-glob';
 import { parse as parseYaml } from 'yaml';
 
 import type { Document } from '../../core/types.js';
+import { splitFrontmatter } from '../common/frontmatter.js';
 
 export type IngestedMarkdown =
   | {
@@ -66,12 +67,57 @@ async function ingestOne(root: string, relativePath: string): Promise<IngestedMa
     };
   }
 
-  let frontmatterRaw: string | null;
-  let body: string;
   try {
     const split = splitFrontmatter(raw);
-    frontmatterRaw = split.yaml;
-    body = split.body;
+    const frontmatterRaw = split.yaml;
+    const body = split.body;
+
+    let frontmatter: Record<string, unknown>;
+
+    if (frontmatterRaw === null) {
+      frontmatter = {};
+    } else {
+      const trimmed = frontmatterRaw.trim();
+      if (trimmed.length === 0) {
+        frontmatter = {};
+      } else {
+        try {
+          const parsed = parseYaml(trimmed);
+          if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            frontmatter = parsed as Record<string, unknown>;
+          } else {
+            return {
+              kind: 'ingest-failure',
+              path: relativePath,
+              stage: 'frontmatter',
+              reason:
+                'Frontmatter must be a YAML mapping, got ' +
+                (parsed === null ? 'null' : Array.isArray(parsed) ? 'array' : typeof parsed),
+            };
+          }
+        } catch (err) {
+          return {
+            kind: 'ingest-failure',
+            path: relativePath,
+            stage: 'frontmatter',
+            reason: err instanceof Error ? err.message : 'YAML parse error',
+          };
+        }
+      }
+    }
+
+    const document: Document = {
+      path: relativePath,
+      frontmatter,
+      body,
+    };
+
+    return {
+      kind: 'document',
+      path: relativePath,
+      raw,
+      document,
+    };
   } catch (err) {
     return {
       kind: 'ingest-failure',
@@ -80,87 +126,6 @@ async function ingestOne(root: string, relativePath: string): Promise<IngestedMa
       reason: err instanceof Error ? err.message : 'Unknown frontmatter error',
     };
   }
-
-  let frontmatter: Record<string, unknown>;
-
-  if (frontmatterRaw === null) {
-    frontmatter = {};
-  } else {
-    const trimmed = frontmatterRaw.trim();
-    if (trimmed.length === 0) {
-      frontmatter = {};
-    } else {
-      try {
-        const parsed = parseYaml(trimmed);
-        if (parsed !== null && typeof parsed === 'object' && !Array.isArray(parsed)) {
-          frontmatter = parsed as Record<string, unknown>;
-        } else {
-          return {
-            kind: 'ingest-failure',
-            path: relativePath,
-            stage: 'frontmatter',
-            reason:
-              'Frontmatter must be a YAML mapping, got ' +
-              (parsed === null ? 'null' : Array.isArray(parsed) ? 'array' : typeof parsed),
-          };
-        }
-      } catch (err) {
-        return {
-          kind: 'ingest-failure',
-          path: relativePath,
-          stage: 'frontmatter',
-          reason: err instanceof Error ? err.message : 'YAML parse error',
-        };
-      }
-    }
-  }
-
-  const document: Document = {
-    path: relativePath,
-    frontmatter,
-    body,
-  };
-
-  return {
-    kind: 'document',
-    path: relativePath,
-    raw,
-    document,
-  };
-}
-
-const FRONTMATTER_FENCE = /^---\s*$/;
-
-function splitFrontmatter(raw: string): {
-  yaml: string | null;
-  body: string;
-} {
-  const lines = raw.split(/\r?\n/);
-  if (lines.length === 0 || !FRONTMATTER_FENCE.test(lines[0] ?? '')) {
-    return { yaml: null, body: raw };
-  }
-
-  for (let i = 1; i < lines.length; i++) {
-    if (FRONTMATTER_FENCE.test(lines[i] ?? '')) {
-      const yaml = lines.slice(1, i).join('\n');
-
-      let bodyStart = 0;
-      for (let lineIdx = 0; lineIdx <= i; lineIdx++) {
-        bodyStart += lines[lineIdx]!.length;
-        if (bodyStart < raw.length) {
-          if (raw[bodyStart] === '\r' && raw[bodyStart + 1] === '\n') {
-            bodyStart += 2;
-          } else if (raw[bodyStart] === '\n') {
-            bodyStart += 1;
-          }
-        }
-      }
-
-      return { yaml, body: raw.slice(bodyStart) };
-    }
-  }
-
-  throw new Error('No closing --- delimiter found for frontmatter');
 }
 
 export function isTypeDefinitionCandidate(document: Document, typeDeclarationKey: string): boolean {

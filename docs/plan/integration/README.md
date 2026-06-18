@@ -10,6 +10,7 @@ Implementation plans in this folder cover host integrations, CLI/runtime behavio
 
 Current plans:
 
+- [P32 — Shared Node/Obsidian integration helpers](P32-shared-node-obsidian-integration-helpers.md)
 - [Node CLI plans](node-cli/README.md)
 - [Node lib plans](node-lib/README.md)
 - [Obsidian plugin plans](obsidian/README.md)

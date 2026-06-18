@@ -3,68 +3,40 @@ import type {
   ResolveDocReferenceInput,
   ResolveDocReferenceResult,
   Resolver,
-  TypeDeclarationLookupResult,
-  TypeReferenceLookupResult,
-  TypeRegistry,
 } from '../../core/integration.js';
 import { parseMarkdownLink } from '../../core/link-grammar.js';
-import type {
-  DocRefFormat,
-  ParsedTypeDefinitionDocument,
-  ParseError,
-  ParserConfig,
-} from '../../core/parser.js';
-import { parseTypeDefinitionDocument } from '../../core/parser.js';
+import type { ParserConfig } from '../../core/parser.js';
 import type { Document } from '../../core/types.js';
+import {
+  detectDocRefFormat,
+  extractWikiLinkTarget,
+  matchesDocRefPathQualifier,
+  safeDecodeDocRefTarget,
+  stripDocRefFragment,
+} from '../common/doc-ref.js';
+import type { ParseFailure } from '../common/type-candidates.js';
+import { parseTypeCandidates as parseSharedTypeCandidates } from '../common/type-candidates.js';
+import {
+  createTypeRegistry as createSharedTypeRegistry,
+  deriveTypeIdentity,
+} from '../common/type-registry.js';
 
 import type { IngestedMarkdown } from './ingestion.js';
 
-export type ParseFailure = {
-  path: string;
-  errors: ParseError[];
-};
+export type { ParseFailure } from '../common/type-candidates.js';
+
+export function parseTypeCandidates(
+  candidates: { path: string; raw: string }[],
+  parserConfig: ParserConfig,
+) {
+  return parseSharedTypeCandidates(candidates, parserConfig);
+}
 
 export function deriveIdentity(relativePath: string): {
   id: string;
   name: string;
 } {
-  const normalized = posix.normalize(relativePath.replaceAll('\\', '/'));
-  const ext = posix.extname(normalized);
-  const fileName = posix.basename(normalized, ext);
-  return {
-    id: normalized,
-    name: fileName.toLowerCase(),
-  };
-}
-
-export function parseTypeCandidates(
-  candidates: { path: string; raw: string }[],
-  parserConfig: ParserConfig,
-): {
-  parsed: ParsedTypeDefinitionDocument[];
-  failures: ParseFailure[];
-} {
-  const parsed: ParsedTypeDefinitionDocument[] = [];
-  const failures: ParseFailure[] = [];
-
-  for (const candidate of candidates) {
-    const identity = deriveIdentity(candidate.path);
-    const result = parseTypeDefinitionDocument(candidate.raw, identity, parserConfig);
-
-    if (result.kind === 'ok') {
-      parsed.push(result.typeDef);
-    } else {
-      failures.push({ path: candidate.path, errors: result.errors });
-    }
-  }
-
-  return { parsed, failures };
-}
-
-function detectFormat(value: string): DocRefFormat | null {
-  if (value.startsWith('[[') && value.endsWith(']]')) return 'wiki-link';
-  if (parseMarkdownLink(value) !== null) return 'markdown-link';
-  return null;
+  return deriveTypeIdentity(relativePath);
 }
 
 export function createResolver(ingested: IngestedMarkdown[]): Resolver {
@@ -119,8 +91,8 @@ export function createResolver(ingested: IngestedMarkdown[]): Resolver {
     }
 
     if (totalCount > 1 && target.includes('/')) {
-      const narrowedDocs = documents.filter((doc) => matchesPathQualifier(doc.path, target));
-      const narrowedFailures = failures.filter((f) => matchesPathQualifier(f.path, target));
+      const narrowedDocs = documents.filter((doc) => matchesDocRefPathQualifier(doc.path, target));
+      const narrowedFailures = failures.filter((f) => matchesDocRefPathQualifier(f.path, target));
       const narrowedTotal = narrowedDocs.length + narrowedFailures.length;
 
       if (narrowedTotal === 1) {
@@ -172,7 +144,7 @@ export function createResolver(ingested: IngestedMarkdown[]): Resolver {
       };
     }
 
-    const targetWithoutFragment = stripFragment(parts.target);
+    const targetWithoutFragment = stripDocRefFragment(parts.target);
     if (targetWithoutFragment.length === 0) {
       return {
         kind: 'invalid-link',
@@ -182,7 +154,7 @@ export function createResolver(ingested: IngestedMarkdown[]): Resolver {
       };
     }
 
-    const decodedTarget = safeDecodeURI(targetWithoutFragment);
+    const decodedTarget = safeDecodeDocRefTarget(targetWithoutFragment);
     const normalizedSource = posix.normalize(input.sourceDocumentPath.replaceAll('\\', '/'));
     const sourceDir = posix.dirname(normalizedSource);
     let resolved: string;
@@ -211,7 +183,7 @@ export function createResolver(ingested: IngestedMarkdown[]): Resolver {
   };
 
   return (input: ResolveDocReferenceInput): ResolveDocReferenceResult => {
-    const format = input.format ?? detectFormat(input.value);
+    const format = input.format ?? detectDocRefFormat(input.value);
     if (format === 'wiki-link') return resolveWikiLink(input);
     if (format === 'markdown-link') return resolveMarkdownLink(input);
     // Unknown format implies invalid shape; surface as invalid-link with a
@@ -226,136 +198,10 @@ export function createResolver(ingested: IngestedMarkdown[]): Resolver {
 }
 
 export function createTypeRegistry(
-  parsedTypeDefs: ParsedTypeDefinitionDocument[],
+  parsedTypeDefs: Parameters<typeof createSharedTypeRegistry>[0],
   parseFailures: ParseFailure[] = [],
-): TypeRegistry {
-  const byName = new Map<string, ParsedTypeDefinitionDocument[]>();
-  const failedByName = new Map<string, string>();
-
-  for (const typeDef of parsedTypeDefs) {
-    const existing = byName.get(typeDef.name);
-    if (existing) {
-      existing.push(typeDef);
-    } else {
-      byName.set(typeDef.name, [typeDef]);
-    }
-  }
-
-  for (const failure of parseFailures) {
-    const identity = deriveIdentity(failure.path);
-    if (!failedByName.has(identity.name)) {
-      failedByName.set(identity.name, `Parse failed: ${failure.errors.length} error(s)`);
-    }
-  }
-
-  const lookupByName = (typeName: string): TypeReferenceLookupResult => {
-    const name = typeName.toLowerCase();
-    const matches = byName.get(name);
-
-    if (!matches || matches.length === 0) {
-      const failureReason = failedByName.get(name);
-      if (failureReason !== undefined) {
-        return { kind: 'unavailable', reason: failureReason };
-      }
-      return { kind: 'not-found', typeName: name };
-    }
-
-    if (matches.length > 1) {
-      return { kind: 'ambiguous', typeName: name, candidates: matches };
-    }
-
-    const typeDef = matches[0];
-    if (!typeDef) {
-      const failureReason = failedByName.get(name);
-      if (failureReason !== undefined) {
-        return { kind: 'unavailable', reason: failureReason };
-      }
-      return { kind: 'not-found', typeName: name };
-    }
-
-    return { kind: 'found', typeDef };
-  };
-
-  return {
-    getByName(typeName: string): TypeReferenceLookupResult {
-      return lookupByName(typeName);
-    },
-
-    getByDeclaration(value: unknown): TypeDeclarationLookupResult {
-      if (value === undefined || value === null) {
-        return { kind: 'missing-declaration' };
-      }
-
-      if (value === 'type') {
-        return lookupByName('type');
-      }
-
-      if (typeof value === 'string') {
-        const target = extractWikiLinkTarget(value);
-        if (target !== null) {
-          return lookupByName(nativeBasename(target));
-        }
-      }
-
-      return { kind: 'invalid-declaration', value };
-    },
-  };
-}
-
-function stripFragment(target: string): string {
-  const hash = target.indexOf('#');
-  return hash === -1 ? target : target.slice(0, hash);
-}
-
-function safeDecodeURI(value: string): string {
-  try {
-    return decodeURIComponent(value);
-  } catch {
-    return value;
-  }
-}
-
-function extractWikiLinkTarget(wikiLink: string): string | null {
-  if (!wikiLink.startsWith('[[') || !wikiLink.endsWith(']]')) {
-    return null;
-  }
-
-  const inner = wikiLink.slice(2, -2);
-  if (inner.length === 0) return null;
-
-  const hashIdx = inner.indexOf('#');
-  const pipeIdx = inner.indexOf('|');
-
-  let targetEnd: number;
-  if (hashIdx === -1 && pipeIdx === -1) {
-    targetEnd = inner.length;
-  } else if (hashIdx === -1) {
-    targetEnd = pipeIdx;
-  } else if (pipeIdx === -1) {
-    targetEnd = hashIdx;
-  } else {
-    targetEnd = Math.min(hashIdx, pipeIdx);
-  }
-
-  const target = inner.slice(0, targetEnd);
-  if (target.length === 0) return null;
-
-  if (target.includes('[') || target.includes(']')) return null;
-
-  return target;
-}
-
-function matchesPathQualifier(candidatePath: string, qualifier: string): boolean {
-  const normalizedCandidate = posix
-    .normalize(candidatePath.replaceAll('\\', '/'))
-    .replace(/\.md$/i, '')
-    .toLowerCase();
-  const normalizedQualifier = posix
-    .normalize(qualifier.replaceAll('\\', '/'))
-    .replace(/\.md$/i, '')
-    .toLowerCase();
-  if (normalizedCandidate === normalizedQualifier) return true;
-  return normalizedCandidate.endsWith(`/${normalizedQualifier}`);
+) {
+  return createSharedTypeRegistry(parsedTypeDefs, parseFailures, nativeBasename);
 }
 
 function lowercaseBasename(relativePath: string): string {

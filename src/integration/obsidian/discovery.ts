@@ -7,6 +7,7 @@ import type {
   TypeDefinitionDocumentIdentity,
 } from '../../core/parser.js';
 import { parseTypeDefinitionDocument } from '../../core/parser.js';
+import { createTypeRegistry as createSharedTypeRegistry } from '../common/type-registry.js';
 
 import type { ObsidianPluginSettings } from './settings.js';
 
@@ -246,62 +247,7 @@ function createObsidianTypeRegistry(
   parsedTypeDefs: ParsedTypeDefinitionDocument[],
   parseFailures: ObsidianTypeParseFailure[],
 ): TypeRegistry {
-  const byName = groupTypeDefsByName(parsedTypeDefs);
-  const failedByName = new Map<string, string>();
-
-  for (const failure of parseFailures) {
-    const name = deriveObsidianTypeIdentity(failure.path).name;
-    if (!failedByName.has(name)) {
-      failedByName.set(name, `Parse failed: ${failure.errors.length} error(s)`);
-    }
-  }
-
-  const lookupByName = (typeName: string) => {
-    const name = typeName.toLowerCase();
-    const candidates = byName.get(name) ?? [];
-
-    if (candidates.length > 1) {
-      return { kind: 'ambiguous' as const, typeName: name, candidates };
-    }
-
-    const typeDef = candidates[0];
-    if (typeDef !== undefined) {
-      return { kind: 'found' as const, typeDef };
-    }
-
-    const failureReason = failedByName.get(name);
-    if (failureReason !== undefined) {
-      return { kind: 'unavailable' as const, reason: failureReason };
-    }
-
-    return { kind: 'not-found' as const, typeName: name };
-  };
-
-  return {
-    getByName(typeName) {
-      return lookupByName(typeName);
-    },
-    getByDeclaration(value) {
-      if (value === undefined || value === null) {
-        return { kind: 'missing-declaration' };
-      }
-
-      if (value === 'type') {
-        return lookupByName('type');
-      }
-
-      if (typeof value !== 'string') {
-        return { kind: 'invalid-declaration', value };
-      }
-
-      const target = extractWikiLinkTarget(value);
-      if (target === null) {
-        return { kind: 'invalid-declaration', value };
-      }
-
-      return lookupByName(target);
-    },
-  };
+  return createSharedTypeRegistry(parsedTypeDefs, parseFailures);
 }
 
 function groupTypeDefsByName(
@@ -315,29 +261,6 @@ function groupTypeDefsByName(
   }
 
   return byName;
-}
-
-function extractWikiLinkTarget(wikiLink: string): string | null {
-  if (!wikiLink.startsWith('[[') || !wikiLink.endsWith(']]')) return null;
-
-  const inner = wikiLink.slice(2, -2);
-  if (inner.length === 0) return null;
-
-  const hashIdx = inner.indexOf('#');
-  const pipeIdx = inner.indexOf('|');
-  const targetEnd =
-    hashIdx === -1 && pipeIdx === -1
-      ? inner.length
-      : hashIdx === -1
-        ? pipeIdx
-        : pipeIdx === -1
-          ? hashIdx
-          : Math.min(hashIdx, pipeIdx);
-
-  const target = inner.slice(0, targetEnd);
-  if (target.length === 0 || target.includes('[') || target.includes(']')) return null;
-
-  return basenameWithoutExtension(target).toLowerCase();
 }
 
 function basenameWithoutExtension(path: string): string {

@@ -1,15 +1,8 @@
 import type { Document } from '../../core/types.js';
+import type { EffectiveTypeDeclaration, TypeBinding } from '../common/bindings.js';
+import { resolveEffectiveTypeDeclaration as resolveSharedEffectiveTypeDeclaration } from '../common/bindings.js';
 
-export type TypeBinding = {
-  type: string;
-  match: string;
-};
-
-export type EffectiveTypeDeclaration =
-  | { kind: 'frontmatter'; value: unknown }
-  | { kind: 'binding'; typeName: string; matchedBinding: TypeBinding }
-  | { kind: 'untyped' }
-  | { kind: 'ambiguous-binding'; candidates: TypeBinding[] };
+export type { EffectiveTypeDeclaration, TypeBinding } from '../common/bindings.js';
 
 export function resolveEffectiveTypeDeclaration(
   document: Document,
@@ -17,60 +10,18 @@ export function resolveEffectiveTypeDeclaration(
   bindings: TypeBinding[],
   typeDeclarationKey: string,
 ): EffectiveTypeDeclaration {
-  if (document.frontmatter[typeDeclarationKey] !== undefined) {
-    return {
-      kind: 'frontmatter',
-      value: document.frontmatter[typeDeclarationKey],
-    };
-  }
-
-  const matches = bindings.filter((binding) => isGlobMatch(rootRelativePath, binding.match));
-
-  if (matches.length === 0) {
-    return { kind: 'untyped' };
-  }
-
-  if (matches.length === 1) {
-    const matchedBinding = matches[0]!;
-    return {
-      kind: 'binding',
-      typeName: matchedBinding.type,
-      matchedBinding,
-    };
-  }
-
-  const distinctMatches = firstBindingPerType(matches);
-  if (distinctMatches.length === 1) {
-    const matchedBinding = distinctMatches[0]!;
-    return {
-      kind: 'binding',
-      typeName: matchedBinding.type,
-      matchedBinding,
-    };
-  }
-
-  return {
-    kind: 'ambiguous-binding',
-    candidates: distinctMatches,
-  };
+  return resolveSharedEffectiveTypeDeclaration({
+    document,
+    rootRelativePath,
+    bindings,
+    typeDeclarationKey,
+    isMatch: isGlobMatch,
+  });
 }
 
 export function bindingMatchEscapesVault(match: string): boolean {
   const normalized = normalizeVaultPath(match);
   return normalized.startsWith('/') || normalized === '..' || normalized.startsWith('../');
-}
-
-function firstBindingPerType(bindings: TypeBinding[]): TypeBinding[] {
-  const seen = new Set<string>();
-  const result: TypeBinding[] = [];
-
-  for (const binding of bindings) {
-    if (seen.has(binding.type)) continue;
-    seen.add(binding.type);
-    result.push(binding);
-  }
-
-  return result;
 }
 
 function isGlobMatch(path: string, glob: string): boolean {

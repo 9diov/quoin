@@ -122,6 +122,26 @@ properties:
   });
 });
 
+describe('createTypeRegistry', () => {
+  it('keeps node-lib declaration lookup basename-only without stripping file extensions', () => {
+    const typeDef: ParsedTypeDefinitionDocument = {
+      id: 'types/Concept.md',
+      name: 'concept',
+      schema: { properties: {} },
+    };
+    const registry = createTypeRegistry([typeDef]);
+
+    expect(registry.getByDeclaration('[[Concept]]')).toMatchObject({
+      kind: 'found',
+      typeDef,
+    });
+    expect(registry.getByDeclaration('[[Concept.md]]')).toEqual({
+      kind: 'not-found',
+      typeName: 'concept.md',
+    });
+  });
+});
+
 describe('createResolver', () => {
   it('resolves a Wiki Link to a found document by basename', () => {
     const ingested: IngestedMarkdown[] = [ingestionDoc('notes/Concept.md', { title: 'Concept' })];

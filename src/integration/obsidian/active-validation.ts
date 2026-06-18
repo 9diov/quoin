@@ -1,10 +1,11 @@
-import type { App, CachedMetadata, TFile } from 'obsidian';
+import type { App, TFile } from 'obsidian';
 
 import type { TypeRegistry } from '../../core/integration.js';
 import type { ParsedTypeDefinitionDocument } from '../../core/parser.js';
 import type { Document } from '../../core/types.js';
 import type { ValidationResult } from '../../core/validation.js';
 import { validate } from '../../core/validation.js';
+import { extractDocumentBodyBestEffort } from '../common/frontmatter.js';
 import type { EffectiveTypeDeclaration, TypeBinding } from './bindings.js';
 import { deriveObsidianTypeIdentity, inspectTypeDefinitionCandidate } from './discovery.js';
 import type { ObsidianBasenameIndex } from './lookup.js';
@@ -110,7 +111,7 @@ export async function validateActiveFile(
   const document: Document = {
     path: file.path,
     frontmatter: isRecord(frontmatter) ? frontmatter : {},
-    body: getDocumentBody(raw, fileCache),
+    body: extractDocumentBodyBestEffort(raw, fileCache?.frontmatterPosition?.end.offset),
   };
 
   if (candidate.kind === 'candidate') {
@@ -359,36 +360,6 @@ function warningStatus(tooltip: string): ActiveFileStatusRender {
 
 function formatBinding(binding: TypeBinding): string {
   return `${binding.type}:${binding.match}`;
-}
-
-function getDocumentBody(raw: string, fileCache: CachedMetadata | null): string {
-  const endOffset = fileCache?.frontmatterPosition?.end.offset;
-  if (typeof endOffset === 'number' && endOffset >= 0 && endOffset <= raw.length) {
-    return raw.slice(skipLineEnding(raw, endOffset));
-  }
-
-  // NOTE: Older or mocked metadata cache shapes may not include frontmatterPosition.
-  // Keep this fallback aligned with the core ingestion delimiter model.
-  return splitFrontmatterBody(raw);
-}
-
-function splitFrontmatterBody(raw: string): string {
-  const lines = raw.split(/\r?\n/);
-  if (lines.length === 0 || !/^---\s*$/.test(lines[0] ?? '')) return raw;
-
-  for (let index = 1; index < lines.length; index += 1) {
-    if (/^(---|\.\.\.)\s*$/.test(lines[index] ?? '')) {
-      return lines.slice(index + 1).join('\n');
-    }
-  }
-
-  return raw;
-}
-
-function skipLineEnding(raw: string, offset: number): number {
-  if (raw[offset] === '\r' && raw[offset + 1] === '\n') return offset + 2;
-  if (raw[offset] === '\n') return offset + 1;
-  return offset;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

@@ -9,13 +9,11 @@ import {
   TFile,
   TFolder,
 } from 'obsidian';
-import { stringify as stringifyYaml } from 'yaml';
 
 import type { ParsedTypeDefinitionDocument } from '../../core/parser.js';
-import { scaffold } from '../../core/scaffold.js';
-import { template } from '../../core/template.js';
 import type { Document } from '../../core/types.js';
-import { type ValidationResult, validate } from '../../core/validation.js';
+import type { ValidationResult } from '../../core/validation.js';
+import { buildCreateCandidate } from '../common/create-candidate.js';
 import type { ObsidianTypeRegistryState } from './discovery.js';
 import type { ObsidianBasenameIndex } from './lookup.js';
 import { createObsidianResolver } from './lookup.js';
@@ -203,57 +201,33 @@ export function buildCreatedDocumentCandidate(args: {
   >;
   typeDef: ParsedTypeDefinitionDocument;
 }): CreatedDocumentCandidate {
-  const typeDeclaration = `[[${basenameWithoutExtension(args.typeDef.id)}]]`;
-  const initialFrontmatter: Record<string, unknown> = {
-    [args.settings.typeDeclarationKey]: typeDeclaration,
-  };
-  const scaffolded = scaffold(initialFrontmatter, args.typeDef);
-  const frontmatter = { ...initialFrontmatter, ...scaffolded.properties };
-  const templated = template(args.typeDef);
-  const contents = serializeDocument(frontmatter, templated.body);
-  const frontmatterEndOffset = frontmatterBlockLength(frontmatter);
-  const document: Document = {
-    path: args.outputPath,
-    frontmatter,
-    body: templated.body,
-  };
-  const validation = validate(
-    document,
-    args.typeDef,
-    {
+  const candidate = buildCreateCandidate({
+    outputPath: args.outputPath,
+    typeDef: args.typeDef,
+    typeDeclarationKey: args.settings.typeDeclarationKey,
+    validationConfig: {
       typeDeclarationKey: args.settings.typeDeclarationKey,
       untypedDocumentBehavior: args.settings.untypedDocumentBehavior,
       referentialValidation: args.settings.referentialValidation,
       integration: 'obsidian',
     },
-    createObsidianResolver(args.app, args.basenameIndex),
-    args.registryState.typeRegistry,
-  );
+    resolver: createObsidianResolver(args.app, args.basenameIndex),
+    typeRegistry: args.registryState.typeRegistry,
+  });
 
-  return { document, contents, frontmatterEndOffset, validation };
+  return {
+    document: candidate.document,
+    contents: candidate.contents,
+    frontmatterEndOffset: candidate.frontmatterEndOffset,
+    validation: candidate.validation,
+  };
 }
 
-export function serializeDocument(frontmatter: Record<string, unknown>, body: string): string {
-  const frontmatterBlock = serializeFrontmatter(frontmatter);
-  if (body.length === 0) return frontmatterBlock;
-  return `${frontmatterBlock}\n${body}`;
-}
+export { serializeDocument } from '../common/frontmatter.js';
 
 export function defaultOutputPath(folderPath: string | undefined): string {
   const folder = normalizePath(folderPath ?? '');
   return folder.length === 0 || folder === '/' ? 'Untitled.md' : `${folder}/Untitled.md`;
-}
-
-function serializeFrontmatter(frontmatter: Record<string, unknown>): string {
-  const yaml = stringifyYaml(frontmatter, {
-    lineWidth: 0,
-    sortMapEntries: false,
-  });
-  return `---\n${yaml}---\n`;
-}
-
-function frontmatterBlockLength(frontmatter: Record<string, unknown>): number {
-  return serializeFrontmatter(frontmatter).length;
 }
 
 function pickType(
@@ -408,11 +382,4 @@ function activeFolderPath(app: App): string {
 function parentFolderPath(path: string): string {
   const index = path.lastIndexOf('/');
   return index === -1 ? '' : path.slice(0, index);
-}
-
-function basenameWithoutExtension(path: string): string {
-  const normalized = path.replaceAll('\\', '/');
-  const filename = normalized.slice(normalized.lastIndexOf('/') + 1);
-  const dot = filename.lastIndexOf('.');
-  return dot <= 0 ? filename : filename.slice(0, dot);
 }

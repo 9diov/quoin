@@ -6,8 +6,14 @@ import type {
   Resolver,
 } from '../../core/integration.js';
 import { parseMarkdownLink } from '../../core/link-grammar.js';
-import type { DocRefFormat } from '../../core/parser.js';
 import type { Document } from '../../core/types.js';
+import {
+  detectDocRefFormat,
+  extractWikiLinkTarget,
+  matchesDocRefPathQualifier,
+  safeDecodeDocRefTarget,
+  stripDocRefFragment,
+} from '../common/doc-ref.js';
 import { type EffectiveTypeDeclaration, resolveEffectiveTypeDeclaration } from './bindings.js';
 
 import type { ObsidianPluginSettings } from './settings.js';
@@ -75,12 +81,6 @@ export class ObsidianBasenameIndex {
   }
 }
 
-function detectFormat(value: string): DocRefFormat | null {
-  if (value.startsWith('[[') && value.endsWith(']]')) return 'wiki-link';
-  if (parseMarkdownLink(value) !== null) return 'markdown-link';
-  return null;
-}
-
 export function createObsidianResolver(app: App, basenameIndex: ObsidianBasenameIndex): Resolver {
   const resolveWikiLink = (input: ResolveDocReferenceInput): ResolveDocReferenceResult => {
     const linkpath = extractWikiLinkTarget(input.value);
@@ -96,7 +96,9 @@ export function createObsidianResolver(app: App, basenameIndex: ObsidianBasename
     const basenameCandidates = basenameIndex.candidatesForLinkpath(linkpath);
     let ambiguityCandidates = basenameCandidates;
     if (basenameCandidates.length > 1 && linkpath.includes('/')) {
-      const narrowed = basenameCandidates.filter((path) => matchesPathQualifier(path, linkpath));
+      const narrowed = basenameCandidates.filter((path) =>
+        matchesDocRefPathQualifier(path, linkpath),
+      );
       if (narrowed.length > 0) {
         ambiguityCandidates = narrowed;
       }
@@ -137,7 +139,7 @@ export function createObsidianResolver(app: App, basenameIndex: ObsidianBasename
       };
     }
 
-    const stripped = stripFragment(parts.target);
+    const stripped = stripDocRefFragment(parts.target);
     if (stripped.length === 0) {
       return {
         kind: 'invalid-link',
@@ -147,7 +149,7 @@ export function createObsidianResolver(app: App, basenameIndex: ObsidianBasename
       };
     }
 
-    const linkpath = safeDecodeURI(stripped);
+    const linkpath = safeDecodeDocRefTarget(stripped);
     const destination = app.metadataCache.getFirstLinkpathDest(linkpath, input.sourceDocumentPath);
     if (destination === null || destination.extension !== 'md') {
       return { kind: 'not-found', value: input.value, format: 'markdown-link' };
@@ -160,7 +162,7 @@ export function createObsidianResolver(app: App, basenameIndex: ObsidianBasename
   };
 
   return (input: ResolveDocReferenceInput): ResolveDocReferenceResult => {
-    const format = input.format ?? detectFormat(input.value);
+    const format = input.format ?? detectDocRefFormat(input.value);
     if (format === 'wiki-link') return resolveWikiLink(input);
     if (format === 'markdown-link') return resolveMarkdownLink(input);
     return {
@@ -242,51 +244,6 @@ function documentFromCache(app: App, path: string): Document {
     frontmatter: {},
     body: '',
   };
-}
-
-function extractWikiLinkTarget(wikiLink: string): string | null {
-  if (!wikiLink.startsWith('[[') || !wikiLink.endsWith(']]')) return null;
-
-  const inner = wikiLink.slice(2, -2);
-  if (inner.length === 0) return null;
-
-  const hashIdx = inner.indexOf('#');
-  const pipeIdx = inner.indexOf('|');
-  const targetEnd =
-    hashIdx === -1 && pipeIdx === -1
-      ? inner.length
-      : hashIdx === -1
-        ? pipeIdx
-        : pipeIdx === -1
-          ? hashIdx
-          : Math.min(hashIdx, pipeIdx);
-
-  const target = inner.slice(0, targetEnd);
-  if (target.length === 0 || target.includes('[') || target.includes(']')) return null;
-
-  return target;
-}
-
-function stripFragment(target: string): string {
-  const hash = target.indexOf('#');
-  return hash === -1 ? target : target.slice(0, hash);
-}
-
-function matchesPathQualifier(candidatePath: string, qualifier: string): boolean {
-  const normalize = (value: string) =>
-    value.replaceAll('\\', '/').replace(/\.md$/i, '').toLowerCase();
-  const normalizedCandidate = normalize(candidatePath);
-  const normalizedQualifier = normalize(qualifier);
-  if (normalizedCandidate === normalizedQualifier) return true;
-  return normalizedCandidate.endsWith(`/${normalizedQualifier}`);
-}
-
-function safeDecodeURI(value: string): string {
-  try {
-    return decodeURIComponent(value);
-  } catch {
-    return value;
-  }
 }
 
 function basenameWithoutExtension(path: string): string {

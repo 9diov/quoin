@@ -155,6 +155,28 @@ _type: "[[Sectioned]]"
       expect(state.result.warnings).toEqual([]);
     }
   });
+
+  it('falls back to raw body text when frontmatter is unterminated and no offset is available', async () => {
+    const raw = `---
+_type: "[[Sectioned]]"
+## Required
+`;
+    const note = fakeFile('notes/broken-frontmatter.md', { _type: '[[Sectioned]]' }, 'md', raw);
+    const app = createFakeApp([note]);
+
+    const state = await validateActiveFile({
+      app,
+      file: note,
+      settings: DEFAULT_OBSIDIAN_PLUGIN_SETTINGS,
+      typeRegistry: registryWithType(sectionedType()),
+      basenameIndex: new ObsidianBasenameIndex(),
+    });
+
+    expect(state.kind).toBe('validated');
+    if (state.kind === 'validated') {
+      expect(state.result.warnings).toEqual([]);
+    }
+  });
 });
 
 describe('renderActiveFileStatus', () => {
