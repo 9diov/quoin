@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { validate } from '../../src/index.js';
 import { expectError, expectPassing, makeDocument, makeResolver, makeTypeDef } from './helpers.js';
 
-describe('V020 wiki-link shape failure happens before Resolver', () => {
+describe('V020 doc-ref shape failure happens before Resolver', () => {
   it('returns property:wrong-type and never calls resolver', () => {
     const typeDef = makeTypeDef({
       properties: {
-        mentor: { type: 'wiki-link' },
+        mentor: { type: { kind: 'doc-ref', format: 'wiki-link' } },
       },
     });
 
@@ -26,7 +26,7 @@ describe('V021 valid wiki-link calls Resolver and passes when found', () => {
   it('passes when resolver returns found', () => {
     const typeDef = makeTypeDef({
       properties: {
-        mentor: { type: 'wiki-link' },
+        mentor: { type: { kind: 'doc-ref', format: 'wiki-link' } },
       },
     });
 
@@ -44,17 +44,17 @@ describe('V021 valid wiki-link calls Resolver and passes when found', () => {
   });
 });
 
-describe('V022 broken wiki-link returns resolve error', () => {
+describe('V022 broken doc-ref returns resolve error', () => {
   it('returns resolve:broken-wiki-link when resolver returns not-found', () => {
     const typeDef = makeTypeDef({
       properties: {
-        mentor: { type: 'wiki-link' },
+        mentor: { type: { kind: 'doc-ref', format: 'wiki-link' } },
       },
     });
 
     const document = makeDocument({ _type: '[[Concept]]', mentor: '[[Missing]]' });
     const resolver = makeResolver({
-      '[[Missing]]': { kind: 'not-found', wikiLink: '[[Missing]]' },
+      '[[Missing]]': { kind: 'not-found', value: '[[Missing]]', format: 'wiki-link' },
     });
 
     const result = validate(document, typeDef, {}, resolver);
@@ -65,11 +65,11 @@ describe('V022 broken wiki-link returns resolve error', () => {
   });
 });
 
-describe('V023 ambiguous wiki-link returns resolve error', () => {
+describe('V023 ambiguous doc-ref returns resolve error', () => {
   it('returns resolve:ambiguous-wiki-link when resolver returns ambiguous', () => {
     const typeDef = makeTypeDef({
       properties: {
-        mentor: { type: 'wiki-link' },
+        mentor: { type: { kind: 'doc-ref', format: 'wiki-link' } },
       },
     });
 
@@ -77,7 +77,8 @@ describe('V023 ambiguous wiki-link returns resolve error', () => {
     const resolver = makeResolver({
       '[[Alice]]': {
         kind: 'ambiguous',
-        wikiLink: '[[Alice]]',
+        value: '[[Alice]]',
+        format: 'wiki-link',
         candidates: [
           { path: 'people/Alice.md', frontmatter: {}, body: '' },
           { path: 'archive/Alice.md', frontmatter: {}, body: '' },
@@ -97,7 +98,7 @@ describe('V024 missing Resolver is a config error only after shape passes', () =
   it('returns config:missing-dependency when resolver is undefined', () => {
     const typeDef = makeTypeDef({
       properties: {
-        mentor: { type: 'wiki-link' },
+        mentor: { type: { kind: 'doc-ref', format: 'wiki-link' } },
       },
     });
 
@@ -115,7 +116,7 @@ describe('V025 resolve:invalid-wiki-link from resolver', () => {
   it('returns resolve:invalid-wiki-link when resolver returns invalid-link', () => {
     const typeDef = makeTypeDef({
       properties: {
-        mentor: { type: 'wiki-link' },
+        mentor: { type: { kind: 'doc-ref', format: 'wiki-link' } },
       },
     });
 
@@ -123,7 +124,8 @@ describe('V025 resolve:invalid-wiki-link from resolver', () => {
     const resolver = makeResolver({
       '[[Alice]]': {
         kind: 'invalid-link',
-        wikiLink: '[[Alice]]',
+        value: '[[Alice]]',
+        format: 'wiki-link',
         reason: 'bad target',
       },
     });
@@ -140,7 +142,7 @@ describe('V026 resolve:unavailable from resolver', () => {
   it('returns resolve:unavailable when resolver returns unavailable', () => {
     const typeDef = makeTypeDef({
       properties: {
-        mentor: { type: 'wiki-link' },
+        mentor: { type: { kind: 'doc-ref', format: 'wiki-link' } },
       },
     });
 
@@ -148,7 +150,8 @@ describe('V026 resolve:unavailable from resolver', () => {
     const resolver = makeResolver({
       '[[Alice]]': {
         kind: 'unavailable',
-        wikiLink: '[[Alice]]',
+        value: '[[Alice]]',
+        format: 'wiki-link',
         reason: 'vault offline',
       },
     });

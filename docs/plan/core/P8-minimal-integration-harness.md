@@ -1,5 +1,7 @@
 # P8 — Minimal Integration Harness
 
+> **Note:** [P28](../P28-doc-reference-format-separation.md) supersedes the harness's Resolver wiring. The harness Resolver now accepts `{ value, format?, sourceDocumentPath }` and returns `{ kind, value, format, … }` results.
+
 ## Goal
 
 Implement a tiny in-memory Integration harness that proves the Core can be used end-to-end without introducing host-specific complexity. After this phase, the repo should demonstrate the full Integration-owned flow: discover and parse Type Definition Documents, resolve a regular Document's root Type Declaration outside Core, wire Resolver and TypeRegistry, and call `validate()`, `scaffold()`, and `template()` against realistic in-memory fixtures.

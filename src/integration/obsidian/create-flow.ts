@@ -226,7 +226,7 @@ export function buildCreatedDocumentCandidate(args: {
       referentialValidation: args.settings.referentialValidation,
       integration: 'obsidian',
     },
-    createObsidianResolver(args.app, args.basenameIndex, args.outputPath),
+    createObsidianResolver(args.app, args.basenameIndex),
     args.registryState.typeRegistry,
   );
 

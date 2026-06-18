@@ -11,7 +11,8 @@ properties:
     required: true
     default: Untitled concept
   source:
-    type: wiki-link
+    type: doc-ref
+    format: wiki-link
 ```
 
 ## Template

@@ -1,5 +1,7 @@
 # Parser Test Cases
 
+> **Note:** [D9](../design/D9-doc-ref-format-separation.md) supersedes the references to `wiki-link` as a primitive. The Parser now normalizes `type: doc-ref` (with optional `format` / `referenced-type`), `type: "[[name]]"`, and `type: "[](name)"` to canonical `DocReference` shapes. `type: wiki-link` is accepted as a compatibility alias.
+
 These cases cover strict Type Definition Document parsing.
 
 Unless a case says otherwise, Parser is called with:

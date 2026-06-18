@@ -25,7 +25,7 @@ describe('V002 optional missing Property passes', () => {
   it('returns no errors when an optional field is absent', () => {
     const typeDef = makeTypeDef({
       properties: {
-        mentor: { type: 'wiki-link' },
+        mentor: { type: { kind: 'doc-ref', format: 'wiki-link' } },
       },
     });
 
@@ -95,7 +95,12 @@ describe('V006 empty list passes by default', () => {
   it('allows empty list when allow-empty is not specified', () => {
     const typeDef = makeTypeDef({
       properties: {
-        skills: { type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } } },
+        skills: {
+          type: {
+            kind: 'list',
+            of: { kind: 'doc-ref', format: 'wiki-link', referencedType: 'skill' },
+          },
+        },
       },
     });
 
@@ -112,7 +117,10 @@ describe('V007 empty list fails with allow-empty false', () => {
     const typeDef = makeTypeDef({
       properties: {
         skills: {
-          type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } },
+          type: {
+            kind: 'list',
+            of: { kind: 'doc-ref', format: 'wiki-link', referencedType: 'skill' },
+          },
           'allow-empty': false,
         },
       },
@@ -133,7 +141,7 @@ describe('V008 choice rejects empty value by default', () => {
   it('returns property:empty-not-allowed for null choice without allow-empty', () => {
     const typeDef = makeTypeDef({
       properties: {
-        level: { type: { kind: 'type-ref', name: 'level' } },
+        level: { type: { kind: 'doc-ref', format: 'wiki-link', referencedType: 'level' } },
       },
     });
 
@@ -150,7 +158,7 @@ describe('V008 choice rejects empty value by default', () => {
   it('returns property:empty-not-allowed for empty string choice without allow-empty', () => {
     const typeDef = makeTypeDef({
       properties: {
-        level: { type: { kind: 'type-ref', name: 'level' } },
+        level: { type: { kind: 'doc-ref', format: 'wiki-link', referencedType: 'level' } },
       },
     });
 

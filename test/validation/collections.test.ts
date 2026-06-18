@@ -6,7 +6,12 @@ describe('V030 list accumulates item-level errors', () => {
   it('returns per-item errors and only calls resolver on valid items', () => {
     const typeDef = makeTypeDef({
       properties: {
-        skills: { type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } } },
+        skills: {
+          type: {
+            kind: 'list',
+            of: { kind: 'doc-ref', format: 'wiki-link', referencedType: 'skill' },
+          },
+        },
       },
     });
 
@@ -16,7 +21,7 @@ describe('V030 list accumulates item-level errors', () => {
     });
 
     const resolver = makeResolver({
-      '[[Missing]]': { kind: 'not-found', wikiLink: '[[Missing]]' },
+      '[[Missing]]': { kind: 'not-found', value: '[[Missing]]', format: 'wiki-link' },
     });
 
     const result = validate(document, typeDef, {}, resolver);
@@ -51,7 +56,7 @@ describe('V031 top-level [[name]] requires a single Wiki Link string', () => {
   it('returns property:wrong-type when value is an array', () => {
     const typeDef = makeTypeDef({
       properties: {
-        level: { type: { kind: 'type-ref', name: 'level' } },
+        level: { type: { kind: 'doc-ref', format: 'wiki-link', referencedType: 'level' } },
       },
     });
 
@@ -72,7 +77,12 @@ describe('V032 list does not use TypeRegistry when Referential Validation is off
   it('passes without calling typeRegistry when referentialValidation is false', () => {
     const typeDef = makeTypeDef({
       properties: {
-        skills: { type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } } },
+        skills: {
+          type: {
+            kind: 'list',
+            of: { kind: 'doc-ref', format: 'wiki-link', referencedType: 'skill' },
+          },
+        },
       },
     });
 

@@ -201,14 +201,15 @@ describe('P010–P014 — Schema strictness', () => {
     });
   });
 
-  it('P017: top-level [[name]] parses to Type Reference', () => {
+  it('P017: top-level [[name]] parses to doc-ref with wiki-link format', () => {
     const body = `## Schema\n\n\`\`\`yaml\nproperties:\n  level:\n    type: "[[level]]"\n\`\`\`\n`;
     const result = parse(body);
     expect(result.kind).toBe('ok');
     if (result.kind !== 'ok') return;
     expect(result.typeDef.schema.properties.level?.type).toEqual({
-      kind: 'type-ref',
-      name: 'level',
+      kind: 'doc-ref',
+      format: 'wiki-link',
+      referencedType: 'level',
     });
   });
 
@@ -279,7 +280,7 @@ describe('P020–P022 — Defaults', () => {
     const err = findError(errors, 'parser:invalid-default');
     expect(err).toBeDefined();
     expect(err?.location).toEqual({ scope: 'property', property: 'level' });
-    expect(err?.details?.expected).toBe('wiki-link');
+    expect(err?.details?.expected).toBe('doc-ref<wiki-link, level>');
   });
 
   it('P021: empty default must obey allow-empty', () => {

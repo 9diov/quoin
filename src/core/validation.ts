@@ -92,6 +92,7 @@ export function validate(
         propertyName,
         propertySchema,
         document.frontmatter,
+        document.path,
         resolvedConfig,
         resolver,
         typeRegistry,

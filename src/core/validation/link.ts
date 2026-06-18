@@ -1,31 +1,47 @@
 import type { Resolver } from '../integration.js';
+import { detectDocRefFormat } from '../link-grammar.js';
+import type { DocRefFormat } from '../parser.js';
 import type { Document } from '../types.js';
 import type { ValidationError } from '../validation.js';
 import { validationError } from './errors.js';
 
-export type WikiLinkResolveStatus =
+export type DocRefResolveStatus =
   | { kind: 'error'; error: ValidationError }
   | { kind: 'success'; document: Document };
 
-export function resolveWikiLink(
-  wikiLink: string,
+export function resolveDocReference(
+  value: string,
+  format: DocRefFormat | undefined,
+  sourceDocumentPath: string,
   resolver: Resolver | undefined,
   propertyName: string,
   index?: number,
-): WikiLinkResolveStatus {
+): DocRefResolveStatus {
   if (!resolver) {
     return {
       kind: 'error',
       error: validationError(
         'config:missing-dependency',
-        `Resolver is required to validate Wiki Link value "${wikiLink}".`,
+        `Resolver is required to validate document-reference value "${value}".`,
         { scope: 'property', property: propertyName, ...(index !== undefined ? { index } : {}) },
         { dependency: 'resolver' },
       ),
     };
   }
 
-  const result = resolver(wikiLink);
+  const effectiveFormat = format ?? detectDocRefFormat(value) ?? undefined;
+  const input = {
+    value,
+    sourceDocumentPath,
+    ...(effectiveFormat !== undefined ? { format: effectiveFormat } : {}),
+  };
+  const result = resolver(input);
+
+  const loc = {
+    scope: 'property' as const,
+    property: propertyName,
+    ...(index !== undefined ? { index } : {}),
+  };
 
   switch (result.kind) {
     case 'found':
@@ -35,9 +51,9 @@ export function resolveWikiLink(
         kind: 'error',
         error: validationError(
           'resolve:broken-wiki-link',
-          `Wiki Link "${wikiLink}" could not be found.`,
-          { scope: 'property', property: propertyName, ...(index !== undefined ? { index } : {}) },
-          { wikiLink: result.wikiLink },
+          `Document reference "${value}" could not be found.`,
+          loc,
+          { value: result.value, format: result.format },
         ),
       };
     case 'invalid-link':
@@ -45,9 +61,9 @@ export function resolveWikiLink(
         kind: 'error',
         error: validationError(
           'resolve:invalid-wiki-link',
-          `Wiki Link "${wikiLink}" is malformed: ${result.reason}`,
-          { scope: 'property', property: propertyName, ...(index !== undefined ? { index } : {}) },
-          { wikiLink: result.wikiLink, reason: result.reason },
+          `Document reference "${value}" is malformed: ${result.reason}`,
+          loc,
+          { value: result.value, format: result.format, reason: result.reason },
         ),
       };
     case 'ambiguous':
@@ -55,9 +71,9 @@ export function resolveWikiLink(
         kind: 'error',
         error: validationError(
           'resolve:ambiguous-wiki-link',
-          `Wiki Link "${wikiLink}" is ambiguous.`,
-          { scope: 'property', property: propertyName, ...(index !== undefined ? { index } : {}) },
-          { wikiLink: result.wikiLink },
+          `Document reference "${value}" is ambiguous.`,
+          loc,
+          { value: result.value, format: result.format },
         ),
       };
     case 'unavailable':
@@ -65,9 +81,9 @@ export function resolveWikiLink(
         kind: 'error',
         error: validationError(
           'resolve:unavailable',
-          `Wiki Link "${wikiLink}" could not be resolved: ${result.reason}`,
-          { scope: 'property', property: propertyName, ...(index !== undefined ? { index } : {}) },
-          { wikiLink: result.wikiLink, reason: result.reason },
+          `Document reference "${value}" could not be resolved: ${result.reason}`,
+          loc,
+          { value: result.value, format: result.format, reason: result.reason },
         ),
       };
   }

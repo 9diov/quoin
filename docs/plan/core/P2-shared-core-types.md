@@ -1,5 +1,7 @@
 # P2 — Shared Core Types
 
+> **Note:** [P28](../P28-doc-reference-format-separation.md) supersedes the type list below. `wiki-link` is no longer a `PrimitiveTypeName`; `DocReference` is exported by the Core and used in `PropertyTypeName` / `ListItemType`.
+
 ## Goal
 
 Encode the TypeScript contracts from D2, D3, and D4 as type-level declarations in the Core. After this phase, the Core has no behavior, but every type referenced by Parser, Validation, Scaffolding, Templating, Resolver, and TypeRegistry is declared and exported.

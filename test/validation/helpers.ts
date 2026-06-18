@@ -92,19 +92,21 @@ export function makeResolver(
     {
       kind: string;
       document?: Document;
-      wikiLink?: string;
+      value?: string;
+      format?: 'wiki-link' | 'markdown-link';
       reason?: string;
       candidates?: Document[];
     }
   >,
 ): Resolver & { calls: string[] } {
   const calls: string[] = [];
-  const fn = ((wikiLink: string) => {
-    calls.push(wikiLink);
-    const entry = results[wikiLink];
-    if (!entry) return { kind: 'not-found' as const, wikiLink };
+  const fn = ((input: { value: string; format?: 'wiki-link' | 'markdown-link' }) => {
+    calls.push(input.value);
+    const entry = results[input.value];
+    const format = input.format ?? 'wiki-link';
+    if (!entry) return { kind: 'not-found' as const, value: input.value, format };
     return entry;
-  }) as Resolver & { calls: string[] };
+  }) as unknown as Resolver & { calls: string[] };
   fn.calls = calls;
   return fn;
 }

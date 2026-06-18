@@ -32,12 +32,20 @@ A single key-value entry in a Document's YAML frontmatter that is governed by th
 Property keys declared in Type Definition Documents must match `[a-z0-9_-]`, be lowercase, and have no leading/trailing hyphens or underscores (except the reserved `_type` key). The Parser rejects schemas that violate this. See D2 for rationale and possible future relaxations.
 _Avoid_: Field, variable, attribute, key
 
+**Doc Reference**:
+A Property value that points to another Document — semantically modeled by `type: doc-ref`. Two concrete syntaxes are supported: Wiki Link (`[[Target]]`) and Markdown Link (`[Label](path/to/target.md)`). The `format` schema key narrows the accepted syntax; `referenced-type` constrains the target Document's declared type. The schema shorthands `type: "[[name]]"` and `type: "[](name)"` normalize to `doc-ref` with the corresponding `format` and `referenced-type`.
+_Avoid_: Internal link, link, reference
+
 **Wiki Link**:
-A Property value in the form `[[TargetDocument]]` — an internal reference to another Document in the same vault or repository. Used by Type References (`type: "[[name]]"`, `list<[[name]]>`) and by primitive `wiki-link` Properties.
-_Avoid_: Internal link, wikilink, link
+One supported concrete syntax for a Doc Reference, in the form `[[TargetDocument]]`. Not a Property type; `wiki-link` is a `format` value for `doc-ref`. Legacy `type: wiki-link` is accepted as a parser alias for `type: doc-ref` + `format: wiki-link`.
+_Avoid_: Internal link, wikilink
+
+**Markdown Link**:
+One supported concrete syntax for a Doc Reference, in the form `[Label](path/to/target.md)`. Targets are resolved relative to the containing Document's path (or root-relative when starting with `/`). Protocol-qualified targets (`https://…`, `mailto:…`) are not Doc References and remain plain `text`.
+_Avoid_: Markdown hyperlink, external link
 
 **External Link**:
-A Property value in the form `[text](url)` — a standard Markdown hyperlink to an external resource. Currently modeled as `type: text`; not a primitive type and not used as a Type Reference.
+A Property value in the form `[text](https://…)` or another protocol-qualified URL — a standard Markdown hyperlink to an external resource. Currently modeled as `type: text`; not a Doc Reference and not used for Referential Validation.
 _Avoid_: URL, hyperlink, link
 
 **Constraint**:
@@ -69,11 +77,11 @@ The pure data structure returned by the Core after a Scaffolding operation — d
 _Avoid_: Patch, diff, update
 
 **Collection Type**:
-A Property type that takes an inner form in angle brackets — currently `list<X>` (ordered list whose items are primitives or Type References) and `choice<"a"|"b"|"c">` (a literal enum: value must equal one of the listed quoted string literals exactly). The only two forms supported; no maps, sets, or other containers. The `choice<...>` grammar reserves room for a future union extension (`choice<text|[[tag]]>`); v1 accepts quoted literals only.
+A Property type that takes an inner form in angle brackets — currently `list<X>` (ordered list whose items are primitives or `doc-ref`s) and `choice<"a"|"b"|"c">` (a literal enum: value must equal one of the listed quoted string literals exactly). The only two forms supported; no maps, sets, or other containers. The `choice<...>` grammar reserves room for a future union extension (`choice<text|[[tag]]>`); v1 accepts quoted literals only.
 _Avoid_: Container type, compound type, generic type
 
 **Type Reference**:
-A named reference to a Type Definition Document used inside a Property's type declaration, spelled as a bare Wiki Link `[[name]]`. Appears at the top level (`type: "[[skill]]"` — a single typed link) or inside a list (`list<[[skill]]>` — items are typed links). `name` is a canonical identifier matching `TypeDefinitionDocumentIdentity.name`.
+A schema/type-definition lookup — the canonical type name used to fetch a Type Definition Document by name (`TypeDefinitionDocumentIdentity.name`). At runtime, schemas express Type Reference through `referenced-type: name` on a `doc-ref` Property or through the shorthands `type: "[[name]]"` and `type: "[](name)"`. Not itself a Property value type.
 _Avoid_: Type parameter, type argument, linked type
 
 **Untyped Document**:
@@ -85,11 +93,11 @@ A user-authored Type Definition Document whose `TypeDefinitionDocumentIdentity.n
 _Avoid_: Schema of schemas, root type, type-of-types
 
 **Link Resolution**:
-The standard Validation stage after Wiki Link shape validation — resolving a Wiki Link to a Document, or returning a precise reason resolution failed. Runs for present, non-empty `wiki-link`, top-level `[[name]]`, and `list<X>` items (whether `X` is `wiki-link` or `[[name]]`) that pass shape validation.
+The standard Validation stage after Doc Reference shape validation — resolving a Doc Reference to a Document, or returning a precise reason resolution failed. Runs for every present, non-empty `doc-ref` value that passes shape validation, including list items of type `doc-ref`.
 _Avoid_: Link checking, link validation
 
 **Referential Validation**:
-The opt-in Validation stage after Link Resolution — checking that the target Document conforms to the Type Reference declared in the schema (e.g. a `list<[[skill]]>` entry must conform to the `skill` type). Applies only to typed references — top-level `[[name]]` and `list<[[name]]>` — not primitive `wiki-link`, `list<wiki-link>`, or enum `choice<"a"|"b"|"c">`. Opt-in via Validation Config, as it requires TypeRegistry lookup and can be expensive at scale.
+The opt-in Validation stage after Link Resolution — checking that the target Document conforms to the Type Reference declared in the schema (e.g. a `list<[[skill]]>` entry must conform to the `skill` type). Applies only to `doc-ref` Properties whose schema sets `referenced-type` (or the shorthand `type: "[[name]]"` / `type: "[](name)"`). A `doc-ref` without `referenced-type` and `choice<"a"|"b"|"c">` are never referentially validated. Opt-in via Validation Config, as it requires TypeRegistry lookup and can be expensive at scale.
 _Avoid_: Deep validation, type validation, reference checking
 
 **Validation Config**:
@@ -118,11 +126,11 @@ The structured result returned by the Parser — either a parsed Type Definition
 _Avoid_: Parser output, parse response
 
 **Resolver**:
-A function injected by the Integration into the Core that takes a Wiki Link and returns a Resolve Wiki Link Result. The Core's only mechanism for accessing Documents outside the one being validated — keeping I/O out of the Core. Resolution strategy (e.g. Obsidian's shortest-path vs full-path matching) is baked in at construction time by an Integration factory — the Core sees only `(wikiLink: string) => ResolveWikiLinkResult`.
+A function injected by the Integration into the Core that takes a Doc Reference input (`{ value, format?, sourceDocumentPath }`) and returns a Resolve Doc Reference Result. The Core's only mechanism for accessing Documents outside the one being validated — keeping I/O out of the Core. Format-aware: a `wiki-link` value, a `markdown-link` value, or an unconstrained value where the Integration detects the format. Resolution strategy (e.g. Obsidian's shortest-path matching, Node CLI's basename match for `wiki-link`, or relative-path resolution for `markdown-link`) is baked in at construction time by an Integration factory.
 _Avoid_: Document store, loader, fetcher
 
-**Resolve Wiki Link Result**:
-The pure result returned by a Resolver. Describes whether a Wiki Link resolved to one Document, was not found, was malformed, matched multiple Documents, or could not be resolved because the Integration was unavailable.
+**Resolve Doc Reference Result**:
+The pure result returned by a Resolver. Describes whether a Doc Reference resolved to one Document, was not found, was malformed, matched multiple Documents, or could not be resolved because the Integration was unavailable. Carries `value` and `format` so diagnostics can attribute failures to the concrete syntax involved.
 _Avoid_: Resolver output, lookup result, resolved link
 
 **TypeRegistry**:

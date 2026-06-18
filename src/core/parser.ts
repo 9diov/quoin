@@ -5,11 +5,19 @@ import { validateIdentity } from './parser/identity.js';
 import { parseSchemaYaml } from './parser/schema-yaml.js';
 import { parseTemplateSections } from './section-parser.js';
 
-export type PrimitiveTypeName = 'text' | 'number' | 'boolean' | 'date' | 'datetime' | 'wiki-link';
+export type PrimitiveTypeName = 'text' | 'number' | 'boolean' | 'date' | 'datetime';
+
+export type DocRefFormat = 'wiki-link' | 'markdown-link';
+
+export type DocReference = {
+  kind: 'doc-ref';
+  format?: DocRefFormat;
+  referencedType?: string;
+};
 
 export type TypeReference = { kind: 'type-ref'; name: string };
 
-export type ListItemType = { kind: 'primitive'; name: PrimitiveTypeName } | TypeReference;
+export type ListItemType = { kind: 'primitive'; name: PrimitiveTypeName } | DocReference;
 
 // Union member of a choice<...> type. v1 supports literal members only.
 // Primitive and type-ref member kinds are reserved for a future union extension
@@ -20,7 +28,7 @@ export type CollectionTypeName =
   | { kind: 'list'; of: ListItemType }
   | { kind: 'choice'; members: ChoiceMember[] };
 
-export type PropertyTypeName = PrimitiveTypeName | TypeReference | CollectionTypeName;
+export type PropertyTypeName = PrimitiveTypeName | DocReference | CollectionTypeName;
 
 export type PropertySchema = {
   type: PropertyTypeName;

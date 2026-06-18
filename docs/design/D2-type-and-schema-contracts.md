@@ -1,5 +1,7 @@
 # D2 — Type and Schema Contracts
 
+> **Note:** [D9 — Doc Reference Format Separation](D9-doc-ref-format-separation.md) supersedes this document's treatment of internal references. `wiki-link` is no longer a Primitive Type; internal Document references are modeled by `doc-ref` with an optional `format` (`wiki-link` or `markdown-link`) and optional `referenced-type`. The schema shorthands `type: "[[name]]"` and `type: "[](name)"` normalize to `doc-ref`. Below, `type: wiki-link` is accepted only as a compatibility alias for `type: doc-ref` + `format: wiki-link`.
+
 ## Type definitions
 
 ```typescript

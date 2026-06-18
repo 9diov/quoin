@@ -90,17 +90,21 @@ Supported Property types:
 
 | Form | Example | Meaning |
 |---|---|---|
-| Primitive | `type: text` | One of `text`, `number`, `boolean`, `date`, `datetime`, `wiki-link`. |
-| Typed reference | `type: "[[skill]]"` | A Wiki Link to a Document of type `skill`. |
-| List | `type: list<text>` / `type: "list<[[skill]]>"` | Ordered list whose items are primitives or typed references. |
+| Primitive | `type: text` | One of `text`, `number`, `boolean`, `date`, `datetime`. |
+| Document reference | `type: doc-ref` | A reference to another Document in either supported syntax. |
+| Document reference (constrained format) | `type: doc-ref` + `format: wiki-link` (or `markdown-link`) | Narrowed to one concrete link syntax. |
+| Typed document reference | `type: doc-ref` + `referenced-type: skill`, or shorthand `type: "[[skill]]"` / `type: "[](skill)"` | Document reference whose target must declare type `skill`. |
+| List | `type: list<text>` / `type: "list<[[skill]]>"` / `type: list<doc-ref>` | Ordered list whose items are primitives or document references. |
 | Enum | `type: 'choice<"draft"\|"published">'` | Value must equal one of the listed quoted string literals exactly. |
 
-YAML quoting note: any `type` value containing `[[...]]` should be quoted — `[` is a YAML flow-sequence indicator. Bare `[[name]]` at the top level MUST be quoted; `list<[[name]]>` SHOULD be quoted for portability.
+YAML quoting note: any `type` value containing `[[...]]` or `[]` should be quoted — `[` is a YAML flow-sequence indicator. Bare `[[name]]` and `[](name)` at the top level MUST be quoted; `list<[[name]]>` and `list<[](name)>` SHOULD be quoted for portability.
 
 Supported Constraints:
 
 - `required`
 - `allow-empty`
+
+`format` and `referenced-type` are valid only on `doc-ref` properties (including `list<doc-ref>` items). When `format` is omitted, `doc-ref` accepts either supported syntax.
 
 `default` is used by Scaffolding only. Validation does not apply or evaluate defaults.
 
@@ -138,9 +142,10 @@ Required Sections are marked with `<!-- required -->`. Section matching is exact
 
 ## Link semantics
 
-- **Wiki Links** use `[[TargetDocument]]` and are resolved by an Integration-supplied Resolver during standard Validation.
-- **External Links** use standard Markdown link syntax, `[text](url)`, and are currently declared as `type: text`.
-- **Referential Validation** is opt-in. It applies only to typed references — `type: "[[name]]"` and `list<[[name]]>` — checking whether linked Documents conform to declared Type References using an Integration-supplied TypeRegistry. Primitive `wiki-link`, `list<wiki-link>`, and `choice<"a"|"b"|"c">` carry no Type Reference and are never referentially validated.
+- **Document References** (`type: doc-ref`) are internal references resolved by an Integration-supplied Resolver during standard Validation.
+- Supported `doc-ref` formats are `wiki-link` (`[[Target]]`) and `markdown-link` (`[Label](path/to/target.md)`). Protocol-qualified targets (`https://…`, `mailto:…`) are not document references.
+- **External Links** use standard Markdown link syntax with an explicit protocol, e.g. `[text](https://example.com)`, and are currently declared as `type: text`.
+- **Referential Validation** is opt-in. It applies only to document references whose schema sets `referenced-type` (or the shorthand `type: "[[name]]"` / `type: "[](name)"`), checking whether the linked Document declares the expected type via an Integration-supplied TypeRegistry. A `doc-ref` without `referenced-type` validates link shape and target existence but is never referentially validated.
 - Referential Validation is not transitive.
 
 ## Design docs

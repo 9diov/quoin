@@ -115,13 +115,14 @@ Quoin finds all `.md` files under the current directory, resolves each document'
 | `boolean` | `type: boolean` | `true` / `false` (no string coercion) |
 | `date` | `type: date` | Date string (`YYYY-MM-DD`) |
 | `datetime` | `type: datetime` | Datetime string |
-| `wiki-link` | `type: wiki-link` | `[[TargetDocument]]` |
-| Typed reference | `type: "[[skill]]"` | Wiki Link to a document of type `skill` |
+| `doc-ref` | `type: doc-ref` | `[[Target]]` or `[Label](path/to/target.md)` (either supported syntax) |
+| `doc-ref` (format-constrained) | `type: doc-ref` + `format: wiki-link` (or `markdown-link`) | Value must match the declared `format` |
+| Typed `doc-ref` | `type: doc-ref` + `referenced-type: skill`, or shorthand `type: "[[skill]]"` / `type: "[](skill)"` | Document reference whose target declares type `skill` |
 | List | `type: list<text>` | Ordered list of primitives |
-| Typed list | `type: "list<[[skill]]>"` | Ordered list of typed Wiki Links |
+| Typed list | `type: "list<[[skill]]>"`, `type: "list<[](skill)>"`, `type: list<doc-ref>` (+ `format`/`referenced-type`) | Ordered list of document references |
 | Enum | `type: 'choice<"draft"\|"published">'` | Exact match against one of the listed literals |
 
-> **YAML quoting:** any `type` value containing `[[...]]` must be quoted — bare `[` is a YAML flow-sequence indicator.
+> **YAML quoting:** any `type` value containing `[[...]]` or `[]` must be quoted — bare `[` is a YAML flow-sequence indicator.
 
 ### Constraints
 
@@ -134,9 +135,9 @@ Quoin finds all `.md` files under the current directory, resolves each document'
 
 ### Referential validation
 
-For typed references — `type: "[[level]]"` and `type: "list<[[concept]]>"` — Quoin runs two checks:
+For typed document references — any `doc-ref` with `referenced-type`, including the shorthands `type: "[[level]]"`, `type: "[](level)"`, and `type: "list<[[concept]]>"` — Quoin runs two checks:
 
-1. **Link resolution**: the Wiki Link target must exist as a document in the project.
+1. **Link resolution**: the document-reference target must exist as a document in the project.
 2. **Type conformance**: the target document must itself conform to the declared type (i.e. its `_type` must point to the right Type Definition Document).
 
 This means a broken link and a link to the wrong type are both errors, not just warnings.

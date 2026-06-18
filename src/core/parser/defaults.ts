@@ -1,5 +1,10 @@
-import { isValidWikiLinkShape } from '../link-grammar.js';
+import {
+  detectDocRefFormat,
+  isValidMarkdownLinkShape,
+  isValidWikiLinkShape,
+} from '../link-grammar.js';
 import type {
+  DocReference,
   ListItemType,
   ParseError,
   ParserConfig,
@@ -10,15 +15,22 @@ import type {
 import { isCanonicalDate, isIso8601WithTimezone } from '../primitive-grammar.js';
 import { propertyError } from './errors.js';
 
+function describeDocRef(ref: DocReference): string {
+  const parts: string[] = [];
+  if (ref.format !== undefined) parts.push(ref.format);
+  if (ref.referencedType !== undefined) parts.push(ref.referencedType);
+  return parts.length === 0 ? 'doc-ref' : `doc-ref<${parts.join(', ')}>`;
+}
+
 function describeListItem(item: ListItemType): string {
-  return item.kind === 'primitive' ? item.name : `[[${item.name}]]`;
+  return item.kind === 'primitive' ? item.name : describeDocRef(item);
 }
 
 function describeType(type: PropertyTypeName): string {
   if (typeof type === 'string') return type;
   switch (type.kind) {
-    case 'type-ref':
-      return `[[${type.name}]]`;
+    case 'doc-ref':
+      return describeDocRef(type);
     case 'list':
       return `list<${describeListItem(type.of)}>`;
     case 'choice':
@@ -69,12 +81,57 @@ function checkPrimitiveDefault(
         });
       }
       return null;
-    case 'wiki-link':
-      if (!isValidWikiLinkShape(value)) {
-        return defaultError(property, `Default must be a Wiki Link.`, { expected: 'wiki-link' });
-      }
-      return null;
   }
+}
+
+function checkDocRefDefault(
+  property: string,
+  value: unknown,
+  ref: DocReference,
+  index?: number,
+): ParseError | null {
+  const expected = describeDocRef(ref);
+  if (ref.format === 'wiki-link') {
+    if (!isValidWikiLinkShape(value)) {
+      const details: Record<string, unknown> = { expected };
+      if (index !== undefined) details.index = index;
+      return defaultError(
+        property,
+        index === undefined
+          ? `Default must be a Wiki Link.`
+          : `Default item ${index} must be a Wiki Link.`,
+        details,
+      );
+    }
+    return null;
+  }
+  if (ref.format === 'markdown-link') {
+    if (!isValidMarkdownLinkShape(value)) {
+      const details: Record<string, unknown> = { expected };
+      if (index !== undefined) details.index = index;
+      return defaultError(
+        property,
+        index === undefined
+          ? `Default must be a Markdown link.`
+          : `Default item ${index} must be a Markdown link.`,
+        details,
+      );
+    }
+    return null;
+  }
+  // Format omitted: accept either supported syntax.
+  if (detectDocRefFormat(value) === null) {
+    const details: Record<string, unknown> = { expected };
+    if (index !== undefined) details.index = index;
+    return defaultError(
+      property,
+      index === undefined
+        ? `Default must be a Wiki Link or Markdown link.`
+        : `Default item ${index} must be a Wiki Link or Markdown link.`,
+      details,
+    );
+  }
+  return null;
 }
 
 function defaultError(
@@ -120,11 +177,9 @@ export function validateDefault(
     return err ? [err] : [];
   }
 
-  if (type.kind === 'type-ref') {
-    if (!isValidWikiLinkShape(value)) {
-      return [defaultError(property, `Default must be a Wiki Link.`, { expected: 'wiki-link' })];
-    }
-    return [];
+  if (type.kind === 'doc-ref') {
+    const err = checkDocRefDefault(property, value, type);
+    return err ? [err] : [];
   }
 
   if (type.kind === 'list') {
@@ -144,15 +199,10 @@ export function validateDefault(
         }
       });
     } else {
+      const itemType = type.of;
       value.forEach((item, index) => {
-        if (!isValidWikiLinkShape(item)) {
-          errors.push(
-            defaultError(property, `Default item ${index} must be a Wiki Link.`, {
-              expected: 'wiki-link',
-              index,
-            }),
-          );
-        }
+        const err = checkDocRefDefault(property, item, itemType, index);
+        if (err) errors.push(err);
       });
     }
     return errors;

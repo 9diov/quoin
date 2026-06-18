@@ -1,5 +1,7 @@
 # P3 — Parser
 
+> **Note:** [P28](../P28-doc-reference-format-separation.md) supersedes how Parser emits internal-reference Properties. `type: doc-ref` (with optional `format`/`referenced-type`), `type: "[[name]]"`, and `type: "[](name)"` all normalize to canonical `DocReference` shapes. `type: wiki-link` is a compatibility alias.
+
 ## Goal
 
 Implement `parseTypeDefinitionDocument` so that every test case in [parser.md](../../test-cases/parser.md) passes. After this phase, the Core can turn a Type Definition Document and Integration-supplied identity into a `ParsedTypeDefinitionDocument` or a list of `ParseError`s — no I/O, no Resolver, no TypeRegistry.

@@ -59,13 +59,22 @@ export type TypesResult = {
   exitCode: number;
 };
 
+function renderDocRef(ref: { format?: string; referencedType?: string }): string {
+  const parts: string[] = [];
+  if (ref.format !== undefined) parts.push(ref.format);
+  if (ref.referencedType !== undefined) parts.push(ref.referencedType);
+  return parts.length === 0 ? 'doc-ref' : `doc-ref<${parts.join(', ')}>`;
+}
+
 function renderPropertyType(type: PropertyTypeName): string {
   if (typeof type === 'string') return type;
   switch (type.kind) {
-    case 'type-ref':
-      return `[[${type.name}]]`;
-    case 'list':
-      return `list<${type.of.kind === 'primitive' ? type.of.name : `[[${type.of.name}]]`}>`;
+    case 'doc-ref':
+      return renderDocRef(type);
+    case 'list': {
+      const item = type.of.kind === 'primitive' ? type.of.name : renderDocRef(type.of);
+      return `list<${item}>`;
+    }
     case 'choice':
       return `choice<${type.members.map((m) => JSON.stringify(m.value)).join('|')}>`;
   }

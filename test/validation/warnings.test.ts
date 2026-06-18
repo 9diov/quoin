@@ -25,7 +25,12 @@ describe('V051 reserved Property collision is warning', () => {
   it('emits property:reserved-collision warning for obsidian tags', () => {
     const typeDef = makeTypeDef({
       properties: {
-        tags: { type: { kind: 'list', of: { kind: 'type-ref', name: 'skill' } } },
+        tags: {
+          type: {
+            kind: 'list',
+            of: { kind: 'doc-ref', format: 'wiki-link', referencedType: 'skill' },
+          },
+        },
       },
     });
 

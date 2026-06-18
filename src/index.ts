@@ -1,6 +1,7 @@
 export type {
+  ResolveDocReferenceInput,
+  ResolveDocReferenceResult,
   Resolver,
-  ResolveWikiLinkResult,
   TypeDeclarationLookupResult,
   TypeReferenceLookupResult,
   TypeRegistry,
@@ -8,6 +9,8 @@ export type {
 
 export type {
   CollectionTypeName,
+  DocReference,
+  DocRefFormat,
   ParsedTypeDefinitionDocument,
   ParseError,
   ParseErrorKind,

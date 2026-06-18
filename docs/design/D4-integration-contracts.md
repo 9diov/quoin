@@ -1,5 +1,7 @@
 # D4 — Integration Contracts
 
+> **Note:** [D9 — Doc Reference Format Separation](D9-doc-ref-format-separation.md) supersedes the Resolver contract below. The current Resolver is format-aware: it takes a `{ value, format?, sourceDocumentPath }` input and returns `{ kind, value, format, … }` results. Wiki-link-specific names (`wikiLink`, `ResolveWikiLinkResult`) are gone from the contract.
+
 ## Resolver
 
 ```typescript

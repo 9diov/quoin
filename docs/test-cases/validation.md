@@ -1,5 +1,7 @@
 # Validation Test Cases
 
+> **Note:** [D9](../design/D9-doc-ref-format-separation.md) supersedes the cases that treated `wiki-link` as a primitive. Internal reference Properties are now `doc-ref` (optionally with `format` and `referenced-type`); Validation routes them through a format-aware branch and passes the source `document.path` to the Resolver.
+
 These cases cover the accepted Validation pipeline:
 
 1. Property presence and emptiness.

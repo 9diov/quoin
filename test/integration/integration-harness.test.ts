@@ -256,7 +256,8 @@ describe('integration flows', () => {
       resolverOverrides: {
         '[[TypeScript]]': {
           kind: 'unavailable',
-          wikiLink: '[[TypeScript]]',
+          value: '[[TypeScript]]',
+          format: 'wiki-link',
           reason: 'index not ready',
         },
       },

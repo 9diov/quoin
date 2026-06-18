@@ -1,11 +1,12 @@
 import type {
   ChoiceMember,
+  DocReference,
+  DocRefFormat,
   ListItemType,
   ParseError,
   PrimitiveTypeName,
   PropertySchema,
   PropertyTypeName,
-  TypeReference,
 } from '../parser.js';
 import { propertyError } from './errors.js';
 import { isMapping } from './object.js';
@@ -16,14 +17,22 @@ const PRIMITIVE_TYPES = new Set<PrimitiveTypeName>([
   'boolean',
   'date',
   'datetime',
-  'wiki-link',
 ]);
 
-const ALLOWED_PROPERTY_SCHEMA_KEYS = new Set(['type', 'required', 'allow-empty', 'default']);
+const ALLOWED_PROPERTY_SCHEMA_KEYS = new Set([
+  'type',
+  'format',
+  'referenced-type',
+  'required',
+  'allow-empty',
+  'default',
+]);
 
 const CANONICAL_KEY = /^[a-z0-9]([a-z0-9_-]*[a-z0-9])?$/;
 const WIKI_LINK_RE = /^\[\[\s*([^[\]]*?)\s*\]\]$/;
+const MARKDOWN_TYPE_REF_RE = /^\[\s*\]\(\s*([^()]*?)\s*\)$/;
 const COLLECTION_RE = /^(list|choice)<([\s\S]*)>$/;
+const ALLOWED_FORMATS = new Set<DocRefFormat>(['wiki-link', 'markdown-link']);
 
 export function isCanonicalPropertyKey(key: string): boolean {
   if (key === '_type') return true;
@@ -41,7 +50,7 @@ type ParseTypeError = {
 
 type ParseTypeResult = { type: PropertyTypeName } | ParseTypeError;
 
-function parseWikiLinkTarget(raw: string): { name: string } | ParseTypeError {
+function parseWikiLinkTypeRef(raw: string): { name: string } | ParseTypeError {
   const match = WIKI_LINK_RE.exec(raw);
   if (!match) {
     return { error: 'invalid-type-reference', details: { value: raw } };
@@ -80,6 +89,27 @@ function parseWikiLinkTarget(raw: string): { name: string } | ParseTypeError {
   return { name: inner };
 }
 
+function parseMarkdownLinkTypeRef(raw: string): { name: string } | ParseTypeError {
+  const match = MARKDOWN_TYPE_REF_RE.exec(raw);
+  if (!match) {
+    return { error: 'invalid-type-reference', details: { value: raw } };
+  }
+  const inner = match[1] ?? '';
+  if (inner.length === 0) {
+    return {
+      error: 'invalid-type-reference',
+      details: { value: raw, reason: 'markdown-link-empty' },
+    };
+  }
+  if (!isCanonicalIdentifier(inner)) {
+    return {
+      error: 'invalid-type-reference',
+      details: { value: inner, reason: 'non-canonical-name' },
+    };
+  }
+  return { name: inner };
+}
+
 function parseListItemType(inner: string): { type: ListItemType } | ParseTypeError {
   const trimmed = inner.trim();
   if (trimmed.length === 0) {
@@ -97,10 +127,22 @@ function parseListItemType(inner: string): { type: ListItemType } | ParseTypeErr
   if (PRIMITIVE_TYPES.has(trimmed as PrimitiveTypeName)) {
     return { type: { kind: 'primitive', name: trimmed as PrimitiveTypeName } };
   }
+  if (trimmed === 'wiki-link') {
+    // Compatibility alias inside lists: list<wiki-link> -> list<doc-ref<wiki-link>>.
+    return { type: { kind: 'doc-ref', format: 'wiki-link' } };
+  }
+  if (trimmed === 'doc-ref') {
+    return { type: { kind: 'doc-ref' } };
+  }
   if (trimmed.startsWith('[[')) {
-    const ref = parseWikiLinkTarget(trimmed);
+    const ref = parseWikiLinkTypeRef(trimmed);
     if ('error' in ref) return ref;
-    return { type: { kind: 'type-ref', name: ref.name } };
+    return { type: { kind: 'doc-ref', format: 'wiki-link', referencedType: ref.name } };
+  }
+  if (trimmed.startsWith('[]')) {
+    const ref = parseMarkdownLinkTypeRef(trimmed);
+    if ('error' in ref) return ref;
+    return { type: { kind: 'doc-ref', format: 'markdown-link', referencedType: ref.name } };
   }
   return {
     error: 'invalid-type-reference',
@@ -178,11 +220,29 @@ function parsePropertyType(raw: unknown): ParseTypeResult {
     return { type: trimmed as PrimitiveTypeName };
   }
 
+  if (trimmed === 'doc-ref') {
+    return { type: { kind: 'doc-ref' } };
+  }
+
+  if (trimmed === 'wiki-link') {
+    // Compatibility alias: bare `type: wiki-link` -> doc-ref + format: wiki-link.
+    return { type: { kind: 'doc-ref', format: 'wiki-link' } };
+  }
+
   if (trimmed.startsWith('[[')) {
-    const ref = parseWikiLinkTarget(trimmed);
+    const ref = parseWikiLinkTypeRef(trimmed);
     if ('error' in ref) return ref;
-    const typeRef: TypeReference = { kind: 'type-ref', name: ref.name };
-    return { type: typeRef };
+    return {
+      type: { kind: 'doc-ref', format: 'wiki-link', referencedType: ref.name },
+    };
+  }
+
+  if (trimmed.startsWith('[]')) {
+    const ref = parseMarkdownLinkTypeRef(trimmed);
+    if ('error' in ref) return ref;
+    return {
+      type: { kind: 'doc-ref', format: 'markdown-link', referencedType: ref.name },
+    };
   }
 
   const match = COLLECTION_RE.exec(trimmed);
@@ -206,6 +266,42 @@ export type PropertySchemaResult = {
   schema?: PropertySchema;
   errors: ParseError[];
 };
+
+function isDocRefTopLevel(type: PropertyTypeName): type is DocReference {
+  return typeof type === 'object' && (type as { kind?: string }).kind === 'doc-ref';
+}
+
+function isDocRefListItem(type: PropertyTypeName): boolean {
+  if (typeof type !== 'object') return false;
+  if ((type as { kind?: string }).kind !== 'list') return false;
+  const list = type as { kind: 'list'; of: ListItemType };
+  return list.of.kind === 'doc-ref';
+}
+
+function attachDocRefAdditions(
+  type: PropertyTypeName,
+  format: DocRefFormat | undefined,
+  referencedType: string | undefined,
+): PropertyTypeName {
+  if (isDocRefTopLevel(type)) {
+    const next: DocReference = { kind: 'doc-ref' };
+    const f = format ?? type.format;
+    const r = referencedType ?? type.referencedType;
+    if (f !== undefined) next.format = f;
+    if (r !== undefined) next.referencedType = r;
+    return next;
+  }
+  if (typeof type === 'object' && type.kind === 'list' && type.of.kind === 'doc-ref') {
+    const item = type.of;
+    const next: DocReference = { kind: 'doc-ref' };
+    const f = format ?? item.format;
+    const r = referencedType ?? item.referencedType;
+    if (f !== undefined) next.format = f;
+    if (r !== undefined) next.referencedType = r;
+    return { kind: 'list', of: next };
+  }
+  return type;
+}
 
 export function validatePropertySchema(key: string, raw: unknown): PropertySchemaResult {
   const errors: ParseError[] = [];
@@ -272,7 +368,7 @@ export function validatePropertySchema(key: string, raw: unknown): PropertySchem
         propertyError(
           'parser:invalid-type-reference',
           key,
-          `Type Reference must be a bare canonical Wiki Link \`[[name]]\`.`,
+          `Type Reference must be a bare canonical Wiki Link \`[[name]]\` or Markdown link \`[](name)\`.`,
           typeResult.details,
         ),
       );
@@ -289,7 +385,103 @@ export function validatePropertySchema(key: string, raw: unknown): PropertySchem
     return { errors };
   }
 
-  const schema: PropertySchema = { type: typeResult.type as PropertyTypeName };
+  let parsedType = typeResult.type as PropertyTypeName;
+  const isDocRefType = isDocRefTopLevel(parsedType) || isDocRefListItem(parsedType);
+
+  let parsedFormat: DocRefFormat | undefined;
+  if ('format' in raw) {
+    if (!isDocRefType) {
+      errors.push(
+        propertyError(
+          'parser:invalid-property-schema',
+          key,
+          `\`format\` is only valid for \`doc-ref\` properties.`,
+          { key: 'format' },
+        ),
+      );
+    } else if (typeof raw.format !== 'string' || !ALLOWED_FORMATS.has(raw.format as DocRefFormat)) {
+      errors.push(
+        propertyError(
+          'parser:invalid-property-schema',
+          key,
+          `\`format\` must be one of: wiki-link, markdown-link.`,
+          { key: 'format', value: raw.format },
+        ),
+      );
+    } else {
+      parsedFormat = raw.format as DocRefFormat;
+    }
+  }
+
+  let parsedReferencedType: string | undefined;
+  if ('referenced-type' in raw) {
+    if (!isDocRefType) {
+      errors.push(
+        propertyError(
+          'parser:invalid-property-schema',
+          key,
+          `\`referenced-type\` is only valid for \`doc-ref\` properties.`,
+          { key: 'referenced-type' },
+        ),
+      );
+    } else {
+      const refTypeValue = raw['referenced-type'];
+      if (typeof refTypeValue !== 'string' || !isCanonicalIdentifier(refTypeValue)) {
+        errors.push(
+          propertyError(
+            'parser:invalid-type-reference',
+            key,
+            `\`referenced-type\` must be a canonical type name.`,
+            { key: 'referenced-type', value: refTypeValue, reason: 'non-canonical-name' },
+          ),
+        );
+      } else {
+        parsedReferencedType = refTypeValue;
+      }
+    }
+  }
+
+  if (isDocRefType && (parsedFormat !== undefined || parsedReferencedType !== undefined)) {
+    // Check for conflicts: an inline shorthand already set format/referencedType.
+    const currentInfo = isDocRefTopLevel(parsedType)
+      ? parsedType
+      : ((parsedType as { kind: 'list'; of: DocReference }).of as DocReference);
+    if (
+      parsedFormat !== undefined &&
+      currentInfo.format !== undefined &&
+      currentInfo.format !== parsedFormat
+    ) {
+      errors.push(
+        propertyError(
+          'parser:invalid-property-schema',
+          key,
+          `\`format\` conflicts with the format implied by the shorthand type.`,
+          { key: 'format', value: parsedFormat, implied: currentInfo.format },
+        ),
+      );
+    }
+    if (
+      parsedReferencedType !== undefined &&
+      currentInfo.referencedType !== undefined &&
+      currentInfo.referencedType !== parsedReferencedType
+    ) {
+      errors.push(
+        propertyError(
+          'parser:invalid-property-schema',
+          key,
+          `\`referenced-type\` conflicts with the type referenced by the shorthand type.`,
+          {
+            key: 'referenced-type',
+            value: parsedReferencedType,
+            implied: currentInfo.referencedType,
+          },
+        ),
+      );
+    }
+    parsedType = attachDocRefAdditions(parsedType, parsedFormat, parsedReferencedType);
+  }
+
+  const schema: PropertySchema = { type: parsedType };
 
   if ('required' in raw) {
     if (typeof raw.required !== 'boolean') {

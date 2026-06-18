@@ -1,5 +1,7 @@
 # D5 — Node CLI Integration
 
+> **Note:** [D9 — Doc Reference Format Separation](D9-doc-ref-format-separation.md) supersedes the Node CLI's Resolver behavior. The Resolver now accepts `{ value, format?, sourceDocumentPath }`. Wiki-link values still resolve by basename; markdown-link values resolve relative to `sourceDocumentPath` (with `/`-prefixed targets treated as project-root-relative).
+
 ## Overview
 
 This document defines a narrow Node.js CLI integration for Quoin.

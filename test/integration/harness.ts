@@ -6,8 +6,9 @@ import {
   type ParseError,
   type ParserConfig,
   parseTypeDefinitionDocument,
+  type ResolveDocReferenceInput,
+  type ResolveDocReferenceResult,
   type Resolver,
-  type ResolveWikiLinkResult,
   type ScaffoldingResult,
   scaffold,
   type TemplatingResult,
@@ -96,7 +97,7 @@ export type CreateHarnessOptions = {
   parserConfig?: ParserConfig;
   identityForFixture?: (fixture: RawMarkdownFixture) => TypeDefinitionDocumentIdentity;
   documents?: Document[];
-  resolverOverrides?: Record<string, ResolveWikiLinkResult>;
+  resolverOverrides?: Record<string, ResolveDocReferenceResult>;
   dependencies?: HarnessDependencies;
 };
 
@@ -244,7 +245,7 @@ function cacheTypeDefinition(cache: TypeDefCache, typeDef: ParsedTypeDefinitionD
 
 function createResolver(
   documentsByPath: ReadonlyMap<string, Document>,
-  overrides: Record<string, ResolveWikiLinkResult>,
+  overrides: Record<string, ResolveDocReferenceResult>,
 ): Resolver {
   const documentsByTitle = new Map<string, Document[]>();
 
@@ -254,31 +255,32 @@ function createResolver(
     documentsByTitle.set(title, [...existing, document]);
   }
 
-  return (wikiLink: string): ResolveWikiLinkResult => {
-    const overridden = overrides[wikiLink];
+  return (input: ResolveDocReferenceInput): ResolveDocReferenceResult => {
+    const overridden = overrides[input.value];
     if (overridden) {
       return overridden;
     }
 
-    const title = parseWikiLinkTitle(wikiLink);
+    const title = parseWikiLinkTitle(input.value);
     if (!title) {
       return {
         kind: 'invalid-link',
-        wikiLink,
+        value: input.value,
+        format: 'wiki-link',
         reason: 'Expected a Wiki Link like [[Target]].',
       };
     }
 
     const candidates = documentsByTitle.get(canonicalizeWikiLinkTarget(title)) ?? [];
     if (candidates.length === 0) {
-      return { kind: 'not-found', wikiLink };
+      return { kind: 'not-found', value: input.value, format: 'wiki-link' };
     }
     if (candidates.length > 1) {
-      return { kind: 'ambiguous', wikiLink, candidates };
+      return { kind: 'ambiguous', value: input.value, format: 'wiki-link', candidates };
     }
     const [document] = candidates;
     if (!document) {
-      return { kind: 'not-found', wikiLink };
+      return { kind: 'not-found', value: input.value, format: 'wiki-link' };
     }
     return { kind: 'found', document };
   };

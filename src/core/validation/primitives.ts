@@ -1,16 +1,13 @@
-import { isValidWikiLinkShape } from '../link-grammar.js';
-import type { PropertyTypeName } from '../parser.js';
+import type { PrimitiveTypeName } from '../parser.js';
 import { isCanonicalDate, isIso8601WithTimezone } from '../primitive-grammar.js';
 import type { ValidationError } from '../validation.js';
 import { validationError } from './errors.js';
 
 export function validatePrimitive(
   value: unknown,
-  type: PropertyTypeName,
+  type: PrimitiveTypeName,
   propertyName: string,
 ): ValidationError | null {
-  if (typeof type === 'object') return null;
-
   switch (type) {
     case 'text':
       return validateText(value, propertyName);
@@ -22,8 +19,6 @@ export function validatePrimitive(
       return validateDate(value, propertyName);
     case 'datetime':
       return validateDatetime(value, propertyName);
-    case 'wiki-link':
-      return validateWikiLinkShape(value, propertyName);
   }
 }
 
@@ -81,17 +76,6 @@ function validateDatetime(value: unknown, propertyName: string): ValidationError
     return validationError(
       'property:wrong-type',
       `Property "${propertyName}" must be an ISO 8601 datetime with timezone.`,
-      { scope: 'property', property: propertyName },
-    );
-  }
-  return null;
-}
-
-function validateWikiLinkShape(value: unknown, propertyName: string): ValidationError | null {
-  if (!isValidWikiLinkShape(value)) {
-    return validationError(
-      'property:wrong-type',
-      `Property "${propertyName}" must be a valid Wiki Link.`,
       { scope: 'property', property: propertyName },
     );
   }

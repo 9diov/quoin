@@ -1,5 +1,7 @@
 # P5 — Validation
 
+> **Note:** [P28](../P28-doc-reference-format-separation.md) supersedes how Validation handles internal references. `doc-ref` values (scalar and list-item) are routed through a format-aware branch; `document.path` is passed to the Resolver; `referencedType` (not a `TypeReference` shape) drives Referential Validation.
+
 ## Goal
 
 Implement `validate` so that every test case in [validation.md](../../test-cases/validation.md) passes. After this phase, the Core can check whether a Document conforms to a parsed Type Definition Document, producing a `ValidationResult` with zero or more errors and warnings — pure, no I/O, Resolver and TypeRegistry wired through Integration-supplied seams.

@@ -1,21 +1,27 @@
 import type { Resolver, TypeRegistry } from '../integration.js';
-import { isValidWikiLinkShape } from '../link-grammar.js';
-import type { ChoiceMember, ListItemType } from '../parser.js';
+import type { ChoiceMember, DocReference, ListItemType } from '../parser.js';
 import type { ValidationError } from '../validation.js';
 import type { ResolvedConfig } from './config.js';
 import { validationError } from './errors.js';
-import { resolveWikiLink } from './link.js';
 import { validatePrimitive } from './primitives.js';
-import { validateReferential } from './referential.js';
+import { validateDocRefValue } from './property.js';
+
+function describeDocRef(ref: DocReference): string {
+  const parts: string[] = [];
+  if (ref.format !== undefined) parts.push(ref.format);
+  if (ref.referencedType !== undefined) parts.push(ref.referencedType);
+  return parts.length === 0 ? 'doc-ref' : `doc-ref<${parts.join(', ')}>`;
+}
 
 function describeItem(item: ListItemType): string {
-  return item.kind === 'primitive' ? item.name : `[[${item.name}]]`;
+  return item.kind === 'primitive' ? item.name : describeDocRef(item);
 }
 
 export function validateList(
   value: unknown,
   item: ListItemType,
   propertyName: string,
+  sourceDocumentPath: string,
   config: ResolvedConfig,
   resolver: Resolver | undefined,
   typeRegistry: TypeRegistry | undefined,
@@ -42,60 +48,23 @@ export function validateList(
           ...primitiveError,
           location: { scope: 'property', property: propertyName, index: i },
         });
-        continue;
-      }
-      if (item.name === 'wiki-link' && typeof entry === 'string') {
-        const status = resolveWikiLink(entry, resolver, propertyName, i);
-        if (status.kind === 'error') {
-          errors.push(status.error);
-        }
       }
       continue;
     }
 
-    // item.kind === 'type-ref'
-    if (typeof entry !== 'string' || entry.trim().length === 0) {
-      errors.push(
-        validationError(
-          'property:wrong-type',
-          `Item at index ${i} of "${propertyName}" must be a non-empty string Wiki Link.`,
-          { scope: 'property', property: propertyName, index: i },
-        ),
-      );
-      continue;
-    }
-
-    if (!isValidWikiLinkShape(entry)) {
-      errors.push(
-        validationError(
-          'property:wrong-type',
-          `Item at index ${i} of "${propertyName}" must be a valid Wiki Link.`,
-          { scope: 'property', property: propertyName, index: i },
-        ),
-      );
-      continue;
-    }
-
-    const status = resolveWikiLink(entry, resolver, propertyName, i);
-    if (status.kind === 'error') {
-      errors.push(status.error);
-      continue;
-    }
-
-    if (config.referentialValidation) {
-      const refResult = validateReferential(
+    // item.kind === 'doc-ref'
+    errors.push(
+      ...validateDocRefValue(
         entry,
-        item.name,
-        status.document,
-        typeRegistry,
-        config.typeDeclarationKey,
+        item,
         propertyName,
+        sourceDocumentPath,
+        config,
+        resolver,
+        typeRegistry,
         i,
-      );
-      if (refResult) {
-        errors.push(refResult);
-      }
-    }
+      ),
+    );
   }
 
   return errors;

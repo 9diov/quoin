@@ -9,8 +9,9 @@ import type {
   PrimitiveTypeName,
   PropertySchema,
   PropertyTypeName,
+  ResolveDocReferenceInput,
+  ResolveDocReferenceResult,
   Resolver,
-  ResolveWikiLinkResult,
   ScaffoldingResult,
   Schema,
   Section,
@@ -33,7 +34,7 @@ describe('Core types', () => {
     const primitive: PrimitiveTypeName = 'text';
     const collection: CollectionTypeName = {
       kind: 'list',
-      of: { kind: 'type-ref', name: 'skill' },
+      of: { kind: 'doc-ref', format: 'wiki-link', referencedType: 'skill' },
     };
     const propertyType: PropertyTypeName = collection;
     const propertySchema: PropertySchema = {
@@ -117,8 +118,15 @@ describe('Core types', () => {
   });
 
   it('accepts Resolver and TypeRegistry shapes', () => {
-    const resolver: Resolver = (wikiLink) => ({ kind: 'not-found', wikiLink });
-    const resolveResult: ResolveWikiLinkResult = resolver('[[Missing]]');
+    const resolver: Resolver = (input: ResolveDocReferenceInput) => ({
+      kind: 'not-found',
+      value: input.value,
+      format: input.format ?? 'wiki-link',
+    });
+    const resolveResult: ResolveDocReferenceResult = resolver({
+      value: '[[Missing]]',
+      sourceDocumentPath: 'notes/example.md',
+    });
 
     const refLookup: TypeReferenceLookupResult = { kind: 'not-found', typeName: 'skill' };
     const declLookup: TypeDeclarationLookupResult = { kind: 'missing-declaration' };

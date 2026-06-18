@@ -1,14 +1,20 @@
-import type { ParsedTypeDefinitionDocument } from './parser.js';
+import type { DocRefFormat, ParsedTypeDefinitionDocument } from './parser.js';
 import type { Document } from './types.js';
 
-export type ResolveWikiLinkResult =
-  | { kind: 'found'; document: Document }
-  | { kind: 'not-found'; wikiLink: string }
-  | { kind: 'invalid-link'; wikiLink: string; reason: string }
-  | { kind: 'ambiguous'; wikiLink: string; candidates: Document[] }
-  | { kind: 'unavailable'; wikiLink: string; reason: string };
+export type ResolveDocReferenceInput = {
+  value: string;
+  format?: DocRefFormat;
+  sourceDocumentPath: string;
+};
 
-export type Resolver = (wikiLink: string) => ResolveWikiLinkResult;
+export type ResolveDocReferenceResult =
+  | { kind: 'found'; document: Document }
+  | { kind: 'not-found'; value: string; format: DocRefFormat }
+  | { kind: 'invalid-link'; value: string; format: DocRefFormat; reason: string }
+  | { kind: 'ambiguous'; value: string; format: DocRefFormat; candidates: Document[] }
+  | { kind: 'unavailable'; value: string; format: DocRefFormat; reason: string };
+
+export type Resolver = (input: ResolveDocReferenceInput) => ResolveDocReferenceResult;
 
 export type TypeReferenceLookupResult =
   | { kind: 'found'; typeDef: ParsedTypeDefinitionDocument }

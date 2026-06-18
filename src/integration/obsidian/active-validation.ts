@@ -334,7 +334,7 @@ function validated(
       referentialValidation: args.settings.referentialValidation,
       integration: 'obsidian',
     },
-    createObsidianResolver(args.app, args.basenameIndex, document.path),
+    createObsidianResolver(args.app, args.basenameIndex),
     args.typeRegistry,
   );
 

@@ -4,7 +4,7 @@ import type { ValidationError } from '../validation.js';
 import { validationError } from './errors.js';
 
 export function validateReferential(
-  wikiLink: string,
+  value: string,
   typeRefName: string,
   targetDocument: Document,
   typeRegistry: TypeRegistry | undefined,
@@ -15,7 +15,7 @@ export function validateReferential(
   if (!typeRegistry) {
     return validationError(
       'config:missing-dependency',
-      `TypeRegistry is required for referential validation of "${wikiLink}".`,
+      `TypeRegistry is required for referential validation of "${value}".`,
       {
         scope: 'property',
         property: propertyName,
@@ -134,7 +134,7 @@ export function validateReferential(
   if (expectedTypeDef.id !== actualTypeDef.id) {
     return validationError(
       'type:referential-mismatch',
-      `Target "${wikiLink}" conforms to "${actualTypeDef.id}", expected "${expectedTypeDef.id}".`,
+      `Target "${value}" conforms to "${actualTypeDef.id}", expected "${expectedTypeDef.id}".`,
       {
         scope: 'property',
         property: propertyName,
@@ -143,7 +143,7 @@ export function validateReferential(
       {
         expectedTypeId: expectedTypeDef.id,
         actualTypeId: actualTypeDef.id,
-        wikiLink,
+        value,
         targetPath: targetDocument.path,
       },
     );

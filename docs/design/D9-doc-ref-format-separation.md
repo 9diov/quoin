@@ -19,7 +19,7 @@ The schema language should separate reference semantics from link syntax.
 
 Introduce `doc-ref` as the semantic Property type for internal document references.
 
-`doc-ref` accepts a `format` option that selects the concrete syntax:
+`doc-ref` may accept a `format` option that narrows the allowed concrete syntax:
 
 ```yaml
 properties:
@@ -39,6 +39,9 @@ Supported formats:
 
 - `wiki-link` — double-bracket internal reference syntax, e.g. `[[Source]]`.
 - `markdown-link` — inline Markdown link syntax, e.g. `[Source](sources/source.md)`.
+
+Without a `format`, `doc-ref` accepts either supported internal-reference
+syntax.
 
 When a `doc-ref` is constrained to reference a Document of a specific type, the schema uses `referenced-type`:
 
@@ -69,7 +72,7 @@ type DocRefFormat = 'wiki-link' | 'markdown-link'
 
 type DocReference = {
   kind: 'doc-ref'
-  format: DocRefFormat
+  format?: DocRefFormat
   referencedType?: string
 }
 ```
@@ -96,9 +99,44 @@ type PropertyTypeName =
 
 `wiki-link` is no longer a primitive type. It is a `doc-ref` format.
 
+Normalization note:
+
+- `format` and `referenced-type` are parser input keys only.
+- In the parsed schema, they are represented inside `PropertySchema.type` as the
+  `DocReference` object.
+- Parsed `PropertySchema` does not gain sibling `format` or `referenced-type`
+  fields.
+
+This new shape intentionally absorbs two existing cases:
+
+- `DocReference` without `referencedType` replaces today's primitive
+  `wiki-link` semantics: shape validation plus resolution, but no Referential
+  Validation.
+- `DocReference` with `referencedType` replaces today's `TypeReference`
+  / `type-ref` semantics: shape validation, resolution, and optional
+  Referential Validation against the expected type.
+
+Canonical display spellings for diagnostics, defaults, and test snapshots
+should be:
+
+- unconstrained scalar: `doc-ref`
+- constrained scalar with `format: wiki-link`: `doc-ref<wiki-link>`
+- constrained scalar with `format: markdown-link`: `doc-ref<markdown-link>`
+- constrained scalar with `referenced-type: person`: `doc-ref<person>` when
+  `format` is omitted, `doc-ref<wiki-link, person>` or
+  `doc-ref<markdown-link, person>` when `format` is present
+- unconstrained list item: `list<doc-ref>`
+- constrained list item: `list<doc-ref<...>>`
+
 ## Schema Grammar
 
 The explicit object form is canonical:
+
+```yaml
+properties:
+  source:
+    type: doc-ref
+```
 
 ```yaml
 properties:
@@ -124,13 +162,17 @@ Allowed Property schema keys become:
 - `allow-empty`
 - `default`
 
-`format` is valid only when `type: doc-ref`.
+`format` is valid only when the declared Property type is `doc-ref`, either as
+`type: doc-ref` or `type: list<doc-ref>`.
 
-`referenced-type` is valid only when `type: doc-ref`.
+`referenced-type` is valid only when the declared Property type is `doc-ref`,
+either as `type: doc-ref` or `type: list<doc-ref>`.
 
 `referenced-type` must be a canonical Type Reference name, using the same identifier rule as existing `[[name]]` type references.
 
-When `type: doc-ref` omits `format`, Parser should reject the schema. The syntax is intentionally explicit because docs repositories differ in their preferred internal-link form.
+When `type: doc-ref` or `type: list<doc-ref>` omits `format`, the schema means
+"accept any supported internal document-reference format." When `format` is
+present, it narrows the accepted value syntax to that one format.
 
 ## Syntactic Sugar
 
@@ -213,17 +255,18 @@ properties:
 
 Both normalize to `list` whose item type is `DocReference`.
 
-`format` and `referenced-type` apply to the `doc-ref` item when `type: list<doc-ref>`. They are invalid for lists of other item types.
+`format` and `referenced-type` apply to the `doc-ref` item when
+`type: list<doc-ref>`. They are invalid for lists of other item types.
 
 ## Runtime Value Syntax
 
-For `format: wiki-link`, runtime values must be valid Wiki Link strings:
+When `format: wiki-link`, runtime values must be valid Wiki Link strings:
 
 ```yaml
 source: "[[Pattern of Enterprise Application Architecture]]"
 ```
 
-For `format: markdown-link`, runtime values must be valid inline Markdown links to internal targets:
+When `format: markdown-link`, runtime values must be valid inline Markdown links to internal targets:
 
 ```yaml
 source: "[PoEAA](sources/poeaa.md)"
@@ -234,11 +277,43 @@ The initial `markdown-link` grammar should be deliberately narrow:
 - Inline links only: `[label](target)`.
 - Non-empty label.
 - Non-empty target.
-- No external URLs.
+- No explicit protocol links such as `https://`, `http://`, `mailto:`, `ftp://`
+  in the core grammar.
 - No bare autolinks.
 - No reference-style Markdown links.
 
-Fragment support is format-specific. It may be allowed for shape validation and target extraction, but Referential Validation compares the resolved Document, not the fragment.
+`markdown-link` target interpretation is source-document-relative:
+
+- The target path is resolved relative to the containing Document's path.
+- `./chapter.md` and `../shared/glossary.md` use ordinary relative-path
+  semantics after path normalization.
+- A target beginning with `/` is project-root-relative or vault-root-relative,
+  according to the Integration's existing document-root model.
+- A target without `./`, `../`, or `/` is still treated as a relative path from
+  the containing Document's directory.
+- Fragments such as `#section` may be preserved during parsing, but resolution
+  and Referential Validation compare the target Document, not the fragment.
+
+Protocol-qualified links are intentionally out of scope for the core
+`doc-ref` grammar.
+
+- `[My Doc](https://example.com/my-doc.md)` is not a document reference in
+  Quoin terms; it is an external link, even if it happens to point to a Markdown
+  file.
+- Allowing protocol links would collapse the distinction between "internal
+  document identity" and "arbitrary URL string", which D9 is trying to make
+  explicit.
+- External resources should remain `text` until Quoin gains a separate
+  text-refinement or external-link mechanism.
+
+This remains an extension point for future Integrations.
+
+- A future Integration may define custom protocol-aware document references such
+  as `obsidian://`, `app://`, or another workspace-local scheme.
+- That extension is not part of the core `markdown-link` contract in D9.
+- If introduced later, it should be a deliberate Integration capability with
+  explicit parsing and resolution rules, rather than an accidental consequence
+  of accepting arbitrary protocol targets in the core grammar.
 
 ## Validation Semantics
 
@@ -246,9 +321,17 @@ Fragment support is format-specific. It may be allowed for shape validation and 
 
 For any present non-empty `doc-ref` value:
 
-1. Validate that the value is a string in the declared `format`.
-2. Resolve the reference with Resolver.
-3. If `referenced-type` is present and `referentialValidation: true`, validate that the resolved target Document declares the expected type through TypeRegistry.
+1. Validate that the value is a string in one supported document-reference
+   syntax.
+2. When `format` is omitted, core shape matching is deterministic:
+   - try `wiki-link` shape first
+   - then try core `markdown-link` shape
+   - otherwise fail with `property:wrong-type`
+3. If `format` is present, validate that the matched syntax is the declared
+   `format`.
+4. Otherwise, accept either supported syntax.
+5. Resolve the reference with Resolver.
+6. If `referenced-type` is present and `referentialValidation: true`, validate that the resolved target Document declares the expected type through TypeRegistry.
 
 Shape failures return `property:wrong-type`.
 
@@ -276,7 +359,8 @@ Target contract:
 ```typescript
 type ResolveDocReferenceInput = {
   value: string
-  format: DocRefFormat
+  format?: DocRefFormat
+  sourceDocumentPath: string
 }
 
 type ResolveDocReferenceResult =
@@ -293,7 +377,19 @@ Integrations own target interpretation:
 
 - Obsidian can resolve `wiki-link` through its metadata cache.
 - Node CLI can resolve `wiki-link` by basename, preserving current behavior.
-- Node CLI can resolve `markdown-link` by relative path first, then optionally by basename if the target has no path separator.
+- When `format` is omitted, the Integration must first detect which supported
+  syntax the value uses according to the core matching order, then resolve
+  according to that syntax.
+- `markdown-link` is resolved relative to `sourceDocumentPath`.
+- Node CLI should normalize the link target against `sourceDocumentPath` and
+  then resolve the resulting in-project path.
+- Obsidian may support `markdown-link` by translating the relative target plus
+  `sourceDocumentPath` into the vault path model, or may reject the format
+  until that mapping is reliable.
+- By default, a protocol-qualified target must be rejected during shape
+  validation before Resolver is invoked.
+- A future Integration-defined extension may override that default for specific,
+  explicitly supported schemes.
 
 TypeRegistry still resolves Type Definition Documents by canonical type name. `referenced-type` is already a type name, so it does not depend on the reference format.
 
@@ -302,24 +398,23 @@ Type Declarations have two separable meanings:
 1. The Document conforms to a named type.
 2. That named type is backed by a Type Definition Document that can be resolved by TypeRegistry.
 
-In the current model, reference-shaped Type Declarations carry both meanings.
+In the current model, Wiki-Link-shaped Type Declarations carry both meanings.
 
-`TypeRegistry.getByDeclaration(value)` must accept type declarations in both canonical formats:
+`TypeRegistry.getByDeclaration(value)` continues to accept the current
+declaration form:
 
 ```yaml
 _type: "[[article]]"
 ```
 
-```yaml
-_type: "[](article)"
-```
-
-Both declarations mean:
+That declaration means:
 
 - This Document conforms to type `article`.
 - Type `article` is declared by a resolvable Type Definition Document.
 
-That second meaning is what enables Referential Validation to compare the target Document's resolved Type Definition Document with the `referenced-type` declared in the source schema.
+That second meaning is what enables Referential Validation to compare the
+target Document's resolved Type Definition Document with the
+`referenced-type` declared in the source schema.
 
 Future work may add bare Type Declarations:
 
@@ -329,7 +424,9 @@ _type: article
 
 A bare declaration would mean only that the Document conforms to type `article`. It would not, by itself, assert that `article` is declared by a Type Definition Document. That leaves room for alternate type-definition mechanisms, external registries, generated schemas, or integration-specific type catalogs.
 
-Bare Type Declarations are not part of this change. Until such a mechanism exists, `TypeRegistry.getByDeclaration('article')` should continue to return `invalid-declaration`.
+Bare Type Declarations are not part of this change. Until such a mechanism
+exists, `TypeRegistry.getByDeclaration('article')` should continue to return
+`invalid-declaration`.
 
 The bare sentinel remains unchanged:
 
@@ -348,7 +445,9 @@ type: "[[level]]"
 type: "list<[[skill]]>"
 ```
 
-Existing runtime wiki-link values remain valid when the normalized format is `wiki-link`.
+Existing runtime wiki-link values remain valid when the normalized format is
+`wiki-link`, and also when `format` is omitted and the value matches wiki-link
+shape.
 
 The old primitive spelling should be deprecated:
 
@@ -374,19 +473,11 @@ That alias should produce the same canonical parsed shape as explicit `doc-ref`.
 
 ## Open Questions
 
-1. Should `format` default to `wiki-link` for compatibility, or be required for all explicit `doc-ref` schemas?
-
-   Recommendation: require it for `type: doc-ref`, but keep `type: wiki-link` as a compatibility alias.
-
-2. Should `markdown-link` runtime values resolve relative to the containing Document path?
-
-   Recommendation: yes for Node CLI and static-site integrations. Obsidian support can be format-specific and may initially reject `markdown-link` if host APIs cannot resolve it reliably.
-
-3. Should `[](person)` be called Markdown-link shorthand even though empty-label Markdown links are not useful runtime links?
+1. Should `[](person)` be called Markdown-link shorthand even though empty-label Markdown links are not useful runtime links?
 
    Recommendation: yes, because this syntax appears only in schema type position. Runtime `markdown-link` values should require non-empty labels.
 
-4. Should resolution error kinds be renamed from `wiki-link` to `doc-ref`?
+2. Should resolution error kinds be renamed from `wiki-link` to `doc-ref`?
 
    Recommendation: defer. Add format-neutral errors only when making a deliberate diagnostics compatibility pass.
 

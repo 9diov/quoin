@@ -1,5 +1,7 @@
 # D8 — Obsidian Plugin Integration
 
+> **Note:** [D9 — Doc Reference Format Separation](D9-doc-ref-format-separation.md) supersedes the Obsidian Resolver contract. The Resolver now accepts `{ value, format?, sourceDocumentPath }`. Wiki-link resolution continues to use the metadata cache. `markdown-link` resolution currently returns `unavailable` from the Obsidian Integration until reliable vault-path mapping is implemented.
+
 ## Overview
 
 This document defines the Obsidian plugin Integration for Quoin.

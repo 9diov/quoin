@@ -1,5 +1,7 @@
 # D7 — Type Inference from Documents
 
+> **Note:** [D9 — Doc Reference Format Separation](D9-doc-ref-format-separation.md) supersedes how inferred reference Properties are emitted. Inferred schemas should emit `type: doc-ref` (optionally with `format`/`referenced-type`) rather than `type: wiki-link`.
+
 ## Overview
 
 **Type Inference** takes a set of existing Documents and produces a draft Type Definition Document — a Schema (and optional Template Block) that those Documents would conform to. It is a write-side bootstrap tool: the user has a folder of untyped Markdown, runs `infer`, and gets a working `types/<name>.md` they can refine by hand.
