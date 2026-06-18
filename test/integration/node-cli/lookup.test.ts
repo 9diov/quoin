@@ -213,10 +213,7 @@ describe('createResolver', () => {
   });
 
   it('reports the original ambiguity when a path qualifier matches no candidate', () => {
-    const ingested: IngestedMarkdown[] = [
-      ingestionDoc('a/Target.md'),
-      ingestionDoc('b/Target.md'),
-    ];
+    const ingested: IngestedMarkdown[] = [ingestionDoc('a/Target.md'), ingestionDoc('b/Target.md')];
     const resolver = createResolver(ingested);
 
     const result = resolver({ value: '[[c/Target]]', sourceDocumentPath: 'doc.md' });

@@ -274,10 +274,7 @@ function stripFragment(target: string): string {
 
 function matchesPathQualifier(candidatePath: string, qualifier: string): boolean {
   const normalize = (value: string) =>
-    value
-      .replaceAll('\\', '/')
-      .replace(/\.md$/i, '')
-      .toLowerCase();
+    value.replaceAll('\\', '/').replace(/\.md$/i, '').toLowerCase();
   const normalizedCandidate = normalize(candidatePath);
   const normalizedQualifier = normalize(qualifier);
   if (normalizedCandidate === normalizedQualifier) return true;

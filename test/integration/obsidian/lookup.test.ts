@@ -109,10 +109,7 @@ describe('createObsidianResolver', () => {
 
     expect(result.kind).toBe('ambiguous');
     if (result.kind === 'ambiguous') {
-      expect(result.candidates.map((c) => c.path).sort()).toEqual([
-        'a/Target.md',
-        'b/Target.md',
-      ]);
+      expect(result.candidates.map((c) => c.path).sort()).toEqual(['a/Target.md', 'b/Target.md']);
     }
   });
 
