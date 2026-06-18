@@ -308,17 +308,22 @@ This is the only supported strategy in v1, though the strategy slot remains conf
 Resolution rules:
 
 1. parse the raw Wiki Link string
-2. extract only the document target portion
-3. if the target contains path segments, use only the final path segment
-4. ignore section fragments and display text for lookup
-5. match by basename against the project-wide resolver universe
+2. extract the document target portion (preserve any path qualifier)
+3. ignore section fragments and display text for lookup
+4. match by basename (the final path segment, case-insensitive) against the
+   project-wide resolver universe
+5. if multiple basename matches exist and the target carries a path
+   qualifier (e.g. `[[skills/TypeScript]]`), narrow to candidates whose
+   path ends with that qualifier; if narrowing reduces the set to one,
+   resolve to it. If the qualifier matches none of the candidates, fall
+   back to reporting the original basename ambiguity.
 
 Examples:
 
-- `[[TypeScript]]` -> `TypeScript`
-- `[[skills/TypeScript]]` -> `TypeScript`
-- `[[TypeScript#Generics]]` -> `TypeScript`
-- `[[TypeScript|TS]]` -> `TypeScript`
+- `[[TypeScript]]` -> basename `TypeScript`
+- `[[skills/TypeScript]]` -> basename `TypeScript`, path qualifier `skills/TypeScript`
+- `[[TypeScript#Generics]]` -> basename `TypeScript`
+- `[[TypeScript|TS]]` -> basename `TypeScript`
 
 The resolver indexes all ingested Markdown `Document`s in scope, including Type Definition Documents.
 
@@ -334,9 +339,16 @@ Node-specific guidance:
 
 - no basename match -> `not-found`
 - one basename match that failed ingestion -> `unavailable`
-- multiple basename matches -> `ambiguous`, even if some are unavailable
+- multiple basename matches with no path qualifier -> `ambiguous`, even if
+  some are unavailable
+- multiple basename matches with a path qualifier that narrows to one ->
+  resolve to that one (`found` or `unavailable`)
+- multiple basename matches with a path qualifier that narrows to zero ->
+  report the original basename `ambiguous` so the user sees the available
+  candidates
 
-This conservative rule prevents hidden basename collisions.
+This conservative rule prevents hidden basename collisions while still
+respecting explicit user disambiguation via path qualifiers.
 
 ## TypeRegistry
 

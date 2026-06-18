@@ -94,12 +94,20 @@ export function createObsidianResolver(app: App, basenameIndex: ObsidianBasename
     }
 
     const basenameCandidates = basenameIndex.candidatesForLinkpath(linkpath);
-    if (basenameCandidates.length > 1) {
+    let ambiguityCandidates = basenameCandidates;
+    if (basenameCandidates.length > 1 && linkpath.includes('/')) {
+      const narrowed = basenameCandidates.filter((path) => matchesPathQualifier(path, linkpath));
+      if (narrowed.length > 0) {
+        ambiguityCandidates = narrowed;
+      }
+    }
+
+    if (ambiguityCandidates.length > 1) {
       return {
         kind: 'ambiguous',
         value: input.value,
         format: 'wiki-link',
-        candidates: basenameCandidates.map((path) => documentFromCache(app, path)),
+        candidates: ambiguityCandidates.map((path) => documentFromCache(app, path)),
       };
     }
 
@@ -262,6 +270,18 @@ function extractWikiLinkTarget(wikiLink: string): string | null {
 function stripFragment(target: string): string {
   const hash = target.indexOf('#');
   return hash === -1 ? target : target.slice(0, hash);
+}
+
+function matchesPathQualifier(candidatePath: string, qualifier: string): boolean {
+  const normalize = (value: string) =>
+    value
+      .replaceAll('\\', '/')
+      .replace(/\.md$/i, '')
+      .toLowerCase();
+  const normalizedCandidate = normalize(candidatePath);
+  const normalizedQualifier = normalize(qualifier);
+  if (normalizedCandidate === normalizedQualifier) return true;
+  return normalizedCandidate.endsWith(`/${normalizedQualifier}`);
 }
 
 function safeDecodeURI(value: string): string {

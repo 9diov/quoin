@@ -198,6 +198,50 @@ describe('createResolver', () => {
     expect(result.kind).toBe('found');
   });
 
+  it('narrows ambiguous basenames using a path qualifier in the wiki link', () => {
+    const ingested: IngestedMarkdown[] = [
+      ingestionDoc('a/Target.md', { title: 'A' }),
+      ingestionDoc('b/Target.md', { title: 'B' }),
+    ];
+    const resolver = createResolver(ingested);
+
+    const result = resolver({ value: '[[a/Target]]', sourceDocumentPath: 'doc.md' });
+    expect(result.kind).toBe('found');
+    if (result.kind === 'found') {
+      expect(result.document.path).toBe('a/Target.md');
+    }
+  });
+
+  it('reports the original ambiguity when a path qualifier matches no candidate', () => {
+    const ingested: IngestedMarkdown[] = [
+      ingestionDoc('a/Target.md'),
+      ingestionDoc('b/Target.md'),
+    ];
+    const resolver = createResolver(ingested);
+
+    const result = resolver({ value: '[[c/Target]]', sourceDocumentPath: 'doc.md' });
+    expect(result.kind).toBe('ambiguous');
+    if (result.kind === 'ambiguous') {
+      expect(result.candidates).toHaveLength(2);
+    }
+  });
+
+  it('keeps narrowed candidates as ambiguous when the qualifier still matches more than one', () => {
+    const ingested: IngestedMarkdown[] = [
+      ingestionDoc('shared/a/Target.md'),
+      ingestionDoc('other/a/Target.md'),
+      ingestionDoc('b/Target.md'),
+    ];
+    const resolver = createResolver(ingested);
+
+    const result = resolver({ value: '[[a/Target]]', sourceDocumentPath: 'doc.md' });
+    expect(result.kind).toBe('ambiguous');
+    if (result.kind === 'ambiguous') {
+      const paths = result.candidates.map((c) => c.path).sort();
+      expect(paths).toEqual(['other/a/Target.md', 'shared/a/Target.md']);
+    }
+  });
+
   it('returns ambiguous even when some matches are unavailable', () => {
     const ingested: IngestedMarkdown[] = [
       ingestionDoc('one/Concept.md'),

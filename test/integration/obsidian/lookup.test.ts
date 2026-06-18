@@ -70,6 +70,52 @@ describe('createObsidianResolver', () => {
     });
   });
 
+  it('narrows ambiguous basenames using a path qualifier and delegates to metadataCache', () => {
+    const first = fakeFile('a/Target.md', { _type: '[[A]]' });
+    const second = fakeFile('b/Target.md', { _type: '[[B]]' });
+    const app = createFakeApp([first, second]);
+    app.__resolve('a/Target', 'source.md', first);
+    const index = new ObsidianBasenameIndex();
+    index.rebuild([first, second]);
+
+    const result = createObsidianResolver(
+      app,
+      index,
+    )({
+      value: '[[a/Target]]',
+      sourceDocumentPath: 'source.md',
+    });
+
+    expect(result.kind).toBe('found');
+    if (result.kind === 'found') {
+      expect(result.document.path).toBe('a/Target.md');
+    }
+  });
+
+  it('falls back to original ambiguity when path qualifier matches no basename candidate', () => {
+    const first = fakeFile('a/Target.md');
+    const second = fakeFile('b/Target.md');
+    const app = createFakeApp([first, second]);
+    const index = new ObsidianBasenameIndex();
+    index.rebuild([first, second]);
+
+    const result = createObsidianResolver(
+      app,
+      index,
+    )({
+      value: '[[c/Target]]',
+      sourceDocumentPath: 'source.md',
+    });
+
+    expect(result.kind).toBe('ambiguous');
+    if (result.kind === 'ambiguous') {
+      expect(result.candidates.map((c) => c.path).sort()).toEqual([
+        'a/Target.md',
+        'b/Target.md',
+      ]);
+    }
+  });
+
   it('returns ambiguous for duplicate basename candidates before accepting Obsidian selection', () => {
     const first = fakeFile('a/Target.md', { _type: '[[A]]' });
     const second = fakeFile('b/target.md', { _type: '[[B]]' });

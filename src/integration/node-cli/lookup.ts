@@ -68,8 +68,9 @@ function detectFormat(value: string): DocRefFormat | null {
 }
 
 export function createResolver(ingested: IngestedMarkdown[]): Resolver {
+  type FailureRecord = { path: string; reason: string };
   const byBasename = new Map<string, Document[]>();
-  const failedBasenames = new Map<string, string[]>();
+  const failedBasenames = new Map<string, FailureRecord[]>();
   const byPath = new Map<string, Document>();
   const failedByPath = new Map<string, string>();
 
@@ -86,11 +87,12 @@ export function createResolver(ingested: IngestedMarkdown[]): Resolver {
       }
       byPath.set(normalizedPath, entry.document);
     } else {
+      const record: FailureRecord = { path: normalizedPath, reason: entry.reason };
       const existing = failedBasenames.get(basename);
       if (existing) {
-        existing.push(entry.reason);
+        existing.push(record);
       } else {
-        failedBasenames.set(basename, [entry.reason]);
+        failedBasenames.set(basename, [record]);
       }
       failedByPath.set(normalizedPath, entry.reason);
     }
@@ -107,16 +109,39 @@ export function createResolver(ingested: IngestedMarkdown[]): Resolver {
       };
     }
 
-    const basename = target.toLowerCase();
-    const documents = byBasename.get(basename);
-    const failures = failedBasenames.get(basename);
-
-    const docCount = documents?.length ?? 0;
-    const failureCount = failures?.length ?? 0;
-    const totalCount = docCount + failureCount;
+    const basename = nativeBasename(target).toLowerCase();
+    const documents = byBasename.get(basename) ?? [];
+    const failures = failedBasenames.get(basename) ?? [];
+    const totalCount = documents.length + failures.length;
 
     if (totalCount === 0) {
       return { kind: 'not-found', value: input.value, format: 'wiki-link' };
+    }
+
+    if (totalCount > 1 && target.includes('/')) {
+      const narrowedDocs = documents.filter((doc) => matchesPathQualifier(doc.path, target));
+      const narrowedFailures = failures.filter((f) => matchesPathQualifier(f.path, target));
+      const narrowedTotal = narrowedDocs.length + narrowedFailures.length;
+
+      if (narrowedTotal === 1) {
+        if (narrowedDocs.length === 1 && narrowedDocs[0]) {
+          return { kind: 'found', document: narrowedDocs[0] };
+        }
+        const reason = narrowedFailures[0]?.reason ?? 'Unknown ingestion failure';
+        return { kind: 'unavailable', value: input.value, format: 'wiki-link', reason };
+      }
+
+      if (narrowedTotal > 1) {
+        return {
+          kind: 'ambiguous',
+          value: input.value,
+          format: 'wiki-link',
+          candidates: narrowedDocs,
+        };
+      }
+      // narrowedTotal === 0: qualifier matched nothing — fall through to
+      // report the original basename ambiguity so the user sees what was
+      // available.
     }
 
     if (totalCount > 1) {
@@ -124,15 +149,15 @@ export function createResolver(ingested: IngestedMarkdown[]): Resolver {
         kind: 'ambiguous',
         value: input.value,
         format: 'wiki-link',
-        candidates: documents ?? [],
+        candidates: documents,
       };
     }
 
-    if (documents !== undefined && documents.length === 1 && documents[0]) {
+    if (documents.length === 1 && documents[0]) {
       return { kind: 'found', document: documents[0] };
     }
 
-    const reason = failures?.[0] ?? 'Unknown ingestion failure';
+    const reason = failures[0]?.reason ?? 'Unknown ingestion failure';
     return { kind: 'unavailable', value: input.value, format: 'wiki-link', reason };
   };
 
@@ -268,7 +293,7 @@ export function createTypeRegistry(
       if (typeof value === 'string') {
         const target = extractWikiLinkTarget(value);
         if (target !== null) {
-          return lookupByName(target);
+          return lookupByName(nativeBasename(target));
         }
       }
 
@@ -317,8 +342,20 @@ function extractWikiLinkTarget(wikiLink: string): string | null {
 
   if (target.includes('[') || target.includes(']')) return null;
 
-  const basename = nativeBasename(target);
-  return basename;
+  return target;
+}
+
+function matchesPathQualifier(candidatePath: string, qualifier: string): boolean {
+  const normalizedCandidate = posix
+    .normalize(candidatePath.replaceAll('\\', '/'))
+    .replace(/\.md$/i, '')
+    .toLowerCase();
+  const normalizedQualifier = posix
+    .normalize(qualifier.replaceAll('\\', '/'))
+    .replace(/\.md$/i, '')
+    .toLowerCase();
+  if (normalizedCandidate === normalizedQualifier) return true;
+  return normalizedCandidate.endsWith(`/${normalizedQualifier}`);
 }
 
 function lowercaseBasename(relativePath: string): string {
