@@ -18,6 +18,9 @@ status: "in-progress"
 
 ## To do
 
+* [ ] (Implementation) Add timing output to Node CLI commands per [P30](P30-cli-timing-output.md)
+  Output: `timing.ts`, updated `validate.ts` / `create.ts` / `types.ts`, updated snapshots
+
 * [ ] (Implementation) Land the property-based testing first iteration described in [P18](P18-property-based-testing-first-iteration.md)
   Output: `test/property/**`, `fast-check` dev dependencies
 * [ ] (Implementation) Remove the misleading `url` primitive described in [P27](P27-remove-url-primitive.md)

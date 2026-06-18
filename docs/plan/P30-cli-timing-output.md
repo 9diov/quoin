@@ -1,6 +1,6 @@
 ---
 _type: "[[plan-doc]]"
-status: "proposed"
+status: "done"
 ---
 
 # P30 — CLI Timing Output
