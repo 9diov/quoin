@@ -17,8 +17,9 @@ import type { ParseFailure } from './lookup.js';
 import { printHuman, printJson } from './output.js';
 import type { IngestFailure } from './project.js';
 import { buildProjectUniverse } from './project.js';
+import { createTimingRecorder, formatTimingHuman, type Timing } from './timing.js';
 
-export type CreateResult =
+type CreateResultBase =
   | {
       kind: 'created';
       path: string;
@@ -45,6 +46,8 @@ export type CreateResult =
     }
   | { kind: 'io-error'; output: string; reason: string };
 
+export type CreateResult = CreateResultBase & { timing: Timing };
+
 /** The only successful outcome exits 0; every other outcome exits 1. */
 export function createExitCode(result: CreateResult): number {
   return result.kind === 'created' ? 0 : 1;
@@ -67,7 +70,8 @@ async function resolveOutputPath(
   config: EffectiveConfig,
   output: string,
 ): Promise<
-  { ok: true; relativePath: string; absolutePath: string } | { ok: false; result: CreateResult }
+  | { ok: true; relativePath: string; absolutePath: string }
+  | { ok: false; result: CreateResultBase }
 > {
   const absolutePath = isAbsolute(output) ? resolve(output) : resolve(config.root, output);
 
@@ -106,12 +110,20 @@ export async function runCreate(
   typeName: string,
   output: string,
 ): Promise<CreateResult> {
+  const timing = createTimingRecorder();
+  const withTiming = (result: CreateResultBase): CreateResult => ({
+    ...result,
+    timing: timing.finish(),
+  });
+
+  const universePhase = timing.startPhase();
   const universe = await buildProjectUniverse(config);
+  timing.endPhase('universe', universePhase);
 
   // create is strict about discovery health: any ingest or type-parse failure
   // aborts before we synthesize or write anything (D5).
   if (universe.ingestFailures.length > 0 || universe.typeParseFailures.length > 0) {
-    return {
+    return withTiming({
       kind: 'discovery-unhealthy',
       ingestFailures: universe.ingestFailures.map((f: IngestFailure) => ({
         path: f.path,
@@ -122,28 +134,33 @@ export async function runCreate(
         path: f.path,
         errors: f.errors,
       })),
-    };
+    });
   }
 
+  const synthesisPhase = timing.startPhase();
   const lookup = universe.typeRegistry.getByName(typeName);
   switch (lookup.kind) {
     case 'not-found':
-      return { kind: 'type-not-found', typeName: lookup.typeName };
+      timing.endPhase('synthesis', synthesisPhase);
+      return withTiming({ kind: 'type-not-found', typeName: lookup.typeName });
     case 'ambiguous':
-      return {
+      timing.endPhase('synthesis', synthesisPhase);
+      return withTiming({
         kind: 'type-ambiguous',
         typeName: lookup.typeName,
         candidateIds: lookup.candidates.map((c) => c.id),
-      };
+      });
     case 'unavailable':
-      return { kind: 'type-unavailable', typeName, reason: lookup.reason };
+      timing.endPhase('synthesis', synthesisPhase);
+      return withTiming({ kind: 'type-unavailable', typeName, reason: lookup.reason });
   }
 
   const typeDef = lookup.typeDef;
 
   const outputResolution = await resolveOutputPath(config, output);
   if (!outputResolution.ok) {
-    return outputResolution.result;
+    timing.endPhase('synthesis', synthesisPhase);
+    return withTiming(outputResolution.result);
   }
 
   // Synthesize frontmatter from only the configured declaration key, then layer
@@ -163,6 +180,7 @@ export async function runCreate(
     frontmatter,
     body,
   };
+  timing.endPhase('synthesis', synthesisPhase);
 
   const validationConfig: ValidationConfig = {
     typeDeclarationKey: config.typeDeclarationKey,
@@ -170,6 +188,7 @@ export async function runCreate(
     referentialValidation: config.referentialValidation,
   };
 
+  const validationPhase = timing.startPhase();
   const validation = validate(
     candidate,
     typeDef,
@@ -177,18 +196,20 @@ export async function runCreate(
     universe.resolver,
     universe.typeRegistry,
   );
+  timing.endPhase('validation', validationPhase);
 
   if (validation.errors.length > 0) {
-    return {
+    return withTiming({
       kind: 'validation-failed',
       path: outputResolution.relativePath,
       errors: validation.errors,
       warnings: validation.warnings,
-    };
+    });
   }
 
   const content = serializeDocument(frontmatter, body);
 
+  const writePhase = timing.startPhase();
   try {
     await mkdir(dirname(outputResolution.absolutePath), { recursive: true });
     await writeFile(outputResolution.absolutePath, content, {
@@ -196,21 +217,23 @@ export async function runCreate(
       flag: 'wx',
     });
   } catch (err) {
-    return {
+    timing.endPhase('write', writePhase);
+    return withTiming({
       kind: 'io-error',
       output,
       reason: err instanceof Error ? err.message : 'Unknown write error',
-    };
+    });
   }
+  timing.endPhase('write', writePhase);
 
-  return {
+  return withTiming({
     kind: 'created',
     path: outputResolution.relativePath,
     typeId: typeDef.id,
     typeName: typeDef.name,
     declaration,
     warnings: validation.warnings,
-  };
+  });
 }
 
 /**
@@ -275,13 +298,17 @@ export function formatCreateHuman(result: CreateResult): void {
       printHuman(`ABORT  write failed for "${result.output}": ${result.reason}`);
       break;
   }
+
+  printHuman(formatTimingHuman(result.timing));
 }
 
 export function formatCreateJson(result: CreateResult, config: EffectiveConfig): void {
+  const { timing, ...resultWithoutTiming } = result;
   printJson({
     command: 'create',
-    result,
+    result: resultWithoutTiming,
     exitCode: createExitCode(result),
     effectiveConfig: serializeEffectiveConfig(config),
+    timing,
   });
 }

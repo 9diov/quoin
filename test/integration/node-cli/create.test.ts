@@ -1,9 +1,11 @@
 import { readFile, rm, stat } from 'node:fs/promises';
 import { join } from 'node:path';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   createExitCode,
+  formatCreateHuman,
+  formatCreateJson,
   runCreate,
   serializeDocument,
 } from '../../../src/integration/node-cli/create.js';
@@ -17,6 +19,19 @@ const CONCEPT_WITH_TEMPLATE = `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\
 
 const CONCEPT_REQUIRED = `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  title:\n    type: text\n    required: true\n\`\`\`\n`;
 
+function expectTimingShape(
+  timing: { totalMs: number; phases: { name: string; ms: number }[] },
+  names: string[],
+): void {
+  expect(Number.isInteger(timing.totalMs)).toBe(true);
+  expect(timing.totalMs).toBeGreaterThanOrEqual(0);
+  expect(timing.phases.map((phase) => phase.name)).toEqual(names);
+  for (const phase of timing.phases) {
+    expect(Number.isInteger(phase.ms)).toBe(true);
+    expect(phase.ms).toBeGreaterThanOrEqual(0);
+  }
+}
+
 describe('runCreate', () => {
   it('creates a frontmatter-only file when the type has no Template Block', async () => {
     const dir = await createTempProject({
@@ -26,6 +41,7 @@ describe('runCreate', () => {
       const result = await runCreate(defaultConfig(dir), 'concept', 'notes/a.md');
       expect(result.kind).toBe('created');
       expect(createExitCode(result)).toBe(0);
+      expectTimingShape(result.timing, ['universe', 'synthesis', 'validation', 'write']);
 
       const written = await readFile(join(dir, 'notes/a.md'), 'utf-8');
       expect(written).toBe('---\n_type: "[[Concept]]"\n---\n');
@@ -118,6 +134,7 @@ describe('runCreate', () => {
       const result = await runCreate(defaultConfig(dir), 'concept', '../escape.md');
       expect(result.kind).toBe('output-invalid');
       expect(createExitCode(result)).toBe(1);
+      expectTimingShape(result.timing, ['universe', 'synthesis']);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
@@ -187,10 +204,57 @@ describe('runCreate', () => {
       const result = await runCreate(defaultConfig(dir), 'concept', 'a.md');
       expect(result.kind).toBe('validation-failed');
       expect(createExitCode(result)).toBe(1);
+      expectTimingShape(result.timing, ['universe', 'synthesis', 'validation']);
       await expect(stat(join(dir, 'a.md'))).rejects.toThrow();
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
+  });
+});
+
+describe('create formatters', () => {
+  it('appends timing to human output', async () => {
+    const output = await import('../../../src/integration/node-cli/output.js');
+    const spy = vi.spyOn(output, 'printHuman').mockImplementation(() => {});
+
+    formatCreateHuman({
+      kind: 'type-not-found',
+      typeName: 'concept',
+      timing: {
+        totalMs: 3,
+        phases: [{ name: 'universe', ms: 1 }],
+      },
+    });
+
+    expect(spy).toHaveBeenLastCalledWith('Time taken: 3ms (universe: 1ms)');
+    spy.mockRestore();
+  });
+
+  it('includes top-level timing in JSON output', async () => {
+    const output = await import('../../../src/integration/node-cli/output.js');
+    const spy = vi.spyOn(output, 'printJson').mockImplementation(() => {});
+
+    formatCreateJson(
+      {
+        kind: 'type-not-found',
+        typeName: 'concept',
+        timing: {
+          totalMs: 3,
+          phases: [{ name: 'universe', ms: 1 }],
+        },
+      },
+      defaultConfig('/test'),
+    );
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    const payload = spy.mock.calls[0]![0] as Record<string, unknown>;
+    expect(payload.timing).toEqual({
+      totalMs: 3,
+      phases: [{ name: 'universe', ms: 1 }],
+    });
+    expect((payload.result as Record<string, unknown>).timing).toBeUndefined();
+
+    spy.mockRestore();
   });
 });
 

@@ -3,10 +3,24 @@ import { describe, expect, it, vi } from 'vitest';
 
 import {
   expandTargets,
+  formatValidateHuman,
   formatValidateJson,
   runValidate,
 } from '../../../src/integration/node-cli/validate.js';
 import { binding, createTempProject, defaultConfig } from './helpers.js';
+
+function expectTimingShape(
+  timing: { totalMs: number; phases: { name: string; ms: number }[] },
+  names: string[],
+): void {
+  expect(Number.isInteger(timing.totalMs)).toBe(true);
+  expect(timing.totalMs).toBeGreaterThanOrEqual(0);
+  expect(timing.phases.map((phase) => phase.name)).toEqual(names);
+  for (const phase of timing.phases) {
+    expect(Number.isInteger(phase.ms)).toBe(true);
+    expect(phase.ms).toBeGreaterThanOrEqual(0);
+  }
+}
 
 describe('expandTargets', () => {
   it('resolves explicit file target', async () => {
@@ -126,6 +140,7 @@ describe('runValidate', () => {
       const config = defaultConfig(dir);
       const result = await runValidate(config, []);
       expect(result.exitCode).toBe(0);
+      expectTimingShape(result.timing, ['discovery', 'ingestion', 'parsing', 'validation']);
       expect(result.targets).toHaveLength(1);
       expect(result.targets[0]!.kind).toBe('validated');
       if (result.targets[0]!.kind === 'validated') {
@@ -535,6 +550,10 @@ describe('formatValidateJson', () => {
       ingestFailures: [],
       typeParseFailures: [],
       exitCode: 0,
+      timing: {
+        totalMs: 3,
+        phases: [{ name: 'discovery', ms: 1 }],
+      },
     };
 
     formatValidateJson(result, config);
@@ -544,10 +563,34 @@ describe('formatValidateJson', () => {
 
     expect(payload.summary).toBeDefined();
     expect(payload.effectiveConfig).toBeDefined();
+    expect(payload.timing).toEqual({
+      totalMs: 3,
+      phases: [{ name: 'discovery', ms: 1 }],
+    });
     expect((payload.summary as Record<string, unknown>).targets).toBe(0);
     expect((payload.effectiveConfig as Record<string, unknown>).root).toBe('/test');
     expect((payload.effectiveConfig as Record<string, unknown>).bindings).toEqual([]);
 
+    spy.mockRestore();
+  });
+
+  it('appends timing to human output', async () => {
+    const output = await import('../../../src/integration/node-cli/output.js');
+    const spy = vi.spyOn(output, 'printHuman').mockImplementation(() => {});
+
+    formatValidateHuman({
+      targets: [],
+      targetDiagnostics: [],
+      ingestFailures: [],
+      typeParseFailures: [],
+      exitCode: 0,
+      timing: {
+        totalMs: 3,
+        phases: [{ name: 'discovery', ms: 1 }],
+      },
+    });
+
+    expect(spy).toHaveBeenLastCalledWith('Time taken: 3ms (discovery: 1ms)');
     spy.mockRestore();
   });
 });

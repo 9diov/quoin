@@ -7,6 +7,7 @@ import type { TypeBinding } from './bindings.js';
 import { type EffectiveConfig, serializeEffectiveConfig } from './config.js';
 import { printHuman, printJson } from './output.js';
 import { buildProjectUniverse } from './project.js';
+import { createTimingRecorder, formatTimingHuman, type Timing } from './timing.js';
 
 export type TypeSummary = {
   id: string;
@@ -57,6 +58,7 @@ export type TypesResult = {
   parseFailures: { path: string; errors: ParseError[] }[];
   detail: TypeDetailResult | null;
   exitCode: number;
+  timing: Timing;
 };
 
 function renderDocRef(ref: { format?: string; referencedType?: string }): string {
@@ -117,7 +119,10 @@ function detailOf(typeDef: ParsedTypeDefinitionDocument): TypeDetail {
 }
 
 export async function runTypes(config: EffectiveConfig, detailName?: string): Promise<TypesResult> {
+  const timing = createTimingRecorder();
+  const universePhase = timing.startPhase();
   const universe = await buildProjectUniverse(config);
+  timing.endPhase('universe', universePhase);
 
   const types = universe.parsedTypes.map(summarize).sort((a, b) => a.id.localeCompare(b.id));
   const bindings = [...config.bindings];
@@ -227,6 +232,7 @@ export async function runTypes(config: EffectiveConfig, detailName?: string): Pr
     parseFailures,
     detail,
     exitCode,
+    timing: timing.finish(),
   };
 }
 
@@ -288,6 +294,7 @@ export function formatTypesHuman(result: TypesResult): void {
   printHuman(
     `\nDiscovered: ${result.types.length} type(s), ${result.ambiguousNames.length} ambiguous, ${result.parseFailures.length} broken`,
   );
+  printHuman(formatTimingHuman(result.timing));
 }
 
 function formatDetailHuman(detail: TypeDetailResult): void {
@@ -344,5 +351,6 @@ export function formatTypesJson(result: TypesResult, config: EffectiveConfig): v
     detail: result.detail,
     effectiveConfig: serializeEffectiveConfig(config),
     exitCode: result.exitCode,
+    timing: result.timing,
   });
 }

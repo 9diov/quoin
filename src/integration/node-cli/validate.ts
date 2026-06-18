@@ -18,6 +18,7 @@ import {
 } from './ingestion.js';
 import { createResolver, createTypeRegistry, parseTypeCandidates } from './lookup.js';
 import { printHuman, printJson } from './output.js';
+import { createTimingRecorder, formatTimingHuman, type Timing } from './timing.js';
 
 export type ValidationTargetResult =
   | {
@@ -82,6 +83,7 @@ export type ValidateResult = {
   ingestFailures: Extract<IngestedMarkdown, { kind: 'ingest-failure' }>[];
   typeParseFailures: { path: string; errors: unknown[] }[];
   exitCode: number;
+  timing: Timing;
 };
 
 function isExcluded(relativePath: string, exclude: string[]): boolean {
@@ -151,13 +153,16 @@ export async function runValidate(
   config: EffectiveConfig,
   rawTargets: string[],
 ): Promise<ValidateResult> {
+  const timing = createTimingRecorder();
   const ingestFailures: Extract<IngestedMarkdown, { kind: 'ingest-failure' }>[] = [];
   const ingestedDocs: Extract<IngestedMarkdown, { kind: 'document' }>[] = [];
   const typeParseFailures: { path: string; errors: unknown[] }[] = [];
   const targetDiagnostics: TargetDiagnostic[] = [];
   const targets: ValidationTargetResult[] = [];
 
+  const discoveryPhase = timing.startPhase();
   const allResults = await discoverMarkdownFiles(config.root, config.include, config.exclude);
+  timing.endPhase('discovery', discoveryPhase);
 
   const rawTargetPaths =
     rawTargets.length > 0 ? await expandTargets(config.root, rawTargets, config.exclude) : null;
@@ -171,7 +176,9 @@ export async function runValidate(
 
   const allPaths = [...discoveredPaths].sort();
 
+  const ingestionPhase = timing.startPhase();
   const ingestionResults = await ingestMarkdownFiles(config.root, allPaths);
+  timing.endPhase('ingestion', ingestionPhase);
 
   for (const result of ingestionResults) {
     if (result.kind === 'ingest-failure') {
@@ -188,9 +195,11 @@ export async function runValidate(
     return { path: c.path, raw: found?.raw ?? '' };
   });
 
+  const parsingPhase = timing.startPhase();
   const { parsed, failures } = parseTypeCandidates(withRaw, {
     typeDeclarationKey: config.typeDeclarationKey,
   });
+  timing.endPhase('parsing', parsingPhase);
 
   for (const failure of failures) {
     typeParseFailures.push({
@@ -225,6 +234,7 @@ export async function runValidate(
     referentialValidation: config.referentialValidation,
   };
 
+  const validationPhase = timing.startPhase();
   for (const path of targetPaths) {
     const ingested = ingestedDocs.find((d) => d.path === path);
     if (!ingested) continue;
@@ -364,6 +374,7 @@ export async function runValidate(
       }
     }
   }
+  timing.endPhase('validation', validationPhase);
 
   const hasIngestFailures = ingestFailures.length > 0;
   const hasTypeParseFailures = typeParseFailures.length > 0;
@@ -403,6 +414,7 @@ export async function runValidate(
     })) as Extract<IngestedMarkdown, { kind: 'ingest-failure' }>[],
     typeParseFailures,
     exitCode,
+    timing: timing.finish(),
   };
 }
 
@@ -506,6 +518,7 @@ export function formatValidateHuman(result: ValidateResult): void {
     `Diagnostics: ${result.ingestFailures.length} ingest, ${result.typeParseFailures.length} parse, ${result.targetDiagnostics.length} target`,
   );
   printHuman(`Exit: ${result.exitCode}`);
+  printHuman(formatTimingHuman(result.timing));
 }
 
 export function formatValidateJson(result: ValidateResult, config: EffectiveConfig): void {
@@ -545,6 +558,7 @@ export function formatValidateJson(result: ValidateResult, config: EffectiveConf
       targetDiagnostics: result.targetDiagnostics.length,
     },
     effectiveConfig: serializeEffectiveConfig(config),
+    timing: result.timing,
     targets: result.targets.map((t) => {
       if (t.kind === 'validated') {
         return {

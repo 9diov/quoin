@@ -1,12 +1,29 @@
 import { rm } from 'node:fs/promises';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
-import { runTypes } from '../../../src/integration/node-cli/types.js';
+import {
+  formatTypesHuman,
+  formatTypesJson,
+  runTypes,
+} from '../../../src/integration/node-cli/types.js';
 import { binding, createTempProject, defaultConfig } from './helpers.js';
 
 const CONCEPT = `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  title:\n    type: text\n    required: true\n  tags:\n    type: list<text>\n\`\`\`\n\n## Template\n\n\`\`\`markdown\n## Summary <!-- required -->\n\`\`\`\n`;
 
 const SKILL = `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  name:\n    type: text\n\`\`\`\n`;
+
+function expectTimingShape(
+  timing: { totalMs: number; phases: { name: string; ms: number }[] },
+  names: string[],
+): void {
+  expect(Number.isInteger(timing.totalMs)).toBe(true);
+  expect(timing.totalMs).toBeGreaterThanOrEqual(0);
+  expect(timing.phases.map((phase) => phase.name)).toEqual(names);
+  for (const phase of timing.phases) {
+    expect(Number.isInteger(phase.ms)).toBe(true);
+    expect(phase.ms).toBeGreaterThanOrEqual(0);
+  }
+}
 
 describe('runTypes', () => {
   it('lists discovered type summaries sorted by id', async () => {
@@ -17,6 +34,7 @@ describe('runTypes', () => {
     try {
       const result = await runTypes(defaultConfig(dir));
       expect(result.exitCode).toBe(0);
+      expectTimingShape(result.timing, ['universe']);
       expect(result.types.map((t) => t.id)).toEqual(['types/Concept.md', 'types/Skill.md']);
       const concept = result.types.find((t) => t.name === 'concept');
       expect(concept).toMatchObject({
@@ -182,5 +200,59 @@ describe('runTypes', () => {
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
+  });
+});
+
+describe('types formatters', () => {
+  it('appends timing to human output', async () => {
+    const output = await import('../../../src/integration/node-cli/output.js');
+    const spy = vi.spyOn(output, 'printHuman').mockImplementation(() => {});
+
+    formatTypesHuman({
+      types: [],
+      bindings: [],
+      bindingSummaries: [],
+      ambiguousNames: [],
+      parseFailures: [],
+      detail: null,
+      exitCode: 0,
+      timing: {
+        totalMs: 3,
+        phases: [{ name: 'universe', ms: 1 }],
+      },
+    });
+
+    expect(spy).toHaveBeenLastCalledWith('Time taken: 3ms (universe: 1ms)');
+    spy.mockRestore();
+  });
+
+  it('includes timing in JSON output', async () => {
+    const output = await import('../../../src/integration/node-cli/output.js');
+    const spy = vi.spyOn(output, 'printJson').mockImplementation(() => {});
+
+    formatTypesJson(
+      {
+        types: [],
+        bindings: [],
+        bindingSummaries: [],
+        ambiguousNames: [],
+        parseFailures: [],
+        detail: null,
+        exitCode: 0,
+        timing: {
+          totalMs: 3,
+          phases: [{ name: 'universe', ms: 1 }],
+        },
+      },
+      defaultConfig('/test'),
+    );
+
+    expect(spy).toHaveBeenCalledTimes(1);
+    const payload = spy.mock.calls[0]![0] as Record<string, unknown>;
+    expect(payload.timing).toEqual({
+      totalMs: 3,
+      phases: [{ name: 'universe', ms: 1 }],
+    });
+    spy.mockRestore();
   });
 });
