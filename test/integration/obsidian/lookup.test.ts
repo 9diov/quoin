@@ -16,6 +16,7 @@ type FakeFile = {
 
 type FakeApp = Parameters<typeof createObsidianResolver>[0] & {
   __resolve(linkpath: string, sourcePath: string, destination: FakeFile | null): void;
+  __linkpathCalls(): { linkpath: string; sourcePath: string }[];
 };
 
 describe('ObsidianBasenameIndex', () => {
@@ -51,7 +52,13 @@ describe('createObsidianResolver', () => {
     const index = new ObsidianBasenameIndex();
     index.rebuild([target]);
 
-    const result = createObsidianResolver(app, index, 'notes/Source.md')('[[Alias]]');
+    const result = createObsidianResolver(
+      app,
+      index,
+    )({
+      value: '[[Alias]]',
+      sourceDocumentPath: 'notes/Source.md',
+    });
 
     expect(result).toEqual({
       kind: 'found',
@@ -71,7 +78,13 @@ describe('createObsidianResolver', () => {
     const index = new ObsidianBasenameIndex();
     index.rebuild([first, second]);
 
-    const result = createObsidianResolver(app, index, 'source.md')('[[Target]]');
+    const result = createObsidianResolver(
+      app,
+      index,
+    )({
+      value: '[[Target]]',
+      sourceDocumentPath: 'source.md',
+    });
 
     expect(result.kind).toBe('ambiguous');
     if (result.kind === 'ambiguous') {
@@ -87,9 +100,18 @@ describe('createObsidianResolver', () => {
     const index = new ObsidianBasenameIndex();
     index.rebuild([]);
 
-    expect(createObsidianResolver(app, index, 'source.md')('[[Missing]]')).toEqual({
+    expect(
+      createObsidianResolver(
+        app,
+        index,
+      )({
+        value: '[[Missing]]',
+        sourceDocumentPath: 'source.md',
+      }),
+    ).toEqual({
       kind: 'not-found',
-      wikiLink: '[[Missing]]',
+      value: '[[Missing]]',
+      format: 'wiki-link',
     });
   });
 
@@ -97,9 +119,144 @@ describe('createObsidianResolver', () => {
     const app = createFakeApp([]);
     const index = new ObsidianBasenameIndex();
 
-    expect(createObsidianResolver(app, index, 'source.md')('Missing')).toMatchObject({
+    expect(
+      createObsidianResolver(
+        app,
+        index,
+      )({
+        value: 'Missing',
+        sourceDocumentPath: 'source.md',
+      }),
+    ).toMatchObject({
       kind: 'invalid-link',
-      wikiLink: 'Missing',
+      value: 'Missing',
+    });
+  });
+
+  it('resolves markdown-link by delegating to metadataCache.getFirstLinkpathDest', () => {
+    const target = fakeFile('sources/example.md', { _type: '[[Concept]]' });
+    const app = createFakeApp([target]);
+    app.__resolve('sources/example.md', 'notes/page.md', target);
+    const index = new ObsidianBasenameIndex();
+    index.rebuild([target]);
+
+    const result = createObsidianResolver(
+      app,
+      index,
+    )({
+      value: '[Example](sources/example.md)',
+      sourceDocumentPath: 'notes/page.md',
+    });
+
+    expect(result).toEqual({
+      kind: 'found',
+      document: {
+        path: 'sources/example.md',
+        frontmatter: { _type: '[[Concept]]' },
+        body: '',
+      },
+    });
+  });
+
+  it('returns not-found when Obsidian cannot resolve the markdown-link target', () => {
+    const app = createFakeApp([]);
+    const index = new ObsidianBasenameIndex();
+
+    expect(
+      createObsidianResolver(
+        app,
+        index,
+      )({
+        value: '[Missing](missing.md)',
+        sourceDocumentPath: 'notes/page.md',
+      }),
+    ).toEqual({
+      kind: 'not-found',
+      value: '[Missing](missing.md)',
+      format: 'markdown-link',
+    });
+  });
+
+  it('strips the URL fragment before delegating markdown-link resolution', () => {
+    const target = fakeFile('notes/glossary.md');
+    const app = createFakeApp([target]);
+    app.__resolve('notes/glossary.md', 'notes/page.md', target);
+    const index = new ObsidianBasenameIndex();
+    index.rebuild([target]);
+
+    const result = createObsidianResolver(
+      app,
+      index,
+    )({
+      value: '[Glossary](notes/glossary.md#term)',
+      sourceDocumentPath: 'notes/page.md',
+    });
+
+    expect(result.kind).toBe('found');
+    const calls = app.__linkpathCalls();
+    expect(calls).toContainEqual({ linkpath: 'notes/glossary.md', sourcePath: 'notes/page.md' });
+    expect(calls.every((c) => !c.linkpath.includes('#'))).toBe(true);
+  });
+
+  it('percent-decodes the markdown-link target before delegating', () => {
+    const target = fakeFile('notes/My Note.md');
+    const app = createFakeApp([target]);
+    app.__resolve('notes/My Note.md', 'notes/page.md', target);
+    const index = new ObsidianBasenameIndex();
+    index.rebuild([target]);
+
+    const result = createObsidianResolver(
+      app,
+      index,
+    )({
+      value: '[Note](notes/My%20Note.md)',
+      sourceDocumentPath: 'notes/page.md',
+    });
+
+    expect(result.kind).toBe('found');
+    expect(app.__linkpathCalls()).toContainEqual({
+      linkpath: 'notes/My Note.md',
+      sourcePath: 'notes/page.md',
+    });
+  });
+
+  it('treats non-markdown destinations as not-found for markdown-link', () => {
+    const target = fakeFile('assets/diagram.png', {}, 'png');
+    const app = createFakeApp([target]);
+    app.__resolve('assets/diagram.png', 'notes/page.md', target);
+    const index = new ObsidianBasenameIndex();
+
+    expect(
+      createObsidianResolver(
+        app,
+        index,
+      )({
+        value: '[Diagram](assets/diagram.png)',
+        sourceDocumentPath: 'notes/page.md',
+      }),
+    ).toEqual({
+      kind: 'not-found',
+      value: '[Diagram](assets/diagram.png)',
+      format: 'markdown-link',
+    });
+  });
+
+  it('returns invalid-link when caller forces markdown-link format on a value that fails shape parsing', () => {
+    const app = createFakeApp([]);
+    const index = new ObsidianBasenameIndex();
+
+    expect(
+      createObsidianResolver(
+        app,
+        index,
+      )({
+        value: 'not a markdown link',
+        format: 'markdown-link',
+        sourceDocumentPath: 'notes/page.md',
+      }),
+    ).toMatchObject({
+      kind: 'invalid-link',
+      format: 'markdown-link',
     });
   });
 });
@@ -155,6 +312,7 @@ describe('resolveObsidianEffectiveTypeDeclaration', () => {
 function createFakeApp(files: FakeFile[]): FakeApp {
   const filesByPath = new Map(files.map((file) => [file.path, file]));
   const resolutions = new Map<string, FakeFile | null>();
+  const linkpathCalls: { linkpath: string; sourcePath: string }[] = [];
 
   return {
     vault: {
@@ -164,8 +322,10 @@ function createFakeApp(files: FakeFile[]): FakeApp {
     },
     metadataCache: {
       getFileCache: (file: FakeFile) => ({ frontmatter: file.frontmatter }),
-      getFirstLinkpathDest: (linkpath: string, sourcePath: string) =>
-        resolutions.get(`${sourcePath}\0${linkpath}`) ?? null,
+      getFirstLinkpathDest: (linkpath: string, sourcePath: string) => {
+        linkpathCalls.push({ linkpath, sourcePath });
+        return resolutions.get(`${sourcePath}\0${linkpath}`) ?? null;
+      },
       on: () => ({}),
     },
     workspace: {
@@ -180,6 +340,7 @@ function createFakeApp(files: FakeFile[]): FakeApp {
     __resolve: (linkpath: string, sourcePath: string, destination: FakeFile | null) => {
       resolutions.set(`${sourcePath}\0${linkpath}`, destination);
     },
+    __linkpathCalls: () => [...linkpathCalls],
   } as FakeApp;
 }
 

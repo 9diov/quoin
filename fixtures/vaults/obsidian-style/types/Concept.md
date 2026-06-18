@@ -9,4 +9,6 @@ properties:
   title:
     type: text
     required: true
+  related:
+    type: doc-ref
 ```

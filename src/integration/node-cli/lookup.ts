@@ -1,12 +1,19 @@
 import { basename as nativeBasename, posix } from 'node:path';
 import type {
+  ResolveDocReferenceInput,
+  ResolveDocReferenceResult,
   Resolver,
-  ResolveWikiLinkResult,
   TypeDeclarationLookupResult,
   TypeReferenceLookupResult,
   TypeRegistry,
 } from '../../core/integration.js';
-import type { ParsedTypeDefinitionDocument, ParseError, ParserConfig } from '../../core/parser.js';
+import { parseMarkdownLink } from '../../core/link-grammar.js';
+import type {
+  DocRefFormat,
+  ParsedTypeDefinitionDocument,
+  ParseError,
+  ParserConfig,
+} from '../../core/parser.js';
 import { parseTypeDefinitionDocument } from '../../core/parser.js';
 import type { Document } from '../../core/types.js';
 
@@ -54,12 +61,21 @@ export function parseTypeCandidates(
   return { parsed, failures };
 }
 
+function detectFormat(value: string): DocRefFormat | null {
+  if (value.startsWith('[[') && value.endsWith(']]')) return 'wiki-link';
+  if (parseMarkdownLink(value) !== null) return 'markdown-link';
+  return null;
+}
+
 export function createResolver(ingested: IngestedMarkdown[]): Resolver {
   const byBasename = new Map<string, Document[]>();
   const failedBasenames = new Map<string, string[]>();
+  const byPath = new Map<string, Document>();
+  const failedByPath = new Map<string, string>();
 
   for (const entry of ingested) {
     const basename = lowercaseBasename(entry.path);
+    const normalizedPath = posix.normalize(entry.path.replaceAll('\\', '/'));
 
     if (entry.kind === 'document') {
       const existing = byBasename.get(basename);
@@ -68,6 +84,7 @@ export function createResolver(ingested: IngestedMarkdown[]): Resolver {
       } else {
         byBasename.set(basename, [entry.document]);
       }
+      byPath.set(normalizedPath, entry.document);
     } else {
       const existing = failedBasenames.get(basename);
       if (existing) {
@@ -75,15 +92,17 @@ export function createResolver(ingested: IngestedMarkdown[]): Resolver {
       } else {
         failedBasenames.set(basename, [entry.reason]);
       }
+      failedByPath.set(normalizedPath, entry.reason);
     }
   }
 
-  return (wikiLink: string): ResolveWikiLinkResult => {
-    const target = extractWikiLinkTarget(wikiLink);
+  const resolveWikiLink = (input: ResolveDocReferenceInput): ResolveDocReferenceResult => {
+    const target = extractWikiLinkTarget(input.value);
     if (target === null) {
       return {
         kind: 'invalid-link',
-        wikiLink,
+        value: input.value,
+        format: 'wiki-link',
         reason: 'Wiki Link must be in the form [[Target]]',
       };
     }
@@ -97,13 +116,14 @@ export function createResolver(ingested: IngestedMarkdown[]): Resolver {
     const totalCount = docCount + failureCount;
 
     if (totalCount === 0) {
-      return { kind: 'not-found', wikiLink };
+      return { kind: 'not-found', value: input.value, format: 'wiki-link' };
     }
 
     if (totalCount > 1) {
       return {
         kind: 'ambiguous',
-        wikiLink,
+        value: input.value,
+        format: 'wiki-link',
         candidates: documents ?? [],
       };
     }
@@ -113,7 +133,70 @@ export function createResolver(ingested: IngestedMarkdown[]): Resolver {
     }
 
     const reason = failures?.[0] ?? 'Unknown ingestion failure';
-    return { kind: 'unavailable', wikiLink, reason };
+    return { kind: 'unavailable', value: input.value, format: 'wiki-link', reason };
+  };
+
+  const resolveMarkdownLink = (input: ResolveDocReferenceInput): ResolveDocReferenceResult => {
+    const parts = parseMarkdownLink(input.value);
+    if (parts === null) {
+      return {
+        kind: 'invalid-link',
+        value: input.value,
+        format: 'markdown-link',
+        reason: 'Markdown link must be in the form [label](target)',
+      };
+    }
+
+    const targetWithoutFragment = stripFragment(parts.target);
+    if (targetWithoutFragment.length === 0) {
+      return {
+        kind: 'invalid-link',
+        value: input.value,
+        format: 'markdown-link',
+        reason: 'Markdown link target is empty',
+      };
+    }
+
+    const decodedTarget = safeDecodeURI(targetWithoutFragment);
+    const normalizedSource = posix.normalize(input.sourceDocumentPath.replaceAll('\\', '/'));
+    const sourceDir = posix.dirname(normalizedSource);
+    let resolved: string;
+    if (decodedTarget.startsWith('/')) {
+      resolved = posix.normalize(decodedTarget.slice(1));
+    } else {
+      resolved = posix.normalize(posix.join(sourceDir, decodedTarget));
+    }
+
+    const doc = byPath.get(resolved);
+    if (doc !== undefined) {
+      return { kind: 'found', document: doc };
+    }
+
+    const failureReason = failedByPath.get(resolved);
+    if (failureReason !== undefined) {
+      return {
+        kind: 'unavailable',
+        value: input.value,
+        format: 'markdown-link',
+        reason: failureReason,
+      };
+    }
+
+    return { kind: 'not-found', value: input.value, format: 'markdown-link' };
+  };
+
+  return (input: ResolveDocReferenceInput): ResolveDocReferenceResult => {
+    const format = input.format ?? detectFormat(input.value);
+    if (format === 'wiki-link') return resolveWikiLink(input);
+    if (format === 'markdown-link') return resolveMarkdownLink(input);
+    // Unknown format implies invalid shape; surface as invalid-link with a
+    // best-effort default format for downstream display.
+    return {
+      kind: 'invalid-link',
+      value: input.value,
+      format: 'wiki-link',
+      reason: 'Value is not a recognized document-reference syntax',
+    };
   };
 }
 
@@ -192,6 +275,19 @@ export function createTypeRegistry(
       return { kind: 'invalid-declaration', value };
     },
   };
+}
+
+function stripFragment(target: string): string {
+  const hash = target.indexOf('#');
+  return hash === -1 ? target : target.slice(0, hash);
+}
+
+function safeDecodeURI(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
 }
 
 function extractWikiLinkTarget(wikiLink: string): string | null {

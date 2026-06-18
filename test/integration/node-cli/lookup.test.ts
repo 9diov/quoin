@@ -127,7 +127,7 @@ describe('createResolver', () => {
     const ingested: IngestedMarkdown[] = [ingestionDoc('notes/Concept.md', { title: 'Concept' })];
     const resolver = createResolver(ingested);
 
-    const result = resolver('[[Concept]]');
+    const result = resolver({ value: '[[Concept]]', sourceDocumentPath: 'doc.md' });
     expect(result.kind).toBe('found');
     if (result.kind === 'found') {
       expect(result.document.path).toBe('notes/Concept.md');
@@ -136,16 +136,16 @@ describe('createResolver', () => {
 
   it('returns not-found when no document matches basename', () => {
     const resolver = createResolver([]);
-    const result = resolver('[[Concept]]');
+    const result = resolver({ value: '[[Concept]]', sourceDocumentPath: 'doc.md' });
     expect(result.kind).toBe('not-found');
     if (result.kind === 'not-found') {
-      expect(result.wikiLink).toBe('[[Concept]]');
+      expect(result.value).toBe('[[Concept]]');
     }
   });
 
   it('returns invalid-link for malformed Wiki Links', () => {
     const resolver = createResolver([]);
-    const result = resolver('not-a-wikilink');
+    const result = resolver({ value: 'not-a-wikilink', sourceDocumentPath: 'doc.md' });
     expect(result.kind).toBe('invalid-link');
   });
 
@@ -156,7 +156,7 @@ describe('createResolver', () => {
     ];
     const resolver = createResolver(ingested);
 
-    const result = resolver('[[Concept]]');
+    const result = resolver({ value: '[[Concept]]', sourceDocumentPath: 'doc.md' });
     expect(result.kind).toBe('ambiguous');
     if (result.kind === 'ambiguous') {
       expect(result.candidates).toHaveLength(2);
@@ -167,7 +167,7 @@ describe('createResolver', () => {
     const ingested: IngestedMarkdown[] = [ingestionFailure('notes/Concept.md', 'YAML parse error')];
     const resolver = createResolver(ingested);
 
-    const result = resolver('[[Concept]]');
+    const result = resolver({ value: '[[Concept]]', sourceDocumentPath: 'doc.md' });
     expect(result.kind).toBe('unavailable');
     if (result.kind === 'unavailable') {
       expect(result.reason).toBe('YAML parse error');
@@ -178,7 +178,7 @@ describe('createResolver', () => {
     const ingested: IngestedMarkdown[] = [ingestionDoc('skills/typescript/cool/TypeScript.md')];
     const resolver = createResolver(ingested);
 
-    const result = resolver('[[skills/TypeScript]]');
+    const result = resolver({ value: '[[skills/TypeScript]]', sourceDocumentPath: 'doc.md' });
     expect(result.kind).toBe('found');
   });
 
@@ -186,7 +186,7 @@ describe('createResolver', () => {
     const ingested: IngestedMarkdown[] = [ingestionDoc('Concept.md')];
     const resolver = createResolver(ingested);
 
-    const result = resolver('[[Concept#section]]');
+    const result = resolver({ value: '[[Concept#section]]', sourceDocumentPath: 'doc.md' });
     expect(result.kind).toBe('found');
   });
 
@@ -194,7 +194,7 @@ describe('createResolver', () => {
     const ingested: IngestedMarkdown[] = [ingestionDoc('Concept.md')];
     const resolver = createResolver(ingested);
 
-    const result = resolver('[[Concept|My Concept]]');
+    const result = resolver({ value: '[[Concept|My Concept]]', sourceDocumentPath: 'doc.md' });
     expect(result.kind).toBe('found');
   });
 
@@ -205,10 +205,83 @@ describe('createResolver', () => {
     ];
     const resolver = createResolver(ingested);
 
-    const result = resolver('[[Concept]]');
+    const result = resolver({ value: '[[Concept]]', sourceDocumentPath: 'doc.md' });
     expect(result.kind).toBe('ambiguous');
     if (result.kind === 'ambiguous') {
       expect(result.candidates).toHaveLength(1);
+    }
+  });
+
+  it('resolves a relative markdown-link target against the source document path', () => {
+    const ingested: IngestedMarkdown[] = [ingestionDoc('docs/sources/poeaa.md')];
+    const resolver = createResolver(ingested);
+
+    const result = resolver({
+      value: '[PoEAA](sources/poeaa.md)',
+      sourceDocumentPath: 'docs/index.md',
+    });
+    expect(result.kind).toBe('found');
+    if (result.kind === 'found') {
+      expect(result.document.path).toBe('docs/sources/poeaa.md');
+    }
+  });
+
+  it('resolves a parent-relative markdown-link target', () => {
+    const ingested: IngestedMarkdown[] = [ingestionDoc('shared/glossary.md')];
+    const resolver = createResolver(ingested);
+
+    const result = resolver({
+      value: '[G](../shared/glossary.md)',
+      sourceDocumentPath: 'docs/index.md',
+    });
+    expect(result.kind).toBe('found');
+  });
+
+  it('resolves a root-relative markdown-link target', () => {
+    const ingested: IngestedMarkdown[] = [ingestionDoc('notes/x.md')];
+    const resolver = createResolver(ingested);
+
+    const result = resolver({
+      value: '[X](/notes/x.md)',
+      sourceDocumentPath: 'docs/index.md',
+    });
+    expect(result.kind).toBe('found');
+  });
+
+  it('returns not-found when markdown-link target does not exist', () => {
+    const resolver = createResolver([]);
+    const result = resolver({
+      value: '[X](missing.md)',
+      sourceDocumentPath: 'docs/index.md',
+    });
+    expect(result.kind).toBe('not-found');
+    if (result.kind === 'not-found') {
+      expect(result.format).toBe('markdown-link');
+    }
+  });
+
+  it('strips fragments from markdown-link targets for resolution', () => {
+    const ingested: IngestedMarkdown[] = [ingestionDoc('docs/x.md')];
+    const resolver = createResolver(ingested);
+
+    const result = resolver({
+      value: '[X](x.md#section)',
+      sourceDocumentPath: 'docs/index.md',
+    });
+    expect(result.kind).toBe('found');
+  });
+
+  it('percent-decodes markdown-link targets before path resolution', () => {
+    const ingested: IngestedMarkdown[] = [ingestionDoc('docs/My Note.md')];
+    const resolver = createResolver(ingested);
+
+    const result = resolver({
+      value: '[Note](My%20Note.md)',
+      sourceDocumentPath: 'docs/index.md',
+    });
+    expect(result.kind).toBe('found');
+    if (result.kind === 'found') {
+      expect(result.document.path).toBe('docs/My Note.md');
     }
   });
 });

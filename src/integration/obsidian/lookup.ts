@@ -1,6 +1,12 @@
 import type { App, Plugin, TAbstractFile, TFile } from 'obsidian';
 
-import type { Resolver } from '../../core/integration.js';
+import type {
+  ResolveDocReferenceInput,
+  ResolveDocReferenceResult,
+  Resolver,
+} from '../../core/integration.js';
+import { parseMarkdownLink } from '../../core/link-grammar.js';
+import type { DocRefFormat } from '../../core/parser.js';
 import type { Document } from '../../core/types.js';
 import { type EffectiveTypeDeclaration, resolveEffectiveTypeDeclaration } from './bindings.js';
 
@@ -69,17 +75,20 @@ export class ObsidianBasenameIndex {
   }
 }
 
-export function createObsidianResolver(
-  app: App,
-  basenameIndex: ObsidianBasenameIndex,
-  sourcePath: string,
-): Resolver {
-  return (wikiLink) => {
-    const linkpath = extractWikiLinkTarget(wikiLink);
+function detectFormat(value: string): DocRefFormat | null {
+  if (value.startsWith('[[') && value.endsWith(']]')) return 'wiki-link';
+  if (parseMarkdownLink(value) !== null) return 'markdown-link';
+  return null;
+}
+
+export function createObsidianResolver(app: App, basenameIndex: ObsidianBasenameIndex): Resolver {
+  const resolveWikiLink = (input: ResolveDocReferenceInput): ResolveDocReferenceResult => {
+    const linkpath = extractWikiLinkTarget(input.value);
     if (linkpath === null) {
       return {
         kind: 'invalid-link',
-        wikiLink,
+        value: input.value,
+        format: 'wiki-link',
         reason: 'Wiki Link must be in the form [[Target]]',
       };
     }
@@ -88,19 +97,69 @@ export function createObsidianResolver(
     if (basenameCandidates.length > 1) {
       return {
         kind: 'ambiguous',
-        wikiLink,
+        value: input.value,
+        format: 'wiki-link',
         candidates: basenameCandidates.map((path) => documentFromCache(app, path)),
       };
     }
 
-    const destination = app.metadataCache.getFirstLinkpathDest(linkpath, sourcePath);
+    const destination = app.metadataCache.getFirstLinkpathDest(linkpath, input.sourceDocumentPath);
     if (destination === null) {
-      return { kind: 'not-found', wikiLink };
+      return { kind: 'not-found', value: input.value, format: 'wiki-link' };
     }
 
     return {
       kind: 'found',
       document: documentFromFileCache(app, destination),
+    };
+  };
+
+  const resolveMarkdownLink = (input: ResolveDocReferenceInput): ResolveDocReferenceResult => {
+    // Delegate to Obsidian's own internal-link resolver so Quoin sees the
+    // same target the editor, link preview, and graph view see. The Core
+    // grammar rejects protocol-qualified targets at shape validation, so
+    // only internal targets reach here.
+    const parts = parseMarkdownLink(input.value);
+    if (parts === null) {
+      return {
+        kind: 'invalid-link',
+        value: input.value,
+        format: 'markdown-link',
+        reason: 'Markdown link must be in the form [label](target)',
+      };
+    }
+
+    const stripped = stripFragment(parts.target);
+    if (stripped.length === 0) {
+      return {
+        kind: 'invalid-link',
+        value: input.value,
+        format: 'markdown-link',
+        reason: 'Markdown link target is empty',
+      };
+    }
+
+    const linkpath = safeDecodeURI(stripped);
+    const destination = app.metadataCache.getFirstLinkpathDest(linkpath, input.sourceDocumentPath);
+    if (destination === null || destination.extension !== 'md') {
+      return { kind: 'not-found', value: input.value, format: 'markdown-link' };
+    }
+
+    return {
+      kind: 'found',
+      document: documentFromFileCache(app, destination),
+    };
+  };
+
+  return (input: ResolveDocReferenceInput): ResolveDocReferenceResult => {
+    const format = input.format ?? detectFormat(input.value);
+    if (format === 'wiki-link') return resolveWikiLink(input);
+    if (format === 'markdown-link') return resolveMarkdownLink(input);
+    return {
+      kind: 'invalid-link',
+      value: input.value,
+      format: 'wiki-link',
+      reason: 'Value is not a recognized document-reference syntax',
     };
   };
 }
@@ -198,6 +257,19 @@ function extractWikiLinkTarget(wikiLink: string): string | null {
   if (target.length === 0 || target.includes('[') || target.includes(']')) return null;
 
   return target;
+}
+
+function stripFragment(target: string): string {
+  const hash = target.indexOf('#');
+  return hash === -1 ? target : target.slice(0, hash);
+}
+
+function safeDecodeURI(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
 }
 
 function basenameWithoutExtension(path: string): string {
