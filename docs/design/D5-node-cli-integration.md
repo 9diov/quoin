@@ -12,6 +12,15 @@ terms: ["Core", "Document", "Integration", "Markdown Link", "Parse Result", "Par
 
 This document defines a narrow Node.js CLI integration for Quoin.
 
+Implementation note:
+
+- the current codebase realizes this integration in two layers:
+  - `src/integration/node-lib/` owns the reusable Node-host runtime
+  - `src/integration/node-cli/` is a thin CLI shell over that runtime
+
+This document still specifies the Node CLI behavior as the externally visible
+contract.
+
 It is a **reference integration**:
 
 - real filesystem-backed I/O
@@ -19,7 +28,7 @@ It is a **reference integration**:
 - real Resolver and TypeRegistry wiring
 - no host-specific behavior beyond Node and the local filesystem
 
-It remains aligned with [D1 — Architecture](D1-architecture.md): Core stays pure, and the CLI owns discovery, ingestion, root type dispatch, lookup strategy, config, reporting, and writes.
+It remains aligned with [D1 — Architecture](D1-architecture.md): Core stays pure, and the Node integration owns discovery, ingestion, root type dispatch, lookup strategy, config, reporting, and writes.
 
 ## Goals
 

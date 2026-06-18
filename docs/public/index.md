@@ -104,6 +104,29 @@ Quoin finds all `.md` files under the current directory, resolves each document'
 
 ---
 
+## Programmatic API
+
+Quoin also exposes the Node-host integration as a library surface.
+
+Canonical import:
+
+```ts
+import {
+  loadConfigFile,
+  resolveEffectiveConfig,
+  runNodeCreate,
+  runNodeTypes,
+  runNodeValidate,
+} from "quoin/node-lib";
+```
+
+Use this when you want Quoin's real Node filesystem/config/discovery behavior
+without invoking the CLI parser or terminal output.
+
+The `quoin` CLI is now a thin shell over the same `node-lib` integration.
+
+---
+
 ## Schema syntax
 
 ### Property types

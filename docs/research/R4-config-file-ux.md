@@ -5,7 +5,7 @@ sources:
   - "README.md"
   - "docs/public/index.md"
   - "docs/design/D5-node-cli-integration.md"
-  - "src/integration/node-cli/config.ts"
+  - "src/integration/node-lib/config.ts"
   - "src/integration/node-cli/index.ts"
 related:
   - "[[R1-human-readable-cli-output]]"
@@ -123,5 +123,5 @@ If Quoin keeps this filename, it should lean into it with strong tooling and doc
 - [README.md](../../README.md)
 - [docs/public/index.md](../public/index.md)
 - [D5 — Node CLI Integration](../design/D5-node-cli-integration.md)
-- [src/integration/node-cli/config.ts](../../src/integration/node-cli/config.ts)
+- [src/integration/node-lib/config.ts](../../src/integration/node-lib/config.ts)
 - [src/integration/node-cli/index.ts](../../src/integration/node-cli/index.ts)
