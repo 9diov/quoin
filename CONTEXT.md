@@ -24,3 +24,6 @@ The locations above are repository conventions and path-glob bindings for dogfoo
 ## Language
 
 Quoin's glossary lives in [docs/design/GLOSSARY.md](docs/design/GLOSSARY.md). Use those terms consistently in design docs, ADRs, plans, code comments, and user-facing documentation.
+
+## Design principles
+Quoin's design principles live in [docs/design/PRINCIPLES.md](docs/design/PRINCIPLES.md). Use them to evaluate new features, ADRs, integration contracts, and architectural tradeoffs.
