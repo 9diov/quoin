@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Document", "Property", "Scaffolding", "Templating", "Section", "Core", "Parser", "Resolver", "TypeRegistry", "Integration", "Validation"]
 ---
 
 # P2 — Shared Core Types

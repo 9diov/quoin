@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Document", "Type Definition Document", "Property", "Wiki Link", "Scaffolding", "Templating", "Type Reference", "Link Resolution", "Referential Validation", "Core", "Parser", "Resolver", "TypeRegistry", "Integration", "Validation"]
 ---
 
 # P6 — Scaffolding

@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Document", "Property", "Wiki Link", "External Link", "Section", "Template Block", "Core", "Parser", "Resolver", "Integration", "Validation"]
 ---
 
 # P4 — Link and Section grammar helpers

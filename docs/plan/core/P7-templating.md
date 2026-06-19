@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Document", "Type Definition Document", "Scaffolding", "Templating", "Section", "Template Block", "Core", "Parser", "Integration", "Validation", "Validation Warning"]
 ---
 
 # P7 — Templating

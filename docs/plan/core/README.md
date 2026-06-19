@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Scaffolding", "Templating", "Section", "Core", "Parser", "Integration", "Validation"]
 ---
 
 # Core Plans

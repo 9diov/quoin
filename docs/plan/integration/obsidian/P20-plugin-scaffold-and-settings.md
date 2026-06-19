@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Section", "Core", "TypeRegistry", "Integration", "Validation"]
 ---
 
 # P20 — Plugin Scaffold And Settings

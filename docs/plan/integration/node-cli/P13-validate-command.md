@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Document", "Referential Validation", "Type Declaration", "Core", "Resolver", "TypeRegistry", "Integration", "Validation"]
 ---
 
 # P13 — Validate Command

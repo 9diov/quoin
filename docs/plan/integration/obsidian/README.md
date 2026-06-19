@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Resolver", "TypeRegistry", "Integration", "Validation"]
 ---
 
 # Obsidian Plugin Plans

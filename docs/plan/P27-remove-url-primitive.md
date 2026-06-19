@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "proposed"
+terms: ["Document", "Property", "Wiki Link", "Markdown Link", "External Link", "Constraint", "Section", "Type Reference", "Link Resolution", "Referential Validation", "Validation Config", "Core", "Parser", "Resolver", "Integration", "Validation"]
 ---
 
 # P27 — Remove `url` Primitive Type

@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Document", "Property", "Wiki Link", "External Link", "Scaffolding", "Templating", "Section", "Template Block", "Scaffolding Result", "Type Reference", "Untyped Document", "Link Resolution", "Referential Validation", "Type Declaration", "Core", "Parser", "Resolver", "TypeRegistry", "Integration", "Reserved Property", "Validation"]
 ---
 
 # Core Implementation Plan

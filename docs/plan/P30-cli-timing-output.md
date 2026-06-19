@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Document", "Integration", "Validation"]
 ---
 
 # P30 — CLI Timing Output

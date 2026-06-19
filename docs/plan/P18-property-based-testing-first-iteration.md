@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Document", "Property", "Wiki Link", "Scaffolding", "Core", "Parser", "Resolver", "Integration", "Validation"]
 ---
 
 # P18 — Property-Based Testing First Iteration

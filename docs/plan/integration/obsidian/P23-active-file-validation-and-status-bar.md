@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Document", "Type Definition Document", "Property", "Untyped Document", "Referential Validation", "Validation Config", "Type Declaration", "Core", "Resolver", "TypeRegistry", "Integration", "Reserved Property", "Validation", "Validation Result"]
 ---
 
 # P23 — Active-File Validation And Status Bar

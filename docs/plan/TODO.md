@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "in-progress"
+terms: ["Property", "Scaffolding", "Templating", "Section", "Validation Config", "Core", "Parser", "Resolver", "Integration", "Validation"]
 ---
 
 ## Convention

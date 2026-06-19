@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Document", "Property", "Doc Reference", "Wiki Link", "Markdown Link", "Type Reference", "Link Resolution", "Referential Validation", "Core", "Parser", "Resolver", "TypeRegistry", "Integration", "Validation"]
 ---
 
 # P28 — Doc Reference Format Separation

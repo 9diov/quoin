@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Document", "Type Definition Document", "Constraint", "Resolver", "TypeRegistry", "Integration"]
 ---
 
 # P11 — Filesystem Discovery And Ingestion

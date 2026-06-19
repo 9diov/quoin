@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Document", "Type Definition Document", "Core", "Parser", "Resolver", "TypeRegistry", "Integration"]
 ---
 
 # P12 — Node Resolver And TypeRegistry

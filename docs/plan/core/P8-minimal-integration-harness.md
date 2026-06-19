@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Document", "Type Definition Document", "Property", "Wiki Link", "Scaffolding", "Templating", "Untyped Document", "Meta-Type Definition Document", "Referential Validation", "Type Declaration", "Core", "Parser", "Resolver", "TypeRegistry", "Integration", "Validation"]
 ---
 
 # P8 — Minimal Integration Harness

@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Document", "Doc Reference", "Markdown Link", "Section", "Link Resolution", "Core", "Parser", "Resolver", "Integration", "Validation"]
 ---
 
 # P29 — Obsidian Markdown-Link Resolution

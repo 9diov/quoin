@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Core", "Integration"]
 ---
 
 # Integration Plans

@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Template Block", "Resolver", "TypeRegistry", "Integration", "Validation"]
 ---
 
 # P14 — Create And Types Commands

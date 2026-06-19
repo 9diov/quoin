@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "in-progress"
+terms: ["Doc Reference", "Link Resolution", "Core", "Integration"]
 ---
 
 # Implementation Plans

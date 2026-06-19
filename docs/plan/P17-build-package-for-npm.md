@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Section", "Core", "Integration", "Validation"]
 ---
 
 # P17 — Build Package For npm Distribution

@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Document", "Type Definition Document", "Type Declaration", "Core", "Parser", "TypeRegistry", "Integration", "Validation"]
 ---
 
 # P21 — Vault Discovery And TypeRegistry

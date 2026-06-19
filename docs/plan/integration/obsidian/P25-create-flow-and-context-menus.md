@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Document", "Type Definition Document", "Template Block", "Type Declaration", "Core", "Resolver", "TypeRegistry", "Integration", "Validation"]
 ---
 
 # P25 — Create Flow And Context Menus

@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Document", "Type Definition Document", "Property", "Wiki Link", "External Link", "Scaffolding", "Templating", "Section", "Template Block", "Collection Type", "Type Reference", "Referential Validation", "Type Declaration", "Core", "Parser", "Resolver", "TypeRegistry", "Integration", "Validation"]
 ---
 
 # P3 — Parser

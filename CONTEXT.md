@@ -27,3 +27,16 @@ Quoin's glossary lives in [docs/design/GLOSSARY.md](docs/design/GLOSSARY.md). Us
 
 ## Design principles
 Quoin's design principles live in [docs/design/PRINCIPLES.md](docs/design/PRINCIPLES.md). Use them to evaluate new features, ADRs, integration contracts, and architectural tradeoffs.
+
+## Source indexing
+
+Source files may start with a compact JSDoc-style index header:
+
+```ts
+/**
+ * @quoin-terms Core, Parser, Type Definition Document
+ * @quoin-docs docs/design/D2-type-and-schema-contracts.md
+ */
+```
+
+Use exact terms from the glossary. Keep `@quoin-terms` to the most load-bearing concepts for browsing, grepping, and maintenance; this is an index, not a comprehensive tag list. Prefer 3-7 terms per file. Add `@quoin-docs` only when one or two design docs are clear entry points for understanding the file.

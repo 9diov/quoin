@@ -12,6 +12,8 @@ properties:
     type: doc-ref
   related:
     type: list<doc-ref>
+  terms:
+    type: list<text>
 ```
 
 ## Template

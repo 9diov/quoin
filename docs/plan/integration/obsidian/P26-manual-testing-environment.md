@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Document", "Type Definition Document", "Type Declaration", "TypeRegistry", "Integration", "Validation"]
 ---
 
 # P26 — Manual Testing Environment

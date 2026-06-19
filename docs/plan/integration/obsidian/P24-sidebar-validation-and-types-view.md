@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Document", "Type Definition Document", "Section", "TypeRegistry", "Integration", "Validation"]
 ---
 
 # P24 — Sidebar Validation And Types View

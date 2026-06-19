@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Constraint", "Core", "Parser", "Resolver", "Integration", "Validation"]
 ---
 
 # P10 — CLI Scaffold And Config

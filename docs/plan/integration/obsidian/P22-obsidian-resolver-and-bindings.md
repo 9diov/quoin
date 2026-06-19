@@ -1,6 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
+terms: ["Document", "Type Definition Document", "Link Resolution", "Type Declaration", "Core", "Resolver", "TypeRegistry", "Integration", "Validation"]
 ---
 
 # P22 — Obsidian Resolver And Bindings
