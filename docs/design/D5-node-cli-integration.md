@@ -1,7 +1,7 @@
 ---
 _type: "[[design-doc]]"
 status: "active"
-terms: ["Core", "Document", "Integration", "Markdown Link", "Parse Result", "Parser", "Resolver", "Scaffolding", "Template Block", "Templating", "Type Declaration", "Type Definition Document", "TypeRegistry", "Validation", "Validation Config", "Validation Result", "Wiki Link"]
+terms: ["Core", "Document", "Integration", "Markdown Link", "Parse Result", "Parser", "Resolver", "Scaffolding", "Body Block", "Body Generation", "Type Declaration", "Type Definition Document", "TypeRegistry", "Validation", "Validation Config", "Validation Result", "Wiki Link"]
 ---
 
 # D5 — Node CLI Integration
@@ -36,7 +36,7 @@ V1 goals:
 
 1. Discover and parse Type Definition Documents from disk.
 2. Validate one file, many files, or a subtree of files.
-3. Create a new Document from a discovered Type Definition Document using Scaffolding and Templating.
+3. Create a new Document from a discovered Type Definition Document using Scaffolding and Body Generation.
 4. Expose registry and discovery state for debugging.
 
 V1 commands:
@@ -114,7 +114,7 @@ Per run it:
 3. resolves the selected type by canonical type name
 4. synthesizes initial frontmatter using only the configured Type Declaration key
 5. calls `scaffold(...)`
-6. calls `template(...)`
+6. calls `generateBody(...)`
 7. builds a candidate `Document`
 8. runs `validate(...)` against that candidate
 9. aborts on validation errors
@@ -415,13 +415,13 @@ Generation flow:
 2. synthesize root declaration
 3. call `scaffold(frontmatter, typeDef)`
 4. merge root declaration plus scaffolded defaults
-5. call `template(typeDef)`
+5. call `generateBody(typeDef)`
 6. build candidate `Document`
 7. call `validate(...)`
 8. abort on validation errors
 9. write on warnings only
 
-If the selected type has no Template Block, `create` still succeeds and writes a frontmatter-only file.
+If the selected type has no Body Block, `create` still succeeds and writes a frontmatter-only file.
 
 `create` is strict about discovery health. If project-wide discovery finds type parse failures, document ingestion failures, or other run-level integration failures, `create` aborts before writing.
 
@@ -535,6 +535,6 @@ The CLI may parallelize I/O, but observable results must not depend on traversal
 ## Relationship To Existing Design Docs
 
 - [D1 — Architecture](D1-architecture.md): the CLI is an Imperative Shell around the Core.
-- [D2 — Type and Schema Contracts](D2-type-and-schema-contracts.md): the CLI consumes `Document`, `ParsedTypeDefinitionDocument`, Scaffolding, and Templating contracts.
+- [D2 — Type and Schema Contracts](D2-type-and-schema-contracts.md): the CLI consumes `Document`, `ParsedTypeDefinitionDocument`, Scaffolding, and Body Generation contracts.
 - [D3 — Validation Semantics](D3-validation-semantics.md): the CLI owns root-type dispatch and reporting around Core validation.
 - [D4 — Integration Contracts](D4-integration-contracts.md): the CLI provides the concrete Node Resolver, TypeRegistry, parser identity, and discovery behavior.

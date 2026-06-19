@@ -1,7 +1,9 @@
 import { parse as parseYaml } from 'yaml';
 
 import {
+  type BodyGenerationResult,
   type Document,
+  generateBody,
   type ParsedTypeDefinitionDocument,
   type ParseError,
   type ParserConfig,
@@ -11,12 +13,10 @@ import {
   type Resolver,
   type ScaffoldingResult,
   scaffold,
-  type TemplatingResult,
   type TypeDeclarationLookupResult,
   type TypeDefinitionDocumentIdentity,
   type TypeReferenceLookupResult,
   type TypeRegistry,
-  template,
   type ValidationConfig,
   type ValidationResult,
   type ValidationWarning,
@@ -53,14 +53,14 @@ export type HarnessCreationResult = {
   typeDef: ParsedTypeDefinitionDocument;
   frontmatter: Record<string, unknown>;
   scaffolded: ScaffoldingResult;
-  templated: TemplatingResult;
+  templated: BodyGenerationResult;
 };
 
 type HarnessDependencies = {
   parseTypeDefinitionDocument?: typeof parseTypeDefinitionDocument;
   validate?: typeof validate;
   scaffold?: typeof scaffold;
-  template?: typeof template;
+  generateBody?: typeof generateBody;
 };
 
 type FrontmatterLookup = {
@@ -89,7 +89,7 @@ export type InMemoryHarness = {
   createNewDocument(
     typeDef: ParsedTypeDefinitionDocument,
     frontmatter: Record<string, unknown>,
-    dependencies?: Pick<HarnessDependencies, 'scaffold' | 'template'>,
+    dependencies?: Pick<HarnessDependencies, 'scaffold' | 'generateBody'>,
   ): HarnessCreationResult;
 };
 
@@ -212,9 +212,10 @@ export function createInMemoryHarness(
     },
     createNewDocument(typeDef, frontmatter, dependencies) {
       const scaffoldFn = dependencies?.scaffold ?? options.dependencies?.scaffold ?? scaffold;
-      const templateFn = dependencies?.template ?? options.dependencies?.template ?? template;
+      const generateBodyFn =
+        dependencies?.generateBody ?? options.dependencies?.generateBody ?? generateBody;
       const scaffolded = scaffoldFn(frontmatter, typeDef);
-      const templated = templateFn(typeDef);
+      const templated = generateBodyFn(typeDef);
 
       return {
         typeDef,

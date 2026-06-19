@@ -1,7 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
-terms: ["Wiki Link", "Constraint", "Scaffolding", "Templating", "Link Resolution", "Type Declaration", "Core", "Parser", "Resolver", "TypeRegistry", "Integration", "Validation"]
+terms: ["Wiki Link", "Constraint", "Scaffolding", "Body Generation", "Link Resolution", "Type Declaration", "Core", "Parser", "Resolver", "TypeRegistry", "Integration", "Validation"]
 ---
 
 # P19 — Obsidian Plugin Implementation Plan

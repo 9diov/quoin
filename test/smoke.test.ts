@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type {
+  BodyBlock,
+  BodyGenerationResult,
   CollectionTypeName,
   Document,
   ParsedTypeDefinitionDocument,
@@ -15,8 +17,6 @@ import type {
   ScaffoldingResult,
   Schema,
   Section,
-  TemplateBlock,
-  TemplatingResult,
   TypeDeclarationLookupResult,
   TypeDefinitionDocumentIdentity,
   TypeReferenceLookupResult,
@@ -27,7 +27,7 @@ import type {
   ValidationResult,
   ValidationWarning,
 } from '../src/index.js';
-import { parseTypeDefinitionDocument, scaffold, template, validate } from '../src/index.js';
+import { generateBody, parseTypeDefinitionDocument, scaffold, validate } from '../src/index.js';
 
 describe('Core types', () => {
   it('accepts literal values matching D2/D3/D4 shapes', () => {
@@ -50,14 +50,14 @@ describe('Core types', () => {
       required: true,
       defaultContent: '',
     };
-    const templateBlock: TemplateBlock = { body: '## Definitions\n', sections: [section] };
+    const bodyBlock: BodyBlock = { body: '## Definitions\n', sections: [section] };
     const identity: TypeDefinitionDocumentIdentity = { id: 'types/Skill.md', name: 'skill' };
     const parserConfig: ParserConfig = { typeDeclarationKey: '_type' };
     const typeDef: ParsedTypeDefinitionDocument = {
       id: identity.id,
       name: identity.name,
       schema,
-      templateBlock,
+      bodyBlock,
     };
     const parseError: ParseError = {
       kind: 'parser:missing-schema-block',
@@ -142,11 +142,11 @@ describe('Core types', () => {
     expect(registry.getByName('skill').kind).toBe('not-found');
   });
 
-  it('exposes scaffold and template result shapes', () => {
+  it('exposes scaffold and body-generation result shapes', () => {
     const scaffolding: ScaffoldingResult = { properties: { title: 'Untitled' } };
-    const templating: TemplatingResult = { body: '## Definitions\n' };
+    const bodyGeneration: BodyGenerationResult = { body: '## Definitions\n' };
     expect(scaffolding.properties.title).toBe('Untitled');
-    expect(templating.body).toContain('Definitions');
+    expect(bodyGeneration.body).toContain('Definitions');
   });
 });
 
@@ -189,12 +189,12 @@ describe('Core behavior', () => {
     expect(result.properties).toEqual({ title: 'Untitled' });
   });
 
-  it('template returns the template block body', () => {
+  it('generateBody returns the body block body', () => {
     const typeDef: ParsedTypeDefinitionDocument = {
       id: 'types/Concept.md',
       name: 'concept',
       schema: { properties: {} },
-      templateBlock: {
+      bodyBlock: {
         body: '## Definitions\n\n## References\n',
         sections: [
           { level: 2, heading: 'Definitions', required: true, defaultContent: '' },
@@ -203,23 +203,23 @@ describe('Core behavior', () => {
       },
     };
 
-    expect(template(typeDef)).toEqual({ body: '## Definitions\n\n## References\n' });
+    expect(generateBody(typeDef)).toEqual({ body: '## Definitions\n\n## References\n' });
   });
 
-  it('template returns empty body when no template block', () => {
+  it('generateBody returns empty body when no body block', () => {
     const typeDef: ParsedTypeDefinitionDocument = {
       id: 'types/Concept.md',
       name: 'concept',
       schema: { properties: {} },
     };
 
-    expect(template(typeDef)).toEqual({ body: '' });
+    expect(generateBody(typeDef)).toEqual({ body: '' });
   });
 
   it('imports the stub functions without crashing at module load', () => {
     expect(typeof parseTypeDefinitionDocument).toBe('function');
     expect(typeof validate).toBe('function');
     expect(typeof scaffold).toBe('function');
-    expect(typeof template).toBe('function');
+    expect(typeof generateBody).toBe('function');
   });
 });

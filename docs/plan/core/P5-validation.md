@@ -1,7 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
-terms: ["Document", "Type Definition Document", "Conforms to", "Property", "Wiki Link", "Scaffolding", "Templating", "Section", "Template Block", "Collection Type", "Type Reference", "Untyped Document", "Link Resolution", "Referential Validation", "Type Declaration", "Core", "Parser", "Resolver", "TypeRegistry", "Integration", "Reserved Property", "Validation", "Validation Error"]
+terms: ["Document", "Type Definition Document", "Conforms to", "Property", "Wiki Link", "Scaffolding", "Body Generation", "Section", "Body Block", "Collection Type", "Type Reference", "Untyped Document", "Link Resolution", "Referential Validation", "Type Declaration", "Core", "Parser", "Resolver", "TypeRegistry", "Integration", "Reserved Property", "Validation", "Validation Error"]
 ---
 
 # P5 — Validation
@@ -156,10 +156,10 @@ details: {
 
 ### Section validation
 
-Checks required Sections parsed from the Type Definition Document's Template Block against headings in the existing Document body. Runs after all Property validation is complete, regardless of whether Property validation produced errors or warnings.
+Checks required Sections parsed from the Type Definition Document's Body Block against headings in the existing Document body. Runs after all Property validation is complete, regardless of whether Property validation produced errors or warnings.
 
-1. If `typeDef.templateBlock` is absent → skip.
-2. Collect all `Section` entries from `templateBlock.sections` where `required: true`.
+1. If `typeDef.bodyBlock` is absent → skip.
+2. Collect all `Section` entries from `bodyBlock.sections` where `required: true`.
 3. Extract ATX headings from `document.body` using the existing `extractAtxHeadings` helper from `section-parser.ts`.
 4. For each required Section, check if a heading with the same `level` and exact same `heading` text (case-sensitive) exists in the extracted ATX headings.
 5. Missing required Section → `section:missing-required` warning with `location: { scope: 'section', section, level }`.
@@ -254,7 +254,7 @@ The `validation/` subdirectory is an internal split. Only `validate` (in `valida
 5. Add `validation/referential.ts` — `validateReferential(wikiLink, typeRefName, targetDocument, typeRegistry, typeDeclarationKey, location)`. Calls `getByName`, extracts target declaration, calls `getByDeclaration`, compares `id`. Maps all lookup results to `ValidationError | null`.
 6. Add `validation/collections.ts` — `validateList(value, typeRefName, config, resolver, typeRegistry)` and `validateChoice(value, typeRefName, config, resolver, typeRegistry)`. Item-level loops with per-item indexing and error accumulation. Delegates to `primitives.ts` for raw value checks, `link.ts` for resolution, `referential.ts` for opt-in validation.
 7. Add `validation/property.ts` — `validateProperty(key, schema, frontmatterValue, config, resolver, typeRegistry)`. Orchestrates presence → emptiness → type dispatch (primitive vs collection). Returns `ValidationError[]`.
-8. Add `validation/sections.ts` — `validateSections(body, templateBlock)`. Uses `extractAtxHeadings` from `section-parser.ts`. Returns `ValidationWarning[]`.
+8. Add `validation/sections.ts` — `validateSections(body, bodyBlock)`. Uses `extractAtxHeadings` from `section-parser.ts`. Returns `ValidationWarning[]`.
 9. Add `validation/reserved.ts` — `validateReservedCollisions(schema, integration)`. Returns `ValidationWarning[]`. Hardcoded table of reserved properties per integration.
 10. Add `validation/errors.ts` — constructor functions for each `ValidationErrorKind` and `ValidationWarningKind`. Keeps message construction and location shaping consistent.
 11. Wire the `validate` function in `src/core/validation.ts`. Imports and delegates to each pipeline stage. Aggregates all errors and warnings into a single `ValidationResult`. The function body replaces the current `throw new Error('not implemented')` stub.
@@ -284,7 +284,7 @@ The `validation/` subdirectory is an internal split. Only `validate` (in `valida
 
 ## Non-goals
 
-- Implement Scaffolding (P6) or Templating (P7) behavior.
+- Implement Scaffolding (P6) or Body Generation (P7) behavior.
 - Resolve root Document Type Declarations — Integration owns this before calling `validate`.
 - Build a Resolver or TypeRegistry. Only wire through the seams defined in D4.
 - Perform network validation for URLs. Core only checks shape and scheme.

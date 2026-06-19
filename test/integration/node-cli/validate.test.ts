@@ -481,7 +481,7 @@ describe('runValidate', () => {
 
   it('passes with warnings only (exit 0)', async () => {
     const dir = await createTempProject({
-      'types/Concept.md': `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  title:\n    type: text\n\`\`\`\n\n## Template\n\n\`\`\`markdown\n## Summary <!-- required -->\n\`\`\`\n`,
+      'types/Concept.md': `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  title:\n    type: text\n\`\`\`\n\n## Body\n\n\`\`\`markdown\n## Summary <!-- required -->\n\`\`\`\n`,
       'doc.md': '---\n_type: "[[Concept]]"\n---\n\n# Just a heading.',
     });
     try {

@@ -13,7 +13,7 @@ properties:
     type: text
 ```
 
-## Template
+## Body
 
 ```markdown
 ## Agenda

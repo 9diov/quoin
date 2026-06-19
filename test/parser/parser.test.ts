@@ -70,7 +70,7 @@ describe('P000 — Frontmatter self-identification', () => {
 });
 
 describe('P001–P005 — Blocks', () => {
-  it('P001: valid Schema and Template fences', () => {
+  it('P001: valid Schema and Body fences', () => {
     const body = `# Concept
 
 ## Schema
@@ -82,7 +82,7 @@ properties:
     required: true
 \`\`\`
 
-## Template
+## Body
 
 \`\`\`markdown
 ## Definitions <!-- required -->
@@ -99,17 +99,17 @@ properties:
       type: 'text',
       required: true,
     });
-    expect(result.typeDef.templateBlock?.body).toBe(
+    expect(result.typeDef.bodyBlock?.body).toBe(
       '## Definitions <!-- required -->\n\n## References',
     );
-    expect(result.typeDef.templateBlock?.sections).toEqual([
+    expect(result.typeDef.bodyBlock?.sections).toEqual([
       { level: 2, heading: 'Definitions', required: true, defaultContent: '' },
       { level: 2, heading: 'References', required: false, defaultContent: '' },
     ]);
   });
 
   it('P002: missing Schema block', () => {
-    const body = `# Concept\n\n## Template\n\n\`\`\`markdown\n## Definitions\n\`\`\`\n`;
+    const body = `# Concept\n\n## Body\n\n\`\`\`markdown\n## Definitions\n\`\`\`\n`;
     const errors = expectErrors(parse(body));
     const err = findError(errors, 'parser:missing-schema-block');
     expect(err).toBeDefined();
@@ -130,12 +130,12 @@ properties:
     expect(err?.location).toEqual({ scope: 'block', block: 'Schema' });
   });
 
-  it('P005: Template must contain exactly one Markdown fence', () => {
-    const body = `## Schema\n\n\`\`\`yaml\nproperties: {}\n\`\`\`\n\n## Template\n\n## Definitions\n`;
+  it('P005: Body must contain exactly one Markdown fence', () => {
+    const body = `## Schema\n\n\`\`\`yaml\nproperties: {}\n\`\`\`\n\n## Body\n\n## Definitions\n`;
     const errors = expectErrors(parse(body));
-    const err = findError(errors, 'parser:invalid-template-block');
+    const err = findError(errors, 'parser:invalid-body-block');
     expect(err).toBeDefined();
-    expect(err?.location).toEqual({ scope: 'block', block: 'Template' });
+    expect(err?.location).toEqual({ scope: 'block', block: 'Body' });
   });
 });
 
@@ -342,18 +342,18 @@ describe('P030–P031 — Identity', () => {
 
 describe('P040–P041 — Sections', () => {
   it('P040: required marker allows flexible whitespace', () => {
-    const body = `## Schema\n\n\`\`\`yaml\nproperties: {}\n\`\`\`\n\n## Template\n\n\`\`\`markdown\n## Definitions <!--   required   -->\n\`\`\`\n`;
+    const body = `## Schema\n\n\`\`\`yaml\nproperties: {}\n\`\`\`\n\n## Body\n\n\`\`\`markdown\n## Definitions <!--   required   -->\n\`\`\`\n`;
     const result = parse(body);
     expect(result.kind).toBe('ok');
     if (result.kind !== 'ok') return;
-    const sections = result.typeDef.templateBlock?.sections ?? [];
+    const sections = result.typeDef.bodyBlock?.sections ?? [];
     expect(sections).toEqual([
       { level: 2, heading: 'Definitions', required: true, defaultContent: '' },
     ]);
   });
 
   it('P041: duplicate required Section identity is rejected', () => {
-    const body = `## Schema\n\n\`\`\`yaml\nproperties: {}\n\`\`\`\n\n## Template\n\n\`\`\`markdown\n## Definitions <!-- required -->\n\n## Definitions <!-- required -->\n\`\`\`\n`;
+    const body = `## Schema\n\n\`\`\`yaml\nproperties: {}\n\`\`\`\n\n## Body\n\n\`\`\`markdown\n## Definitions <!-- required -->\n\n## Definitions <!-- required -->\n\`\`\`\n`;
     const errors = expectErrors(parse(body));
     const err = findError(errors, 'parser:duplicate-required-section');
     expect(err).toBeDefined();
@@ -362,12 +362,12 @@ describe('P040–P041 — Sections', () => {
 });
 
 describe('Setext headings are not Sections', () => {
-  it('ignores Setext-style headings in Template body', () => {
-    const body = `## Schema\n\n\`\`\`yaml\nproperties: {}\n\`\`\`\n\n## Template\n\n\`\`\`markdown\nDefinitions\n-----------\n\n## References\n\`\`\`\n`;
+  it('ignores Setext-style headings in Body block', () => {
+    const body = `## Schema\n\n\`\`\`yaml\nproperties: {}\n\`\`\`\n\n## Body\n\n\`\`\`markdown\nDefinitions\n-----------\n\n## References\n\`\`\`\n`;
     const result = parse(body);
     expect(result.kind).toBe('ok');
     if (result.kind !== 'ok') return;
-    const sections = result.typeDef.templateBlock?.sections ?? [];
+    const sections = result.typeDef.bodyBlock?.sections ?? [];
     expect(sections).toEqual([
       { level: 2, heading: 'References', required: false, defaultContent: '' },
     ]);
@@ -376,11 +376,11 @@ describe('Setext headings are not Sections', () => {
 
 describe('defaultContent is not mutated', () => {
   it('preserves required-marker comments that appear in body content', () => {
-    const body = `## Schema\n\n\`\`\`yaml\nproperties: {}\n\`\`\`\n\n## Template\n\n\`\`\`markdown\n## Notes\n<!-- required -->\nbody text\n\n## End\n\`\`\`\n`;
+    const body = `## Schema\n\n\`\`\`yaml\nproperties: {}\n\`\`\`\n\n## Body\n\n\`\`\`markdown\n## Notes\n<!-- required -->\nbody text\n\n## End\n\`\`\`\n`;
     const result = parse(body);
     expect(result.kind).toBe('ok');
     if (result.kind !== 'ok') return;
-    const notes = result.typeDef.templateBlock?.sections[0];
+    const notes = result.typeDef.bodyBlock?.sections[0];
     expect(notes?.heading).toBe('Notes');
     expect(notes?.required).toBe(false);
     expect(notes?.defaultContent).toContain('<!-- required -->');

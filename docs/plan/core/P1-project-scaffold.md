@@ -1,7 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
-terms: ["Scaffolding", "Templating", "Section", "Core", "Parser", "Resolver", "TypeRegistry", "Integration", "Validation"]
+terms: ["Scaffolding", "Body Generation", "Section", "Core", "Parser", "Resolver", "TypeRegistry", "Integration", "Validation"]
 ---
 
 # P1 — Project Scaffold
@@ -10,7 +10,7 @@ terms: ["Scaffolding", "Templating", "Section", "Core", "Parser", "Resolver", "T
 
 Create a minimal TypeScript package that can compile, run tests, and expose the Core API surface.
 
-This phase should not implement Parser, Validation, Scaffolding, or Templating behavior yet. It only creates the project structure needed for implementation.
+This phase should not implement Parser, Validation, Scaffolding, or Body Generation behavior yet. It only creates the project structure needed for implementation.
 
 ## Inputs
 
@@ -89,7 +89,7 @@ Package scripts:
 
 - Implement Parser behavior.
 - Implement Validation behavior.
-- Implement Scaffolding or Templating behavior.
+- Implement Scaffolding or Body Generation behavior.
 - Implement Resolver or TypeRegistry factories.
 - Add Obsidian, browser, or full Node Integration code.
 

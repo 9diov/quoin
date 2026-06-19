@@ -301,7 +301,7 @@ function sectionedType(): ParsedTypeDefinitionDocument {
     schema: {
       properties: {},
     },
-    templateBlock: {
+    bodyBlock: {
       body: '## Required <!-- required -->',
       sections: [
         {

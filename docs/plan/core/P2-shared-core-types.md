@@ -1,7 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
-terms: ["Document", "Property", "Scaffolding", "Templating", "Section", "Core", "Parser", "Resolver", "TypeRegistry", "Integration", "Validation"]
+terms: ["Document", "Property", "Scaffolding", "Body Generation", "Section", "Core", "Parser", "Resolver", "TypeRegistry", "Integration", "Validation"]
 ---
 
 # P2 — Shared Core Types
@@ -10,9 +10,9 @@ terms: ["Document", "Property", "Scaffolding", "Templating", "Section", "Core", 
 
 ## Goal
 
-Encode the TypeScript contracts from D2, D3, and D4 as type-level declarations in the Core. After this phase, the Core has no behavior, but every type referenced by Parser, Validation, Scaffolding, Templating, Resolver, and TypeRegistry is declared and exported.
+Encode the TypeScript contracts from D2, D3, and D4 as type-level declarations in the Core. After this phase, the Core has no behavior, but every type referenced by Parser, Validation, Scaffolding, Body Generation, Resolver, and TypeRegistry is declared and exported.
 
-This phase is type-only. Parser, Validation, Scaffolding, and Templating remain stubbed.
+This phase is type-only. Parser, Validation, Scaffolding, and Body Generation remain stubbed.
 
 ## Inputs
 
@@ -34,17 +34,17 @@ All types declared and re-exported from `src/index.ts`.
 - `PropertySchema` — `{ type; required?; 'allow-empty'?; default? }`
 - `Schema` — `{ properties: Record<string, PropertySchema> }`
 - `Section` — `{ level; heading; required; defaultContent }`
-- `TemplateBlock` — `{ sections: Section[] }`
+- `BodyBlock` — `{ sections: Section[] }`
 - `TypeDefinitionDocumentIdentity` — `{ id; name }`
 - `ParserConfig` — `{ typeDeclarationKey? }`
-- `ParsedTypeDefinitionDocument` — `{ id; name; schema; templateBlock? }`
+- `ParsedTypeDefinitionDocument` — `{ id; name; schema; bodyBlock? }`
 - `ParseErrorKind` — full union from D2
 - `ParseLocation` — discriminated union of `document`, `block`, `property`, `section` scopes
 - `ParseError` — `{ kind; message; location; details? }`
 - `ParseResult` — `{ kind: 'ok'; typeDef } | { kind: 'error'; errors }`
 - `Document` — `{ path; frontmatter; body }`
 - `ScaffoldingResult` — `{ properties: Record<string, unknown> }`
-- `TemplatingResult` — `{ body: string }`
+- `BodyGenerationResult` — `{ body: string }`
 
 ### From D3 — Validation Semantics
 
@@ -93,10 +93,10 @@ declare function scaffold(
   typeDef: ParsedTypeDefinitionDocument
 ): ScaffoldingResult
 
-// src/core/template.ts
-declare function template(
+// src/core/body.ts
+declare function generateBody(
   typeDef: ParsedTypeDefinitionDocument
-): TemplatingResult
+): BodyGenerationResult
 ```
 
 ## File layout
@@ -111,7 +111,7 @@ src/
     parser.ts               Parser types + parseTypeDefinitionDocument stub
     validation.ts           Validation types + validate stub
     scaffold.ts             Scaffolding types + scaffold stub
-    template.ts             Templating types + template stub
+    body.ts                 Body Generation types + generateBody stub
     link-grammar.ts         (unchanged in P2 — populated in P4)
     section-parser.ts       (unchanged in P2 — populated in P4)
     integration.ts          Resolver, TypeRegistry, lookup result unions
@@ -126,8 +126,8 @@ If a future contributor finds this split causes circular imports, collapsing eve
 1. Add D2 types to `src/core/parser.ts` (Parser-owned) and `src/core/types.ts` (`Document` only).
 2. Add D3 types to `src/core/validation.ts`.
 3. Add D4 types to a new `src/core/integration.ts`.
-4. Add D2 result types to `src/core/scaffold.ts` and `src/core/template.ts`.
-5. Add stub function signatures in `parser.ts`, `validation.ts`, `scaffold.ts`, `template.ts` whose bodies `throw new Error('not implemented')`.
+4. Add D2 result types to `src/core/scaffold.ts` and `src/core/body.ts`.
+5. Add stub function signatures in `parser.ts`, `validation.ts`, `scaffold.ts`, `body.ts` whose bodies `throw new Error('not implemented')`.
 6. Re-export every public name from `src/index.ts`.
 7. Add a type-level smoke test under `test/` that constructs literal values for each top-level type to catch shape regressions.
 8. Run `npm run typecheck` and `npm test`.
@@ -147,7 +147,7 @@ If a future contributor finds this split causes circular imports, collapsing eve
 
 ## Non-goals
 
-- Implement Parser, Validation, Scaffolding, or Templating behavior.
+- Implement Parser, Validation, Scaffolding, or Body Generation behavior.
 - Implement Link grammar or Section parser helpers.
 - Implement Resolver or TypeRegistry factories.
 - Choose Markdown or YAML parsing libraries.

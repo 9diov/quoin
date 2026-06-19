@@ -1,5 +1,5 @@
 /**
- * @quoin-terms Integration, Scaffolding, Templating, Document, Validation
+ * @quoin-terms Integration, Scaffolding, Body Generation, Document, Validation
  * @quoin-docs docs/design/D5-node-cli-integration.md
  */
 

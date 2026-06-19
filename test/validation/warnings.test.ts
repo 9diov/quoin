@@ -52,7 +52,7 @@ describe('V052 missing required Section is warning', () => {
       id: 'types/Concept.md',
       name: 'concept',
       schema: { properties: {} },
-      templateBlock: {
+      bodyBlock: {
         body: '## Definitions\n\n## References\n',
         sections: [
           { level: 2, heading: 'Definitions', required: true, defaultContent: '' },

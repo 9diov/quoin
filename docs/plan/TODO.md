@@ -1,7 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "in-progress"
-terms: ["Property", "Scaffolding", "Templating", "Section", "Validation Config", "Core", "Parser", "Resolver", "Integration", "Validation"]
+terms: ["Property", "Scaffolding", "Body Generation", "Section", "Validation Config", "Core", "Parser", "Resolver", "Integration", "Validation"]
 ---
 
 ## Convention
@@ -24,6 +24,8 @@ terms: ["Property", "Scaffolding", "Templating", "Section", "Validation Config",
 
 * [ ] (Implementation) Land the property-based testing first iteration described in [P18](P18-property-based-testing-first-iteration.md)
   Output: `test/property/**`, `fast-check` dev dependencies
+* [x] (Implementation) Normalize Body Block / Body Generation terminology per [P33](P33-rename-template-to-body.md)
+  Output: GLOSSARY, design docs, source identifiers, error codes, fixtures, tests all updated; `src/core/body.ts`, `generateBody()`, `BodyGenerationResult`
 * [ ] (Implementation) Remove the misleading `url` primitive described in [P27](P27-remove-url-primitive.md)
   Output: docs, core/parser/validation config, integrations, tests, and fixtures updated to treat external links as `text`
 * [ ] (Design) Design the future `repair()` capability referenced in [D1](../design/D1-architecture.md)
@@ -54,7 +56,7 @@ terms: ["Property", "Scaffolding", "Templating", "Section", "Validation Config",
   Output: [R1](../research/R1-human-readable-cli-output.md)
 
 * [x] (Planning) Core implementation plan and phases
-  Output: [core implementation plan](core/core-implementation-plan.md), [P1](core/P1-project-scaffold.md), [P2](core/P2-shared-core-types.md), [P3](core/P3-parser.md), [P4](core/P4-link-and-section-grammar.md), [P5](core/P5-validation.md), [P6](core/P6-scaffolding.md), [P7](core/P7-templating.md), [P8](core/P8-minimal-integration-harness.md)
+  Output: [core implementation plan](core/core-implementation-plan.md), [P1](core/P1-project-scaffold.md), [P2](core/P2-shared-core-types.md), [P3](core/P3-parser.md), [P4](core/P4-link-and-section-grammar.md), [P5](core/P5-validation.md), [P6](core/P6-scaffolding.md), [P7](core/P7-body-generation.md), [P8](core/P8-minimal-integration-harness.md)
 * [x] (Planning) Node CLI implementation plan and phases
   Output: [P9](integration/node-cli/P9-node-cli-implementation-plan.md), [P10](integration/node-cli/P10-cli-scaffold-and-config.md), [P11](integration/node-cli/P11-filesystem-discovery-and-ingestion.md), [P12](integration/node-cli/P12-node-resolver-and-type-registry.md), [P13](integration/node-cli/P13-validate-command.md), [P14](integration/node-cli/P14-create-and-types-commands.md), [P15](integration/node-cli/P15-path-glob-type-bindings.md)
 * [x] (Planning) Rename package and CLI to Quoin
@@ -65,7 +67,7 @@ terms: ["Property", "Scaffolding", "Templating", "Section", "Validation Config",
   Output: [P18](P18-property-based-testing-first-iteration.md)
 
 * [x] (Implementation) Build the pure core and validation stack
-  Output: `src/core/**`, `test/parser/**`, `test/validation/**`, `test/scaffold/**`, `test/template/**`
+  Output: `src/core/**`, `test/parser/**`, `test/validation/**`, `test/scaffold/**`, `test/body/**`
 * [x] (Implementation) Build the minimal integration harness
   Output: `test/integration/harness.ts`, `test/integration/integration-harness.test.ts`
 * [x] (Implementation) Build the Node CLI for config, discovery, validate, create, types, and bindings

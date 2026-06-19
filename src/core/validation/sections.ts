@@ -1,20 +1,20 @@
 /**
- * @quoin-terms Section, Template Block, Validation Warning
+ * @quoin-terms Section, Body Block, Validation Warning
  * @quoin-docs docs/design/D3-validation-semantics.md
  */
 
-import type { TemplateBlock } from '../parser.js';
+import type { BodyBlock } from '../parser.js';
 import { extractAtxHeadings } from '../section-parser.js';
 import type { ValidationWarning } from '../validation.js';
 import { validationWarning } from './errors.js';
 
 export function validateSections(
   body: string,
-  templateBlock: TemplateBlock | undefined,
+  bodyBlock: BodyBlock | undefined,
 ): ValidationWarning[] {
-  if (!templateBlock) return [];
+  if (!bodyBlock) return [];
 
-  const requiredSections = templateBlock.sections.filter((s) => s.required);
+  const requiredSections = bodyBlock.sections.filter((s) => s.required);
   if (requiredSections.length === 0) return [];
 
   const bodyHeadings = extractAtxHeadings(body);

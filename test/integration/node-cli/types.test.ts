@@ -4,7 +4,7 @@ import { formatTypesHuman, formatTypesJson } from '../../../src/integration/node
 import { runTypes } from '../../../src/integration/node-lib/types.js';
 import { binding, createTempProject, defaultConfig } from './helpers.js';
 
-const CONCEPT = `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  title:\n    type: text\n    required: true\n  tags:\n    type: list<text>\n\`\`\`\n\n## Template\n\n\`\`\`markdown\n## Summary <!-- required -->\n\`\`\`\n`;
+const CONCEPT = `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  title:\n    type: text\n    required: true\n  tags:\n    type: list<text>\n\`\`\`\n\n## Body\n\n\`\`\`markdown\n## Summary <!-- required -->\n\`\`\`\n`;
 
 const SKILL = `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  name:\n    type: text\n\`\`\`\n`;
 
@@ -37,7 +37,7 @@ describe('runTypes', () => {
         name: 'concept',
         propertyCount: 2,
         sectionCount: 1,
-        hasTemplate: true,
+        hasBody: true,
       });
     } finally {
       await rm(dir, { recursive: true, force: true });

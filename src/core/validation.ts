@@ -107,7 +107,7 @@ export function validate(
 
   warnings.push(...validateReservedCollisions(typeDef.schema, resolvedConfig.integration));
 
-  warnings.push(...validateSections(document.body, typeDef.templateBlock));
+  warnings.push(...validateSections(document.body, typeDef.bodyBlock));
 
   return {
     passed: errors.length === 0,

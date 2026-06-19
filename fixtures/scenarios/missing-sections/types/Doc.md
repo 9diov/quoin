@@ -11,7 +11,7 @@ properties:
     required: true
 ```
 
-## Template
+## Body
 
 ```markdown
 ## Summary <!-- required -->

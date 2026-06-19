@@ -3,12 +3,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { type Document, parseTypeDefinitionDocument } from '../../src/index.js';
 import { createInMemoryHarness, type RawMarkdownFixture } from './harness.js';
 
-function typeDocRaw(schemaYaml: string, templateBody?: string): string {
-  const templateSection = templateBody
-    ? `\n## Template\n\n\`\`\`markdown\n${templateBody}\n\`\`\`\n`
+function typeDocRaw(schemaYaml: string, bodyMarkdown?: string): string {
+  const bodySection = bodyMarkdown
+    ? `\n## Body\n\n\`\`\`markdown\n${bodyMarkdown}\n\`\`\`\n`
     : '\n';
 
-  return `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\n${schemaYaml}\n\`\`\`${templateSection}`;
+  return `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\n${schemaYaml}\n\`\`\`${bodySection}`;
 }
 
 function conceptTypeFixture(): RawMarkdownFixture {
@@ -80,7 +80,7 @@ describe('type discovery', () => {
     const harness = createInMemoryHarness([
       {
         path: 'types/Broken.md',
-        raw: '---\n_type: type\n---\n\n## Template\n\n```markdown\n## Summary\n```\n',
+        raw: '---\n_type: type\n---\n\n## Body\n\n```markdown\n## Summary\n```\n',
       },
     ]);
 

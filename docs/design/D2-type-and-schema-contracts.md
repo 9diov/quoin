@@ -1,7 +1,7 @@
 ---
 _type: "[[design-doc]]"
 status: "active"
-terms: ["Collection Type", "Constraint", "Doc Reference", "Document", "External Link", "Markdown Link", "Parse Result", "Parser", "Property", "Scaffolding", "Section", "Template Block", "Type Declaration", "Type Definition Document", "Type Reference", "Validation", "Wiki Link"]
+terms: ["Collection Type", "Constraint", "Doc Reference", "Document", "External Link", "Markdown Link", "Parse Result", "Parser", "Property", "Scaffolding", "Section", "Body Block", "Type Declaration", "Type Definition Document", "Type Reference", "Validation", "Wiki Link"]
 ---
 
 # D2 — Type and Schema Contracts
@@ -56,17 +56,18 @@ type Schema = {
 }
 
 
-// ── Template Block ───────────────────────────────────────────────────
+// ── Body Block ───────────────────────────────────────────────────────
 
 type Section = {
   level: number               // ATX heading level, 1 through 6
   heading: string
   required: boolean           // true when annotated with <!-- required -->
-  defaultContent: string      // body content from Template Block, may be empty
+  defaultContent: string      // body content from Body Block, may be empty
 }
 
-type TemplateBlock = {
+type BodyBlock = {
   sections: Section[]
+  body: string
 }
 
 
@@ -85,7 +86,7 @@ type ParsedTypeDefinitionDocument = {
   id: string
   name: string
   schema: Schema
-  templateBlock?: TemplateBlock
+  bodyBlock?: BodyBlock
 }
 
 
@@ -106,14 +107,14 @@ type ParseErrorKind =
   | 'parser:invalid-enum'
   | 'parser:invalid-property-schema'
   | 'parser:invalid-default'
-  | 'parser:duplicate-template-block'
-  | 'parser:invalid-template-block'
+  | 'parser:duplicate-body-block'
+  | 'parser:invalid-body-block'
   | 'parser:duplicate-required-section'
   | 'parser:invalid-type-definition-identity'
 
 type ParseLocation =
   | { scope: 'document' }
-  | { scope: 'block'; block: 'Schema' | 'Template' }
+  | { scope: 'block'; block: 'Schema' | 'Body' }
   | { scope: 'property'; property: string }
   | { scope: 'section'; section: string; level: number }
 
@@ -146,9 +147,9 @@ type ScaffoldingResult = {
 }
 
 
-// ── Templating ────────────────────────────────────────────────────────
+// ── Body Generation ──────────────────────────────────────────────────
 
-type TemplatingResult = {
+type BodyGenerationResult = {
   body: string
 }
 ```
@@ -171,10 +172,10 @@ declare function scaffold(
   typeDef: ParsedTypeDefinitionDocument
 ): ScaffoldingResult
 
-// Templating
-declare function template(
+// Body Generation
+declare function generateBody(
   typeDef: ParsedTypeDefinitionDocument
-): TemplatingResult
+): BodyGenerationResult
 ```
 
 Validation API is defined in [D3 — Validation Semantics](D3-validation-semantics.md). Resolver and TypeRegistry contracts are defined in [D4 — Integration Contracts](D4-integration-contracts.md).
@@ -241,7 +242,7 @@ Parser rules:
 2. If the key is absent or the frontmatter block itself is missing, Parser returns `parser:missing-type-declaration` with `location: { scope: 'document' }`.
 3. If the key is present but its value is not the literal string `type`, Parser returns `parser:invalid-type-declaration` with `location: { scope: 'document' }` and `details.value`.
 4. Wiki Link values such as `"[[Something]]"` under the Type Declaration key produce `parser:invalid-type-declaration` — Type Definition Documents do not conform to another type; they identify themselves with the bare `type` sentinel.
-5. `parser:missing-type-declaration` is a structural failure. Parser does not attempt Schema or Template parsing after it.
+5. `parser:missing-type-declaration` is a structural failure. Parser does not attempt Schema or Body parsing after it.
 
 The bare literal `type` is reserved as a *value* under the Type Declaration key — regular Documents cannot use it as a Type Declaration; their `_type` value is a Wiki Link.
 
@@ -259,7 +260,7 @@ Accepted structural headings:
 
 ```markdown
 ## Schema
-## Template
+## Body
 ```
 
 Rejected structural headings:
@@ -269,7 +270,7 @@ Rejected structural headings:
 ### Schema
 ## schema
 ## SCHEMA
-## Template:
+## Body:
 ## Schema <!-- metadata -->
 ```
 
@@ -296,23 +297,23 @@ properties:
 
 Unknown top-level schema keys are Parser errors. The legacy `fields` key is not accepted.
 
-### Template block
+### Body block
 
-`## Template` is optional.
+`## Body` is optional.
 
 Rules:
 
-1. A Type Definition Document may contain at most one `## Template` block.
-2. If present, the Template block must contain exactly one fenced code block.
-3. The Template fence info string must be `markdown` or `md`.
-4. The fenced block content is the Template Block body.
-5. Non-whitespace prose outside the fenced block inside `## Template` is a Parser error.
-6. Multiple Markdown fences inside `## Template` are a Parser error.
+1. A Type Definition Document may contain at most one `## Body` block.
+2. If present, the Body block must contain exactly one fenced code block.
+3. The Body fence info string must be `markdown` or `md`.
+4. The fenced block content is the Body Block body.
+5. Non-whitespace prose outside the fenced block inside `## Body` is a Parser error.
+6. Multiple Markdown fences inside `## Body` are a Parser error.
 
 Example:
 
 ````markdown
-## Template
+## Body
 
 ```markdown
 ## Definitions <!-- required -->
@@ -515,7 +516,7 @@ Resolver receives the original raw string.
 
 ## Section parsing
 
-Sections are parsed from Template Block content and Document bodies using ATX headings only.
+Sections are parsed from Body Block content and Document bodies using ATX headings only.
 
 Rules:
 
@@ -555,4 +556,4 @@ Rejected required markers:
 
 The lowercase-only property key rule is justified by Obsidian's silent-lowercasing behaviour: "Obsidian (primary Integration target) silently lowercases all Property keys on save. Allowing mixed-case keys in schemas would cause phantom Validation Errors on Obsidian." This embeds a host-specific normalisation as a universal Core constraint rather than surfacing the collision at the Integration layer. DP7 requires that host conventions be permitted at the Integration layer but never silently absorbed into Core behaviour.
 
-Duplicate required Section identities inside a Template Block are Parser errors. Duplicate non-required Section identities are allowed.
+Duplicate required Section identities inside a Body Block are Parser errors. Duplicate non-required Section identities are allowed.

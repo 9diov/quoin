@@ -15,7 +15,6 @@ properties:
     format: wiki-link
 ```
 
-## Template
+## Body
 
 ## Notes
-

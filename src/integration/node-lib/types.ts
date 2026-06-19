@@ -18,7 +18,7 @@ export type TypeSummary = {
   name: string;
   propertyCount: number;
   sectionCount: number;
-  hasTemplate: boolean;
+  hasBody: boolean;
 };
 
 export type TypeDetailProperty = {
@@ -34,7 +34,7 @@ export type TypeDetail = {
   name: string;
   properties: TypeDetailProperty[];
   sections: { heading: string; level: number; required: boolean }[];
-  hasTemplate: boolean;
+  hasBody: boolean;
 };
 
 export type TypeDetailResult =
@@ -91,8 +91,8 @@ function summarize(typeDef: ParsedTypeDefinitionDocument): TypeSummary {
     id: typeDef.id,
     name: typeDef.name,
     propertyCount: Object.keys(typeDef.schema.properties).length,
-    sectionCount: typeDef.templateBlock?.sections.length ?? 0,
-    hasTemplate: typeDef.templateBlock !== undefined,
+    sectionCount: typeDef.bodyBlock?.sections.length ?? 0,
+    hasBody: typeDef.bodyBlock !== undefined,
   };
 }
 
@@ -107,7 +107,7 @@ function detailOf(typeDef: ParsedTypeDefinitionDocument): TypeDetail {
     }),
   );
 
-  const sections = (typeDef.templateBlock?.sections ?? []).map((s) => ({
+  const sections = (typeDef.bodyBlock?.sections ?? []).map((s) => ({
     heading: s.heading,
     level: s.level,
     required: s.required,
@@ -118,7 +118,7 @@ function detailOf(typeDef: ParsedTypeDefinitionDocument): TypeDetail {
     name: typeDef.name,
     properties,
     sections,
-    hasTemplate: typeDef.templateBlock !== undefined,
+    hasBody: typeDef.bodyBlock !== undefined,
   };
 }
 

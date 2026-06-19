@@ -15,14 +15,14 @@ This note is scoped to Quoin's Core. PBT against Integration code (filesystem I/
 
 Several properties of Quoin's design make it unusually amenable to PBT, beyond the typical "we have some pure functions" justification:
 
-1. **Pure Core (Principle 2).** Validation, Scaffolding, Templating, and the Parser are pure transformations: `(inputs) → result`. PBT's value scales with the share of a system that is referentially transparent — for Quoin's Core, that share is essentially 100%.
+1. **Pure Core (Principle 2).** Validation, Scaffolding, Body Generation, and the Parser are pure transformations: `(inputs) → result`. PBT's value scales with the share of a system that is referentially transparent — for Quoin's Core, that share is essentially 100%.
 2. **Deterministic, inspectable results (Principle 8).** Stability of output is already an explicit design goal. PBT is the most economical way to assert it across the input space rather than at hand-picked points.
 3. **Strict contracts at the boundary (Principle 6).** The schema syntax, type-expression grammar, and block structure are designed to be unambiguous. Unambiguous grammars yield clean structural invariants — exactly what PBT consumes.
 4. **Disjoint type-expression forms (Principle 6).** `primitive`, `list<X>`, `choice<...>`, `[[name]]`, and `list<[[name]]>` are syntactically disjoint. This means each form has a tight, separately testable shape, and the *disjointness itself* is a property worth checking.
 5. **Composable types.** `list<X>` and `choice<...>` compose with primitives and type references. Composition is where example-based suites silently underspecify behavior; PBT exercises the cross-product.
 6. **Diagnostic-rich, not boolean.** Validation produces structured `ValidationResult` values with discriminated error kinds, not just pass/fail. Properties can assert *which* error fires, not merely whether one does — making PBT useful for negative-space coverage.
 
-The existing example-based suite (`test/parser`, `test/validation`, `test/scaffold`, `test/template`) is good at covering known shapes. PBT complements it by hitting the gaps between shapes — odd whitespace, boundary lengths, Unicode, combinatorial composition.
+The existing example-based suite (`test/parser`, `test/validation`, `test/scaffold`, `test/body`) is good at covering known shapes. PBT complements it by hitting the gaps between shapes — odd whitespace, boundary lengths, Unicode, combinatorial composition.
 
 ## Where PBT Would Pay Back
 
@@ -62,7 +62,7 @@ These properties tie Core operations together — the place where example-based 
 Candidate properties:
 
 - **Scaffold-then-validate is clean.** For any Document `D` conforming partially to type `T`, applying the `ScaffoldingResult` from `scaffold(D, T)` produces a Document whose `validate(...)` result has no `missing-required` errors for properties with declared defaults. This is the central guarantee of Scaffolding stated as a property.
-- **Template-then-validate has no missing required sections.** For any type `T` with a Template Block, the Document produced by `template(T)` passes Validation's "required section present" check. Required sections must never be absent in fresh Documents.
+- **GenerateBody-then-validate has no missing required sections.** For any type `T` with a Body Block, the Document produced by `generateBody(T)` passes Validation's "required section present" check. Required sections must never be absent in fresh Documents.
 - **Validation idempotence on output.** `validate(D, T)` does not depend on the order of properties in `D`'s frontmatter — only on values. Shuffling key order produces equal results. (Tests Principle 8 across a class of trivially-equivalent inputs.)
 - **Resolver-independence for primitive properties.** For any Document `D` whose schema has no Wiki Link or Type Reference properties, `validate(D, T, resolverA)` and `validate(D, T, resolverB)` return equal results for any two resolvers. The Resolver must never affect primitive validation.
 - **Referential Validation is opt-in.** With Referential Validation disabled, no `ValidationError` of kind `referential-*` is ever produced, regardless of input. (Principle 5: opt-in, not transitive.)
@@ -194,6 +194,6 @@ Defer broader PBT investment (Tiers 4–5, exhaustive generator coverage) until 
   - [parser.ts](../../src/core/parser.ts)
   - [validation.ts](../../src/core/validation.ts)
   - [scaffold.ts](../../src/core/scaffold.ts)
-  - [template.ts](../../src/core/template.ts)
+  - [body.ts](../../src/core/body.ts)
 - fast-check: https://fast-check.dev/
 - fast-check + Vitest integration: https://fast-check.dev/docs/ecosystem/#vitest

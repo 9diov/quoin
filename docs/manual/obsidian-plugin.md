@@ -71,5 +71,5 @@ Create flow:
 - Folder context menu shows `New Quoin document...`.
 - Type Definition Document context menu shows `New document of this type`.
 - Existing output paths are rejected.
-- Created documents contain `_type: [[TypeBasename]]`, scaffold defaults, and template body.
+- Created documents contain `_type: [[TypeBasename]]`, scaffold defaults, and body content from the `## Body` block.
 - Created documents open in the active leaf with the cursor after frontmatter.

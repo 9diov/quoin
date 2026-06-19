@@ -33,12 +33,12 @@ export function schemaBlockError(
   return makeError(kind, message, { scope: 'block', block: 'Schema' }, details);
 }
 
-export function templateBlockError(
+export function bodyBlockError(
   kind: ParseErrorKind,
   message: string,
   details?: Record<string, unknown>,
 ): ParseError {
-  return makeError(kind, message, { scope: 'block', block: 'Template' }, details);
+  return makeError(kind, message, { scope: 'block', block: 'Body' }, details);
 }
 
 export function propertyError(

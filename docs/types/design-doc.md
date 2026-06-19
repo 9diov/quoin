@@ -16,7 +16,7 @@ properties:
     type: list<text>
 ```
 
-## Template
+## Body
 
 ```markdown
 ## Problem

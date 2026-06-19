@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ParsedTypeDefinitionDocument } from '../../src/index.js';
-import { template } from '../../src/index.js';
+import { generateBody } from '../../src/index.js';
 
 function makeTypeDef(
   overrides: Partial<ParsedTypeDefinitionDocument>,
@@ -13,76 +13,76 @@ function makeTypeDef(
   };
 }
 
-describe('template returns empty body when no template block', () => {
-  it('returns empty body when templateBlock is absent', () => {
+describe('generateBody returns empty body when no body block', () => {
+  it('returns empty body when bodyBlock is absent', () => {
     const typeDef = makeTypeDef({});
-    const result = template(typeDef);
+    const result = generateBody(typeDef);
     expect(result).toEqual({ body: '' });
   });
 });
 
-describe('template returns exact stored Markdown body', () => {
-  it('returns the body from templateBlock', () => {
+describe('generateBody returns exact stored Markdown body', () => {
+  it('returns the body from bodyBlock', () => {
     const typeDef = makeTypeDef({
-      templateBlock: {
+      bodyBlock: {
         body: '## Definitions\n\n## References\n',
         sections: [],
       },
     });
 
-    const result = template(typeDef);
+    const result = generateBody(typeDef);
     expect(result).toEqual({ body: '## Definitions\n\n## References\n' });
   });
 
   it('preserves blank lines between sections', () => {
     const typeDef = makeTypeDef({
-      templateBlock: {
+      bodyBlock: {
         body: '## Header\n\n\n## Body\n',
         sections: [],
       },
     });
 
-    expect(template(typeDef).body).toBe('## Header\n\n\n## Body\n');
+    expect(generateBody(typeDef).body).toBe('## Header\n\n\n## Body\n');
   });
 
   it('preserves <!-- required --> comments in heading lines', () => {
     const typeDef = makeTypeDef({
-      templateBlock: {
+      bodyBlock: {
         body: '## Definitions <!-- required -->\n\ntext\n',
         sections: [],
       },
     });
 
-    expect(template(typeDef).body).toBe('## Definitions <!-- required -->\n\ntext\n');
+    expect(generateBody(typeDef).body).toBe('## Definitions <!-- required -->\n\ntext\n');
   });
 
   it('preserves fenced code blocks and their contents', () => {
     const body = '## Example\n\n```ts\nconst x = 1;\n```\n';
     const typeDef = makeTypeDef({
-      templateBlock: { body, sections: [] },
+      bodyBlock: { body, sections: [] },
     });
 
-    expect(template(typeDef).body).toBe(body);
+    expect(generateBody(typeDef).body).toBe(body);
   });
 
-  it('returns empty body when templateBlock body is empty', () => {
+  it('returns empty body when bodyBlock body is empty', () => {
     const typeDef = makeTypeDef({
-      templateBlock: { body: '', sections: [] },
+      bodyBlock: { body: '', sections: [] },
     });
 
-    expect(template(typeDef)).toEqual({ body: '' });
+    expect(generateBody(typeDef)).toEqual({ body: '' });
   });
 
   it('does not mutate typeDef', () => {
     const typeDef = makeTypeDef({
-      templateBlock: {
+      bodyBlock: {
         body: '## Definitions\n',
         sections: [],
       },
     });
 
     const snapshot = JSON.stringify(typeDef);
-    template(typeDef);
+    generateBody(typeDef);
     expect(JSON.stringify(typeDef)).toBe(snapshot);
   });
 });

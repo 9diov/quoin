@@ -1,5 +1,5 @@
 /**
- * @quoin-terms Parser, Type Definition Document, Parse Result, Template Block, Type Declaration, Frontmatter, Schema, Primitive Type
+ * @quoin-terms Parser, Type Definition Document, Parse Result, Body Block, Type Declaration, Frontmatter, Schema, Primitive Type
  * @quoin-docs docs/design/D2-type-and-schema-contracts.md
  */
 
@@ -8,7 +8,7 @@ import { validateDefault } from './parser/defaults.js';
 import { extractAndValidateFrontmatter } from './parser/frontmatter.js';
 import { validateIdentity } from './parser/identity.js';
 import { parseSchemaYaml } from './parser/schema-yaml.js';
-import { parseTemplateSections } from './section-parser.js';
+import { parseBodySections } from './section-parser.js';
 
 export type PrimitiveTypeName = 'text' | 'number' | 'boolean' | 'date' | 'datetime';
 
@@ -53,7 +53,7 @@ export type Section = {
   defaultContent: string;
 };
 
-export type TemplateBlock = {
+export type BodyBlock = {
   body: string;
   sections: Section[];
 };
@@ -71,7 +71,7 @@ export type ParsedTypeDefinitionDocument = {
   id: string;
   name: string;
   schema: Schema;
-  templateBlock?: TemplateBlock;
+  bodyBlock?: BodyBlock;
 };
 
 export type ParseErrorKind =
@@ -89,14 +89,14 @@ export type ParseErrorKind =
   | 'parser:invalid-enum'
   | 'parser:invalid-property-schema'
   | 'parser:invalid-default'
-  | 'parser:duplicate-template-block'
-  | 'parser:invalid-template-block'
+  | 'parser:duplicate-body-block'
+  | 'parser:invalid-body-block'
   | 'parser:duplicate-required-section'
   | 'parser:invalid-type-definition-identity';
 
 export type ParseLocation =
   | { scope: 'document' }
-  | { scope: 'block'; block: 'Schema' | 'Template' }
+  | { scope: 'block'; block: 'Schema' | 'Body' }
   | { scope: 'property'; property: string }
   | { scope: 'section'; section: string; level: number };
 
@@ -142,11 +142,11 @@ export function parseTypeDefinitionDocument(
     }
   }
 
-  let templateBlock: TemplateBlock | undefined;
-  if (blocks.templateMarkdown !== undefined) {
-    const sectionResult = parseTemplateSections(blocks.templateMarkdown);
+  let bodyBlock: BodyBlock | undefined;
+  if (blocks.bodyMarkdown !== undefined) {
+    const sectionResult = parseBodySections(blocks.bodyMarkdown);
     errors.push(...sectionResult.errors);
-    templateBlock = { body: blocks.templateMarkdown, sections: sectionResult.sections };
+    bodyBlock = { body: blocks.bodyMarkdown, sections: sectionResult.sections };
   }
 
   if (errors.length > 0 || !schemaResult.schema) {
@@ -158,8 +158,8 @@ export function parseTypeDefinitionDocument(
     name: identity.name,
     schema: schemaResult.schema,
   };
-  if (templateBlock !== undefined) {
-    typeDef.templateBlock = templateBlock;
+  if (bodyBlock !== undefined) {
+    typeDef.bodyBlock = bodyBlock;
   }
   return { kind: 'ok', typeDef };
 }

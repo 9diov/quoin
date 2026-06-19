@@ -120,7 +120,7 @@ properties:
     required: true
 ```
 
-## Template
+## Body
 
 ```markdown
 ## Definitions <!-- required -->
@@ -145,7 +145,7 @@ Expected:
         }
       }
     },
-    templateBlock: {
+    bodyBlock: {
       sections: [
         {
           level: 2,
@@ -172,7 +172,7 @@ Type Definition Document:
 ````markdown
 # Concept
 
-## Template
+## Body
 
 ```markdown
 ## Definitions
@@ -241,7 +241,7 @@ Type Definition Document:
 properties: {}
 ```
 
-## Template
+## Body
 
 ## Definitions
 ````
@@ -250,8 +250,8 @@ Expected error:
 
 ```ts
 {
-  kind: 'parser:invalid-template-block',
-  location: { scope: 'block', block: 'Template' }
+  kind: 'parser:invalid-body-block',
+  location: { scope: 'block', block: 'Body' }
 }
 ```
 
@@ -925,7 +925,7 @@ Type Definition Document:
 properties: {}
 ```
 
-## Template
+## Body
 
 ```markdown
 ## Definitions <!--   required   -->
@@ -953,7 +953,7 @@ Type Definition Document:
 properties: {}
 ```
 
-## Template
+## Body
 
 ```markdown
 ## Definitions <!-- required -->
@@ -970,4 +970,3 @@ Expected error:
   location: { scope: 'section', section: 'Definitions', level: 2 }
 }
 ```
-

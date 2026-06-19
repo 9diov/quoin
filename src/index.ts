@@ -1,8 +1,10 @@
 /**
- * @quoin-terms Core, Parser, Validation, Scaffolding, Templating, Integration
+ * @quoin-terms Core, Parser, Validation, Scaffolding, Body Generation, Integration
  * @quoin-docs docs/design/D1-architecture.md
  */
 
+export type { BodyGenerationResult } from './core/body.js';
+export { generateBody } from './core/body.js';
 export type {
   ResolveDocReferenceInput,
   ResolveDocReferenceResult,
@@ -11,8 +13,8 @@ export type {
   TypeReferenceLookupResult,
   TypeRegistry,
 } from './core/integration.js';
-
 export type {
+  BodyBlock,
   CollectionTypeName,
   DocReference,
   DocRefFormat,
@@ -27,14 +29,11 @@ export type {
   PropertyTypeName,
   Schema,
   Section,
-  TemplateBlock,
   TypeDefinitionDocumentIdentity,
 } from './core/parser.js';
 export { parseTypeDefinitionDocument } from './core/parser.js';
 export type { ScaffoldingResult } from './core/scaffold.js';
 export { scaffold } from './core/scaffold.js';
-export type { TemplatingResult } from './core/template.js';
-export { template } from './core/template.js';
 export type { Document } from './core/types.js';
 export type {
   IntegrationName,

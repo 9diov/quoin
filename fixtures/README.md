@@ -63,7 +63,7 @@ rm -rf fixtures/scenarios/create-with-template/_tmp
 | `referential-mismatch` | `validate` | 1 / 0 | `type:referential-mismatch`; passes with `--no-referential-validation` |
 | `binding-valid` | `validate` | 0 | untyped regular document is typed through config `bindings` |
 | `binding-type-not-found` | `validate` | 1 | `binding-type-not-found` from config-driven dispatch |
-| `create-no-template` | `create -t bookmark` | 0 | frontmatter-only file (type has no `## Template`) |
+| `create-no-template` | `create -t bookmark` | 0 | frontmatter-only file (type has no `## Body`) |
 | `create-with-template` | `create -t meeting` | 0 | frontmatter + template body |
 
 The `referential-mismatch` fixture is the one to run both ways:

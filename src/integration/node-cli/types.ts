@@ -30,8 +30,8 @@ export function formatTypesHuman(result: TypesResult): void {
   } else {
     printHuman('--- Types ---');
     for (const t of result.types) {
-      const template = t.hasTemplate ? `, ${t.sectionCount} section(s)` : ', no template';
-      printHuman(`  ${t.name}  (${t.id})  ${t.propertyCount} property(ies)${template}`);
+      const body = t.hasBody ? `, ${t.sectionCount} section(s)` : ', no body';
+      printHuman(`  ${t.name}  (${t.id})  ${t.propertyCount} property(ies)${body}`);
     }
   }
 

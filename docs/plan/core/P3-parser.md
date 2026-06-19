@@ -1,7 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
-terms: ["Document", "Type Definition Document", "Property", "Wiki Link", "External Link", "Scaffolding", "Templating", "Section", "Template Block", "Collection Type", "Type Reference", "Referential Validation", "Type Declaration", "Core", "Parser", "Resolver", "TypeRegistry", "Integration", "Validation"]
+terms: ["Document", "Type Definition Document", "Property", "Wiki Link", "External Link", "Scaffolding", "Body Generation", "Section", "Body Block", "Collection Type", "Type Reference", "Referential Validation", "Type Declaration", "Core", "Parser", "Resolver", "TypeRegistry", "Integration", "Validation"]
 ---
 
 # P3 — Parser
@@ -25,9 +25,9 @@ P4 (Link and Section grammar helpers) is split out so Validation can reuse the s
 
 - Wiki Link shape validation — for `wiki-link`, top-level `[[name]]`, and `list<[[name]]>` defaults
 - External Link shape validation + allowed-scheme check — for `url` defaults
-- ATX heading parser with fenced-code awareness + required-marker extraction — for Template Block Section parsing
+- ATX heading parser with fenced-code awareness + required-marker extraction — for Body Block Section parsing
 
-Recommendation: build these helpers in `src/core/link-grammar.ts` and `src/core/section-parser.ts` as part of P3 with just enough surface to support default validation and Template parsing. P4 then expands them (e.g., body-section walks for Validation) and adds the broader unit-test suite. The alternative — re-ordering P4 before P3 — is acceptable but pushes Milestone 1 wall-clock the same amount.
+Recommendation: build these helpers in `src/core/link-grammar.ts` and `src/core/section-parser.ts` as part of P3 with just enough surface to support default validation and Body parsing. P4 then expands them (e.g., body-section walks for Validation) and adds the broader unit-test suite. The alternative — re-ordering P4 before P3 — is acceptable but pushes Milestone 1 wall-clock the same amount.
 
 ## Deliverables
 
@@ -37,20 +37,20 @@ A working `parseTypeDefinitionDocument` covering all of the following.
 
 - Extract the YAML frontmatter block (`---`-fenced) from the raw input.
 - Look up the key named by `ParserConfig.typeDeclarationKey` (default `_type`).
-- If the key is absent (or frontmatter is missing entirely), return `parser:missing-type-declaration` at `location: { scope: 'document' }`. Treat this as a structural failure — skip Schema and Template parsing.
+- If the key is absent (or frontmatter is missing entirely), return `parser:missing-type-declaration` at `location: { scope: 'document' }`. Treat this as a structural failure — skip Schema and Body parsing.
 - If the key is present but its value is not the literal string `type`, return `parser:invalid-type-declaration` with `details.value` carrying the offending value (Wiki Links, arrays, numbers, etc. all fail the same way). This is also a structural failure.
 - See ADR-0008 for the rationale and D2 for the contract.
 
 ### Block extraction
 
 - Exact level-2, case-sensitive `## Schema` detection. Reject `# Schema`, `### Schema`, `## schema`, `## SCHEMA`, `## Schema:`, `## Schema <!-- metadata -->`.
-- Exact level-2, case-sensitive `## Template` detection with the same rejection rules.
+- Exact level-2, case-sensitive `## Body` detection with the same rejection rules.
 - `## Schema` is required exactly once.
-- `## Template` is optional, at most once.
+- `## Body` is optional, at most once.
 - Each block must contain exactly one fenced code block.
 - Schema fence info string must be `yaml` or `yml`.
-- Template fence info string must be `markdown` or `md`.
-- Non-whitespace prose outside the fenced block inside `## Schema` or `## Template` is a Parser error.
+- Body fence info string must be `markdown` or `md`.
+- Non-whitespace prose outside the fenced block inside `## Schema` or `## Body` is a Parser error.
 - Multiple fences inside either block are a Parser error.
 
 ### Schema YAML
@@ -113,9 +113,9 @@ Violations → `parser:invalid-default` with `details.expected` (the type the de
 
 No Resolver calls, no TypeRegistry calls, no network.
 
-### Template Block Section parsing
+### Body Block Section parsing
 
-When a Template Block exists, parse its fenced Markdown body into `Section[]`:
+When a Body Block exists, parse its fenced Markdown body into `Section[]`:
 
 - ATX headings only (`#` through `######`). Ignore Setext headings.
 - Ignore headings inside fenced code blocks.
@@ -153,7 +153,7 @@ src/core/
   section-parser.ts        ATX heading walker + required-marker extractor (shared with P4/P5)
   parser/
     frontmatter.ts         frontmatter extraction + _type sentinel check
-    blocks.ts              ## Schema / ## Template block extraction
+    blocks.ts              ## Schema / ## Body block extraction
     schema-yaml.ts         YAML parse + top-level schema validation
     property-schema.ts     per-Property validation, including type parsing
     defaults.ts            local default validation, dispatching by PropertyTypeName
@@ -193,7 +193,7 @@ The `parser/` subdirectory is an internal split. Only `parseTypeDefinitionDocume
 
 ## Non-goals
 
-- Implement Validation, Scaffolding, or Templating behavior.
+- Implement Validation, Scaffolding, or Body Generation behavior.
 - Build a Resolver or TypeRegistry.
 - Resolve Wiki Link targets in defaults — only shape validation.
 - Resolve Type References — defer to Referential Validation in P5.

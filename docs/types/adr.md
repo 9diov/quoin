@@ -14,7 +14,7 @@ properties:
     type: doc-ref
 ```
 
-## Template
+## Body
 
 ```markdown
 ## Context

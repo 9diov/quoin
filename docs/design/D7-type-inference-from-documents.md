@@ -1,7 +1,7 @@
 ---
 _type: "[[design-doc]]"
 status: "active"
-terms: ["Collection Type", "Doc Reference", "Document", "Parser", "Property", "Scaffolding", "Section", "Template Block", "Type Definition Document", "Type Reference", "Validation", "Wiki Link"]
+terms: ["Collection Type", "Doc Reference", "Document", "Parser", "Property", "Scaffolding", "Section", "Body Block", "Type Definition Document", "Type Reference", "Validation", "Wiki Link"]
 ---
 
 # D7 — Type Inference from Documents
@@ -10,7 +10,7 @@ terms: ["Collection Type", "Doc Reference", "Document", "Parser", "Property", "S
 
 ## Overview
 
-**Type Inference** takes a set of existing Documents and produces a draft Type Definition Document — a Schema (and optional Template Block) that those Documents would conform to. It is a write-side bootstrap tool: the user has a folder of untyped Markdown, runs `infer`, and gets a working `types/<name>.md` they can refine by hand.
+**Type Inference** takes a set of existing Documents and produces a draft Type Definition Document — a Schema (and optional Body Block) that those Documents would conform to. It is a write-side bootstrap tool: the user has a folder of untyped Markdown, runs `infer`, and gets a working `types/<name>.md` they can refine by hand.
 
 Motivating use cases:
 
@@ -43,7 +43,7 @@ This design only addresses **Type Definition** inference — producing a new Typ
 ## Language additions
 
 **Type Inference**:
-The pure operation of computing, from a non-empty set of input Documents, a draft Schema and optional Template Block, along with per-property and per-section diagnostics describing observations and conflicts.
+The pure operation of computing, from a non-empty set of input Documents, a draft Schema and optional Body Block, along with per-property and per-section diagnostics describing observations and conflicts.
 _Avoid_: type discovery, type extraction, type detection
 
 **InferenceResult**:
@@ -176,13 +176,13 @@ The renderer scans each input's body for ATX headings up to `sectionDepth` (defa
 
 1. **Heading comparison.** Heading text is compared after trimming whitespace, case-sensitive. Level must match.
 2. **Duplicate within one input.** First occurrence is recorded; subsequent occurrences of the same `(level, heading)` in the same input are ignored.
-3. **Level conflict.** If `## Notes` appears in one input and `### Notes` in another, the result is a `kind: 'conflict'` `InferredSection` with both observations recorded. The renderer omits conflicted Sections from the Template Block.
+3. **Level conflict.** If `## Notes` appears in one input and `### Notes` in another, the result is a `kind: 'conflict'` `InferredSection` with both observations recorded. The renderer omits conflicted Sections from the Body Block.
 4. **Required.** `required: true` iff the Section appears (at the same level, same heading) in *every* input.
-5. **Optional Section candidates.** Sections present in some but not all inputs are *not* written into the Template Block. Each becomes a `kind: 'optional-section-candidate'` diagnostic.
+5. **Optional Section candidates.** Sections present in some but not all inputs are *not* written into the Body Block. Each becomes a `kind: 'optional-section-candidate'` diagnostic.
 
 `defaultContent` is always the empty string. Inferring body content is out of scope (Non-goals).
 
-Section order in the rendered Template Block is **first-observation order from the first accepted input**. Cross-input reordering is common and not a conflict.
+Section order in the rendered Body Block is **first-observation order from the first accepted input**. Cross-input reordering is common and not a conflict.
 
 ## Renderer
 
@@ -224,7 +224,7 @@ properties:
   # ... etc.
 ```
 
-## Template
+## Body
 ### Notes <!-- required -->
 
 ### Action Items <!-- required -->
@@ -234,10 +234,10 @@ Rules:
 
 1. **`_type: type` is always emitted under the configured Type Declaration key.** Identity per ADR-0008; the file's filesystem path (set by `--out`) provides the Integration-supplied `name` per D2.
 2. **Conflicted Properties are elided from the `## Schema` block.** They appear only in the leading HTML comment so the rendered file is a valid Type Definition Document that parses without warnings about unknown keys.
-3. **Conflicted Sections are elided from the `## Template` block.** Same reason.
+3. **Conflicted Sections are elided from the `## Body` block.** Same reason.
 4. **Optional-Section candidates are listed in the comment but not emitted as Sections.** Sections are either required (present in all inputs) or absent from the block.
 5. **`strict: true` flips conflicts from soft-elide to hard-refuse.** `kind: 'refused-strict'` is returned with no Markdown; the CLI prints the conflict list to stderr and exits non-zero.
-6. **The `## Template` block is omitted entirely when no Section is inferred-and-required.** Empty Template Blocks are noise.
+6. **The `## Body` block is omitted entirely when no Section is inferred-and-required.** Empty Body Blocks are noise.
 7. **Property order in the `## Schema` block is first-observation order from the first accepted input**, with properties unique to later inputs appended in the order they were first seen.
 
 The HTML comment is a deliberate channel: it survives Markdown round-trips, doesn't render in viewers, and is easy to grep for in CI to detect unresolved drafts.

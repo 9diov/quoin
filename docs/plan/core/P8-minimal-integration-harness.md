@@ -1,7 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
-terms: ["Document", "Type Definition Document", "Property", "Wiki Link", "Scaffolding", "Templating", "Untyped Document", "Meta-Type Definition Document", "Referential Validation", "Type Declaration", "Core", "Parser", "Resolver", "TypeRegistry", "Integration", "Validation"]
+terms: ["Document", "Type Definition Document", "Property", "Wiki Link", "Scaffolding", "Body Generation", "Untyped Document", "Meta-Type Definition Document", "Referential Validation", "Type Declaration", "Core", "Parser", "Resolver", "TypeRegistry", "Integration", "Validation"]
 ---
 
 # P8 — Minimal Integration Harness
@@ -10,7 +10,7 @@ terms: ["Document", "Type Definition Document", "Property", "Wiki Link", "Scaffo
 
 ## Goal
 
-Implement a tiny in-memory Integration harness that proves the Core can be used end-to-end without introducing host-specific complexity. After this phase, the repo should demonstrate the full Integration-owned flow: discover and parse Type Definition Documents, resolve a regular Document's root Type Declaration outside Core, wire Resolver and TypeRegistry, and call `validate()`, `scaffold()`, and `template()` against realistic in-memory fixtures.
+Implement a tiny in-memory Integration harness that proves the Core can be used end-to-end without introducing host-specific complexity. After this phase, the repo should demonstrate the full Integration-owned flow: discover and parse Type Definition Documents, resolve a regular Document's root Type Declaration outside Core, wire Resolver and TypeRegistry, and call `validate()`, `scaffold()`, and `generateBody()` against realistic in-memory fixtures.
 
 This phase is a proof harness, not a product Integration.
 
@@ -21,11 +21,11 @@ This phase is a proof harness, not a product Integration.
 - [D4 — Integration Contracts](../../design/D4-integration-contracts.md) — Resolver, TypeRegistry, parser identity, and discovery flow
 - [ADR-0005 — Functional Core / Imperative Shell](../../adr/0005-functional-core-imperative-shell.md)
 - [ADR-0008 — Type Definition Document self-identifies via frontmatter](../../adr/0008-type-definition-document-self-identifies-via-frontmatter.md)
-- [ADR-0009 — Scaffolding and Templating are creation, not repair](../../adr/0009-scaffolding-is-creation-not-repair.md)
+- [ADR-0009 — Scaffolding and Body Generation are creation, not repair](../../adr/0009-scaffolding-is-creation-not-repair.md)
 - [P3 — Parser](P3-parser.md) — raw Type Definition Document parsing is already complete
 - [P5 — Validation](P5-validation.md) — Integration-owned untyped dispatch is explicitly deferred to this phase
 - [P6 — Scaffolding](P6-scaffolding.md)
-- [P7 — Templating](P7-templating.md)
+- [P7 — Body Generation](P7-body-generation.md)
 
 ## Deliverables
 
@@ -103,7 +103,7 @@ Demonstrate Integration behaviour for new Document creation:
 
 1. choose a parsed Type Definition Document
 2. call `scaffold(frontmatter, typeDef)`
-3. call `template(typeDef)`
+3. call `generateBody(typeDef)`
 4. combine the caller-supplied frontmatter plus `ScaffoldingResult.properties`
 5. keep body creation separate from frontmatter creation
 
@@ -189,7 +189,7 @@ Keep the package public API unchanged unless a concrete consumer need appears. `
    - root Type Declaration dispatch
 2. Decide on one tiny private result model for dispatch outcomes so tests can assert untyped skip/warn and root-type lookup failures clearly.
 3. Add end-to-end tests in `test/integration/integration-harness.test.ts`.
-4. Cover a creation flow that uses `scaffold()` and `template()` together for a new Document without writing a file.
+4. Cover a creation flow that uses `scaffold()` and `generateBody()` together for a new Document without writing a file.
 5. Cover a validation flow that uses root dispatch plus real harness Resolver/TypeRegistry wiring.
 6. Add Integration-level coverage for `document:untyped` warn/skip behaviour that P5 deferred.
 7. If helper duplication with `test/validation/helpers.ts` is modest, keep them separate. If it becomes noisy, extract only the truly shared pieces.
@@ -221,7 +221,7 @@ Unlike Parser and Validation, there is no dedicated `docs/test-cases/integration
 - Root Type Declaration dispatch happens outside Core and is covered by tests.
 - The harness supplies working in-memory Resolver and TypeRegistry implementations.
 - At least one end-to-end test proves `validate()` with referential validation using discovered type defs and resolved Documents.
-- At least one end-to-end test proves a creation flow using both `scaffold()` and `template()`.
+- At least one end-to-end test proves a creation flow using both `scaffold()` and `generateBody()`.
 - Integration-level `document:untyped` warn/skip behaviour is covered by tests.
 - No filesystem or host-runtime complexity is introduced beyond tests.
 - `src/index.ts` public API remains unchanged unless a concrete need is discovered during implementation.

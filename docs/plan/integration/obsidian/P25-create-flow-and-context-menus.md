@@ -1,7 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
-terms: ["Document", "Type Definition Document", "Template Block", "Type Declaration", "Core", "Resolver", "TypeRegistry", "Integration", "Validation"]
+terms: ["Document", "Type Definition Document", "Body Block", "Type Declaration", "Core", "Resolver", "TypeRegistry", "Integration", "Validation"]
 ---
 
 # P25 — Create Flow And Context Menus
@@ -37,7 +37,7 @@ After this phase, the Obsidian plugin v1 should support all user-facing surfaces
 Recommended dependencies for this phase:
 
 - Obsidian `FuzzySuggestModal`, `Modal`, `Notice`, and vault APIs
-- existing Core `scaffold(...)`, `template(...)`, and `validate(...)`
+- existing Core `scaffold(...)`, `generateBody(...)`, and `validate(...)`
 - existing `yaml` dependency or existing deterministic frontmatter emission helper if one is available
 
 ## Create Flow
@@ -51,13 +51,13 @@ Implement the D8 flow exactly:
 5. Keep the modal open on existing path, out-of-vault path, non-Markdown path, or invalid path errors.
 6. Synthesize initial frontmatter with only the configured Type Declaration key set to `[[<TypeDefinitionDocument basename>]]`.
 7. Call `scaffold(frontmatter, typeDef)` and merge defaults.
-8. Call `template(typeDef)`.
+8. Call `generateBody(typeDef)`.
 9. Build a candidate `Document` and call `validate(...)`.
 10. Abort before write on validation errors and surface the errors in the sidebar.
 11. Write on warnings, then open the new file in the active leaf.
 12. Place the cursor at the end of frontmatter.
 
-If the selected type has no Template Block, write a frontmatter-only file.
+If the selected type has no Body Block, write a frontmatter-only file.
 
 ## Steps
 
@@ -81,6 +81,6 @@ If the selected type has no Template Block, write a frontmatter-only file.
 - Create never writes outside the active vault.
 - Validation errors abort before any file is written.
 - Validation warnings do not block the write.
-- Frontmatter-only output works for types without Template Blocks.
+- Frontmatter-only output works for types without Body Blocks.
 - Context menus appear only for supported folder and Type Definition Document targets.
 - `npm run typecheck` succeeds.

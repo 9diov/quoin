@@ -182,12 +182,12 @@ Defaults are used by `quoin create` to scaffold new documents. They are not appl
 
 ---
 
-## Template syntax
+## Body syntax
 
-Type Definition Documents may include a `## Template` block that generates the initial Markdown body when a new document is created with `quoin create`.
+Type Definition Documents may include a `## Body` block that generates the initial Markdown body when a new document is created with `quoin create`.
 
 ````markdown
-## Template
+## Body
 
 ```markdown
 ## Summary <!-- required -->
@@ -196,7 +196,7 @@ Type Definition Documents may include a `## Template` block that generates the i
 ```
 ````
 
-Sections marked `<!-- required -->` cause `validate` to warn when they are missing from an existing document. Templating never overwrites existing content.
+Sections marked `<!-- required -->` cause `validate` to warn when they are missing from an existing document. Body Generation never overwrites existing content.
 
 ---
 
@@ -216,7 +216,7 @@ Exits `0` when all targets pass or emit warnings only. Exits non-zero on any val
 
 ### `quoin create --type <name> --output <path>`
 
-Creates a new document from a type. Scaffolds missing properties from schema defaults and renders the Template body.
+Creates a new document from a type. Scaffolds missing properties from schema defaults and renders the Body block.
 
 ```sh
 quoin create --type concept --output notes/my-concept.md

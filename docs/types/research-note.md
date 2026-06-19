@@ -14,7 +14,7 @@ properties:
     type: list<doc-ref>
 ```
 
-## Template
+## Body
 
 ```markdown
 ## Goal

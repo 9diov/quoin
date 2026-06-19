@@ -1481,7 +1481,7 @@ Expected:
 
 ### V052 missing required Section is warning
 
-Template Block:
+Body Block:
 
 ```markdown
 ## Definitions <!-- required -->

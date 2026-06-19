@@ -1,7 +1,7 @@
 ---
 _type: "[[design-doc]]"
 status: "active"
-terms: ["Core", "Document", "Integration", "Markdown Link", "Parser", "Referential Validation", "Reserved Property", "Resolver", "Scaffolding", "Templating", "Type Declaration", "Type Definition Document", "TypeRegistry", "Untyped Document", "Validation", "Validation Config", "Validation Result", "Wiki Link"]
+terms: ["Core", "Document", "Integration", "Markdown Link", "Parser", "Referential Validation", "Reserved Property", "Resolver", "Scaffolding", "Body Generation", "Type Declaration", "Type Definition Document", "TypeRegistry", "Untyped Document", "Validation", "Validation Config", "Validation Result", "Wiki Link"]
 ---
 
 # D8 — Obsidian Plugin Integration
@@ -32,7 +32,7 @@ V1 goals:
 2. Validate the active Document live as the user edits its frontmatter.
 3. Validate the entire vault on demand and surface results in a sidebar view.
 4. Introspect the TypeRegistry — list discovered Type Definition Documents, parse failures, and canonical-name ambiguities — from the same sidebar view.
-5. Create a new Document from a discovered Type Definition Document using Scaffolding and Templating.
+5. Create a new Document from a discovered Type Definition Document using Scaffolding and Body Generation.
 6. Expose a status bar item that reflects the active file's validation state.
 
 V1 surfaces:
@@ -291,12 +291,12 @@ The flow:
 4. **Output path.** A single text input modal opens, prefilled with `<entry-point folder>/Untitled.md`. The user edits, presses Enter. If the path already exists, the modal stays open with an inline error.
 5. **Plugin synthesizes the initial frontmatter**: just the configured Type Declaration key set to `[[<TypeDefinitionDocument basename>]]`.
 6. The plugin calls `scaffold(frontmatter, typeDef)` and merges defaults.
-7. The plugin calls `template(typeDef)`.
+7. The plugin calls `generateBody(typeDef)`.
 8. The plugin builds a candidate `Document` and calls `validate(...)`.
 9. **Errors abort** before any file is written. The plugin displays a Notice and surfaces the errors in the sidebar.
 10. **Warnings do not block.** The plugin writes the file via `vault.create(path, contents)`, opens it in the active leaf, and places the cursor at the end of frontmatter.
 
-If the selected type has no Template Block, the plugin writes a frontmatter-only file.
+If the selected type has no Body Block, the plugin writes a frontmatter-only file.
 
 ## Determinism
 
@@ -335,7 +335,7 @@ If real-world numbers diverge, the debounce settings give power users an escape 
 ## Relationship to Existing Design Docs
 
 - [D1 — Architecture](D1-architecture.md): the plugin is an Imperative Shell around the Core.
-- [D2 — Type and Schema Contracts](D2-type-and-schema-contracts.md): the plugin consumes `Document`, `ParsedTypeDefinitionDocument`, Scaffolding, and Templating contracts.
+- [D2 — Type and Schema Contracts](D2-type-and-schema-contracts.md): the plugin consumes `Document`, `ParsedTypeDefinitionDocument`, Scaffolding, and Body Generation contracts.
 - [D3 — Validation Semantics](D3-validation-semantics.md): the plugin owns root-type dispatch and reporting around Core validation.
 - [D4 — Integration Contracts](D4-integration-contracts.md): the plugin provides the concrete Obsidian Resolver, TypeRegistry, parser identity, and discovery behaviour.
 - [D5 — Node CLI Integration](D5-node-cli-integration.md): D5 is the reference Integration; D8 mirrors its structure and diverges only where Obsidian's interactive model requires.

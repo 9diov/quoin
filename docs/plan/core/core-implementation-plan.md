@@ -1,7 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
-terms: ["Document", "Property", "Wiki Link", "External Link", "Scaffolding", "Templating", "Section", "Template Block", "Scaffolding Result", "Type Reference", "Untyped Document", "Link Resolution", "Referential Validation", "Type Declaration", "Core", "Parser", "Resolver", "TypeRegistry", "Integration", "Reserved Property", "Validation"]
+terms: ["Document", "Property", "Wiki Link", "External Link", "Scaffolding", "Body Generation", "Section", "Body Block", "Scaffolding Result", "Type Reference", "Untyped Document", "Link Resolution", "Referential Validation", "Type Declaration", "Core", "Parser", "Resolver", "TypeRegistry", "Integration", "Reserved Property", "Validation"]
 ---
 
 # Core Implementation Plan
@@ -54,7 +54,7 @@ src/
     parser.ts
     validation.ts
     scaffold.ts
-    template.ts
+    body.ts
     link-grammar.ts
     section-parser.ts
 ```
@@ -79,7 +79,7 @@ Deliverables:
 - `PropertySchema`
 - `Schema`
 - `Section`
-- `TemplateBlock`
+- `BodyBlock`
 - `TypeDefinitionDocumentIdentity`
 - `ParserConfig`
 - `ParsedTypeDefinitionDocument`
@@ -90,7 +90,7 @@ Deliverables:
 - `Resolver`
 - `TypeRegistry`
 - `ScaffoldingResult`
-- `TemplatingResult`
+- `BodyGenerationResult`
 
 Acceptance:
 
@@ -107,9 +107,9 @@ Detailed plan: [P3 — Parser](P3-parser.md).
 Implement:
 
 - exact level-2 `## Schema` detection
-- exact optional level-2 `## Template` detection
+- exact optional level-2 `## Body` detection
 - fenced YAML extraction for Schema
-- fenced Markdown extraction for Template
+- fenced Markdown extraction for Body
 - schema YAML parsing
 - strict top-level schema validation
 - strict Property schema validation
@@ -118,7 +118,7 @@ Implement:
 - canonical `TypeDefinitionDocumentIdentity.name`
 - non-empty opaque identity `id`
 - local default validation
-- Template Section parsing
+- Body Section parsing
 
 Acceptance:
 
@@ -195,20 +195,20 @@ Acceptance:
 - Present empty Property does not get overwritten.
 - Required Property without default does not appear in Scaffolding Result.
 
-### Phase 7 — Templating
+### Phase 7 — Body Generation
 
-Goal: generate new Document body content from parsed Template Block.
+Goal: generate new Document body content from parsed Body Block.
 
 Implement:
 
-- return fenced Markdown Template content as `TemplatingResult.body`
-- return empty body when no Template Block exists
+- return fenced Markdown Body content as `BodyGenerationResult.body`
+- return empty body when no Body Block exists
 - do not inspect or mutate existing Documents
 
 Acceptance:
 
 - Template output preserves Markdown content.
-- Existing Document body is never passed into or changed by `template()`.
+- Existing Document body is never passed into or changed by `generateBody()`.
 
 ### Phase 8 — Minimal Integration harness
 
@@ -225,7 +225,7 @@ Acceptance:
 
 - Can parse Type Definition Documents.
 - Can resolve a root Type Declaration outside Core.
-- Can call `validate()`, `scaffold()`, and `template()`.
+- Can call `validate()`, `scaffold()`, and `generateBody()`.
 - Demonstrates Referential Validation with in-memory Documents and Type Definition Documents.
 
 ## Suggested Milestones

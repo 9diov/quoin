@@ -1,5 +1,5 @@
 /**
- * @quoin-terms Parser, Type Definition Document, Template Block, Parse Result
+ * @quoin-terms Parser, Type Definition Document, Body Block, Parse Result
  * @quoin-docs docs/design/D2-type-and-schema-contracts.md
  */
 
@@ -8,20 +8,20 @@ import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 
 import type { ParseError } from '../parser.js';
-import { documentError, schemaBlockError, templateBlockError } from './errors.js';
+import { bodyBlockError, documentError, schemaBlockError } from './errors.js';
 
 export type BlockExtractionResult = {
   schemaYaml?: string;
-  templateMarkdown?: string;
+  bodyMarkdown?: string;
   errors: ParseError[];
 };
 
 const SCHEMA_LANG = new Set(['yaml', 'yml']);
-const TEMPLATE_LANG = new Set(['markdown', 'md']);
+const BODY_LANG = new Set(['markdown', 'md']);
 
 const processor = unified().use(remarkParse);
 
-function isExactHeading(node: RootContent, label: 'Schema' | 'Template'): node is Heading {
+function isExactHeading(node: RootContent, label: 'Schema' | 'Body'): node is Heading {
   if (node.type !== 'heading') return false;
   if (node.depth !== 2) return false;
   if (node.children.length !== 1) return false;
@@ -32,7 +32,7 @@ function isExactHeading(node: RootContent, label: 'Schema' | 'Template'): node i
 
 function findBlockChildren(
   root: Root,
-  label: 'Schema' | 'Template',
+  label: 'Schema' | 'Body',
 ): { start: number; children: RootContent[] } | null {
   for (let i = 0; i < root.children.length; i++) {
     const node = root.children[i];
@@ -50,11 +50,7 @@ function findBlockChildren(
   return null;
 }
 
-function findDuplicateHeading(
-  root: Root,
-  label: 'Schema' | 'Template',
-  firstIndex: number,
-): boolean {
+function findDuplicateHeading(root: Root, label: 'Schema' | 'Body', firstIndex: number): boolean {
   for (let i = firstIndex + 1; i < root.children.length; i++) {
     const node = root.children[i];
     if (node && isExactHeading(node, label)) return true;
@@ -93,7 +89,7 @@ export function extractBlocks(body: string): BlockExtractionResult {
   const tree = processor.parse(body) as Root;
 
   const schemaLocation = findBlockChildren(tree, 'Schema');
-  const templateLocation = findBlockChildren(tree, 'Template');
+  const bodyLocation = findBlockChildren(tree, 'Body');
 
   const result: BlockExtractionResult = { errors };
 
@@ -147,46 +143,46 @@ export function extractBlocks(body: string): BlockExtractionResult {
     }
   }
 
-  if (templateLocation !== null) {
-    if (findDuplicateHeading(tree, 'Template', templateLocation.start)) {
+  if (bodyLocation !== null) {
+    if (findDuplicateHeading(tree, 'Body', bodyLocation.start)) {
       errors.push(
-        templateBlockError(
-          'parser:duplicate-template-block',
-          'Type Definition Document must contain at most one `## Template` block.',
+        bodyBlockError(
+          'parser:duplicate-body-block',
+          'Type Definition Document must contain at most one `## Body` block.',
         ),
       );
     }
-    const template = extractSingleCodeBlock(templateLocation.children, TEMPLATE_LANG);
-    if (template.codeCount === 0) {
+    const body = extractSingleCodeBlock(bodyLocation.children, BODY_LANG);
+    if (body.codeCount === 0) {
       errors.push(
-        templateBlockError(
-          'parser:invalid-template-block',
-          '`## Template` must contain exactly one fenced `markdown` code block.',
+        bodyBlockError(
+          'parser:invalid-body-block',
+          '`## Body` must contain exactly one fenced `markdown` code block.',
         ),
       );
-    } else if (template.codeCount > 1) {
+    } else if (body.codeCount > 1) {
       errors.push(
-        templateBlockError(
-          'parser:invalid-template-block',
-          '`## Template` must contain exactly one fenced code block.',
+        bodyBlockError(
+          'parser:invalid-body-block',
+          '`## Body` must contain exactly one fenced code block.',
         ),
       );
-    } else if (!template.code) {
+    } else if (!body.code) {
       errors.push(
-        templateBlockError(
-          'parser:invalid-template-block',
-          '`## Template` fence info string must be `markdown` or `md`.',
+        bodyBlockError(
+          'parser:invalid-body-block',
+          '`## Body` fence info string must be `markdown` or `md`.',
         ),
       );
-    } else if (template.nonCodeBlocks.length > 0) {
+    } else if (body.nonCodeBlocks.length > 0) {
       errors.push(
-        templateBlockError(
-          'parser:invalid-template-block',
-          '`## Template` must contain only one fenced Markdown code block; remove surrounding prose.',
+        bodyBlockError(
+          'parser:invalid-body-block',
+          '`## Body` must contain only one fenced Markdown code block; remove surrounding prose.',
         ),
       );
     } else {
-      result.templateMarkdown = template.code.value;
+      result.bodyMarkdown = body.code.value;
     }
   }
 

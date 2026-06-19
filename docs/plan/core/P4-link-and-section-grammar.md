@@ -1,7 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
-terms: ["Document", "Property", "Wiki Link", "External Link", "Section", "Template Block", "Core", "Parser", "Resolver", "Integration", "Validation"]
+terms: ["Document", "Property", "Wiki Link", "External Link", "Section", "Body Block", "Core", "Parser", "Resolver", "Integration", "Validation"]
 ---
 
 # P4 — Link and Section grammar helpers
@@ -24,11 +24,11 @@ This phase is mostly **refactor + tests**, not new behavior. The Parser does not
 P3 pulled most of P4's deliverables forward to unblock its own work:
 
 - `src/core/link-grammar.ts` — `isValidWikiLinkShape`.
-- `src/core/section-parser.ts` — `parseTemplateSections`: mdast-based ATX walk with Setext filtering, required-marker detection, duplicate-required tracking, `defaultContent` slicing.
+- `src/core/section-parser.ts` — `parseBodySections`: mdast-based ATX walk with Setext filtering, required-marker detection, duplicate-required tracking, `defaultContent` slicing.
 
 What's still missing for P5:
 
-1. A shared **body-side** ATX heading extractor — Validation's `section:missing-required` check walks the Document body the same way Template parsing walks the Template Block, but it wants `{ level, heading }` and nothing else (no required markers, no defaultContent).
+1. A shared **body-side** ATX heading extractor — Validation's `section:missing-required` check walks the Document body the same way Body parsing walks the Body Block, but it wants `{ level, heading }` and nothing else (no required markers, no defaultContent).
 2. **Isolated unit tests.** Today both modules are only exercised through `parseTypeDefinitionDocument`. The recent Codex round found three bugs (Setext false-positives, missing URL parse check, defaultContent mutation) that the parser-level tests didn't catch. Direct unit tests would have.
 3. **Surface decision** for the body-heading walker — it stays internal, reused by `section-parser.ts` and (in P5) by `validation.ts`.
 
@@ -57,7 +57,7 @@ Rules:
 - Levels 1–6 are all returned. Filtering by level is the caller's job.
 - Result preserves source order.
 
-`parseTemplateSections` is refactored to call `extractAtxHeadings`, then layer on:
+`parseBodySections` is refactored to call `extractAtxHeadings`, then layer on:
 
 - Required-marker detection (case-sensitive, trim-flexible HTML comment whose content is exactly `required`).
 - `defaultContent` slicing from `endOffset` to the next heading's `startOffset`.
@@ -108,7 +108,7 @@ Coverage targets (the accepted/rejected lists from D2):
 ```text
 src/core/
   link-grammar.ts          (no change — already P3)
-  section-parser.ts        +extractAtxHeadings helper, parseTemplateSections refactored to use it
+  section-parser.ts        +extractAtxHeadings helper, parseBodySections refactored to use it
 test/parser/
   link-grammar.test.ts     (new)
   section-parser.test.ts   (new)
@@ -118,16 +118,16 @@ test/parser/
 ## Steps
 
 1. Add `extractAtxHeadings` to `section-parser.ts`, with the `AtxHeading` type and source-offset fields. No public re-export from `src/index.ts`.
-2. Refactor `parseTemplateSections` to call `extractAtxHeadings` and layer required-marker + defaultContent + duplicate-required logic on top. Confirm Parser tests still pass.
+2. Refactor `parseBodySections` to call `extractAtxHeadings` and layer required-marker + defaultContent + duplicate-required logic on top. Confirm Parser tests still pass.
 3. Write `test/parser/link-grammar.test.ts` covering every accepted/rejected case in D2's link grammar section.
-4. Write `test/parser/section-parser.test.ts` exercising `extractAtxHeadings` directly and `parseTemplateSections` for required-marker / defaultContent / duplicate behavior.
+4. Write `test/parser/section-parser.test.ts` exercising `extractAtxHeadings` directly and `parseBodySections` for required-marker / defaultContent / duplicate behavior.
 5. Run `npm run typecheck` and `npm test`.
 
 ## Acceptance Criteria
 
 - `extractAtxHeadings` returns ordered `AtxHeading[]` with correct `level`, `heading`, and source offsets for every ATX heading in the input.
 - Setext headings and fenced-code-block headings are absent from the result.
-- `parseTemplateSections` behavior is bit-for-bit unchanged through `parseTypeDefinitionDocument` — every existing parser test still passes.
+- `parseBodySections` behavior is bit-for-bit unchanged through `parseTypeDefinitionDocument` — every existing parser test still passes.
 - Direct unit tests cover every accepted/rejected example in D2's Wiki Link, External Link, and Section grammar sections.
 - The recent regressions (Setext false-positives, URL parse, defaultContent mutation) have dedicated unit tests against the helpers, not just integration tests through the Parser.
 - No new public exports. `extractAtxHeadings` and friends remain internal to `src/core/`.

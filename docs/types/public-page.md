@@ -14,7 +14,7 @@ properties:
     type: 'choice<"draft"|"published"|"archived">'
 ```
 
-## Template
+## Body
 
 ```markdown
 ## Overview

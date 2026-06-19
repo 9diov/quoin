@@ -1,7 +1,7 @@
 ---
 _type: "[[design-doc]]"
 status: "active"
-terms: ["Core", "Document", "Integration", "Parser", "Referential Validation", "Resolver", "Scaffolding", "Templating", "Type Declaration", "Type Definition Document", "TypeRegistry", "Validation"]
+terms: ["Core", "Document", "Integration", "Parser", "Referential Validation", "Resolver", "Scaffolding", "Body Generation", "Type Declaration", "Type Definition Document", "TypeRegistry", "Validation"]
 ---
 
 # Design Principles
@@ -18,7 +18,7 @@ Core must be a pure transformation layer: it takes data in and returns results, 
 
 ## 3. Separate operations by mutation intent and target
 
-Each operation is defined by a single mutation intent (observe, initialize, or repair) applied to a single class of target. Validation observes existing Documents. Scaffolding and Templating initialize new ones. Type Inference observes existing Documents to produce a new Type Definition Document. Repair — mutating existing Documents — is a future concern with its own boundary. A proposed operation that would cross these axes must be split or deferred. User-facing features can compose these operations, but are not allowed to weaken the sepration.
+Each operation is defined by a single mutation intent (observe, initialize, or repair) applied to a single class of target. Validation observes existing Documents. Scaffolding and Body Generation initialize new ones. Type Inference observes existing Documents to produce a new Type Definition Document. Repair — mutating existing Documents — is a future concern with its own boundary. A proposed operation that would cross these axes must be split or deferred. User-facing features can compose these operations, but are not allowed to weaken the sepration.
 
 ## 4. Use explicit channels for type identity and assignment
 

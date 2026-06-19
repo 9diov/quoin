@@ -1,7 +1,7 @@
 ---
 _type: "[[design-doc]]"
 status: "active"
-terms: ["Collection Type", "Constraint", "Doc Reference", "Document", "Link Resolution", "Parser", "Property", "Referential Validation", "Reserved Property", "Resolver", "Section", "Template Block", "Type Declaration", "Type Definition Document", "Type Reference", "TypeRegistry", "Validation", "Validation Config", "Validation Error", "Validation Result", "Validation Warning", "Wiki Link"]
+terms: ["Collection Type", "Constraint", "Doc Reference", "Document", "Link Resolution", "Parser", "Property", "Referential Validation", "Reserved Property", "Resolver", "Section", "Body Block", "Type Declaration", "Type Definition Document", "Type Reference", "TypeRegistry", "Validation", "Validation Config", "Validation Error", "Validation Result", "Validation Warning", "Wiki Link"]
 ---
 
 # D3 — Validation Semantics
@@ -229,11 +229,11 @@ When both lookups resolve but their `id` values differ, Validation returns `type
 
 ## Section validation
 
-Section validation checks required Sections parsed from the Type Definition Document's Template Block against headings in the existing Document body.
+Section validation checks required Sections parsed from the Type Definition Document's Body Block against headings in the existing Document body.
 
 Section identity is exact heading level plus exact heading text. Matching is case-sensitive.
 
-Template required Section:
+Body required Section:
 
 ```markdown
 ## Definitions <!-- required -->

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { extractAtxHeadings, parseTemplateSections } from '../../src/core/section-parser.js';
+import { extractAtxHeadings, parseBodySections } from '../../src/core/section-parser.js';
 
 describe('extractAtxHeadings — levels and order', () => {
   it('returns ATX headings at every level with correct depth', () => {
@@ -57,14 +57,14 @@ describe('extractAtxHeadings — heading text', () => {
   });
 });
 
-describe('parseTemplateSections — required marker variants', () => {
+describe('parseBodySections — required marker variants', () => {
   it.each([
     ['<!-- required -->', '## Definitions <!-- required -->\n'],
     ['<!--required-->', '## Definitions <!--required-->\n'],
     ['<!--   required   -->', '## Definitions <!--   required   -->\n'],
     ['adjacent', '## Definitions<!-- required -->\n'],
   ])('treats %s as required', (_label, md) => {
-    const { sections } = parseTemplateSections(md);
+    const { sections } = parseBodySections(md);
     expect(sections[0]?.required).toBe(true);
   });
 
@@ -75,20 +75,20 @@ describe('parseTemplateSections — required marker variants', () => {
     ['required other', '## Definitions <!-- required other -->\n'],
     ['no comment', '## Definitions\n'],
   ])('does not treat %s as required', (_label, md) => {
-    const { sections } = parseTemplateSections(md);
+    const { sections } = parseBodySections(md);
     expect(sections[0]?.required).toBe(false);
   });
 
   it('strips the required marker from the heading text', () => {
-    const { sections } = parseTemplateSections('## Definitions <!-- required -->\n');
+    const { sections } = parseBodySections('## Definitions <!-- required -->\n');
     expect(sections[0]?.heading).toBe('Definitions');
   });
 });
 
-describe('parseTemplateSections — defaultContent', () => {
+describe('parseBodySections — defaultContent', () => {
   it('captures body content between headings, stripping leading/trailing newlines', () => {
     const md = `## Definitions\n\nThis concept describes...\n\n## References\n`;
-    const { sections } = parseTemplateSections(md);
+    const { sections } = parseBodySections(md);
     expect(sections[0]?.heading).toBe('Definitions');
     expect(sections[0]?.defaultContent).toBe('This concept describes...');
     expect(sections[1]?.heading).toBe('References');
@@ -97,7 +97,7 @@ describe('parseTemplateSections — defaultContent', () => {
 
   it('preserves HTML comments that appear in body content', () => {
     const md = `## Notes\n<!-- required -->\nbody text\n\n## End\n`;
-    const { sections } = parseTemplateSections(md);
+    const { sections } = parseBodySections(md);
     expect(sections[0]?.required).toBe(false);
     expect(sections[0]?.defaultContent).toContain('<!-- required -->');
     expect(sections[0]?.defaultContent).toContain('body text');
@@ -105,15 +105,15 @@ describe('parseTemplateSections — defaultContent', () => {
 
   it('captures body content up to end of input for the last section', () => {
     const md = `## Last\nfinal text\n`;
-    const { sections } = parseTemplateSections(md);
+    const { sections } = parseBodySections(md);
     expect(sections[0]?.defaultContent).toBe('final text');
   });
 });
 
-describe('parseTemplateSections — duplicates', () => {
+describe('parseBodySections — duplicates', () => {
   it('rejects duplicate required Section identity', () => {
     const md = `## Definitions <!-- required -->\n\n## Definitions <!-- required -->\n`;
-    const { sections, errors } = parseTemplateSections(md);
+    const { sections, errors } = parseBodySections(md);
     expect(errors).toHaveLength(1);
     expect(errors[0]?.kind).toBe('parser:duplicate-required-section');
     expect(errors[0]?.location).toEqual({
@@ -126,14 +126,14 @@ describe('parseTemplateSections — duplicates', () => {
 
   it('allows duplicate non-required Section identity', () => {
     const md = `## Notes\n\n## Notes\n`;
-    const { sections, errors } = parseTemplateSections(md);
+    const { sections, errors } = parseBodySections(md);
     expect(errors).toHaveLength(0);
     expect(sections).toHaveLength(2);
   });
 
   it('distinguishes required Sections at different levels', () => {
     const md = `## Notes <!-- required -->\n\n### Notes <!-- required -->\n`;
-    const { sections, errors } = parseTemplateSections(md);
+    const { sections, errors } = parseBodySections(md);
     expect(errors).toHaveLength(0);
     expect(sections).toHaveLength(2);
     expect(sections[0]?.level).toBe(2);

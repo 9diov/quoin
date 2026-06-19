@@ -1,7 +1,7 @@
 ---
 _type: "[[design-doc]]"
 status: "active"
-terms: ["Document", "Type Definition Document", "Conforms to", "Frontmatter", "Property", "Schema", "Primitive Type", "Doc Reference", "Wiki Link", "Markdown Link", "External Link", "Constraint", "Scaffolding", "Templating", "Section", "Templating Result", "Template Block", "Scaffolding Result", "Collection Type", "Type Reference", "Untyped Document", "Meta-Type Definition Document", "Link Resolution", "Referential Validation", "Validation Config", "Type Declaration", "Type Binding", "Effective Type Declaration", "Core", "Parser", "Parse Result", "Discovery", "Ingestion", "Resolver", "Resolve Doc Reference Result", "TypeRegistry", "Integration", "Reserved Property", "Validation", "Validation Result", "Validation Error", "Validation Warning"]
+terms: ["Document", "Type Definition Document", "Conforms to", "Frontmatter", "Property", "Schema", "Primitive Type", "Doc Reference", "Wiki Link", "Markdown Link", "External Link", "Constraint", "Scaffolding", "Body Generation", "Section", "Body Generation Result", "Body Block", "Scaffolding Result", "Collection Type", "Type Reference", "Untyped Document", "Meta-Type Definition Document", "Link Resolution", "Referential Validation", "Validation Config", "Type Declaration", "Type Binding", "Effective Type Declaration", "Core", "Parser", "Parse Result", "Discovery", "Ingestion", "Resolver", "Resolve Doc Reference Result", "TypeRegistry", "Integration", "Reserved Property", "Validation", "Validation Result", "Validation Error", "Validation Warning"]
 ---
 
 # Glossary
@@ -31,7 +31,7 @@ Property keys declared in Type Definition Documents must match `[a-z0-9_-]`, be 
 _Avoid_: Field, variable, attribute, key
 
 **Schema**:
-The structured set of Property declarations parsed from the fenced YAML block inside a Type Definition Document's `## Schema` section. A Schema governs frontmatter Properties only; body structure is governed by the Template Block and Section rules.
+The structured set of Property declarations parsed from the fenced YAML block inside a Type Definition Document's `## Schema` section. A Schema governs frontmatter Properties only; body structure is governed by the Body Block and Section rules.
 _Avoid_: Type file, model, validator
 
 **Primitive Type**:
@@ -62,20 +62,20 @@ _Avoid_: Option, rule, attribute, setting
 A Core operation that computes missing Property values from the defaults declared in a Type Definition Document, returning a Scaffolding Result. The Integration applies the result to the Document — the Core never mutates anything directly.
 _Avoid_: Fixing, templating, applying defaults
 
-**Templating**:
-A Core operation that generates the Markdown body of a new Document from the fenced Markdown block inside the `## Template` block in its Type Definition Document. Applied only when creating a new Document. On existing Documents, Validation warns if required sections are missing — Templating never overwrites existing content.
+**Body Generation**:
+A Core operation that generates the Markdown body of a new Document from the fenced Markdown block inside the `## Body` block in its Type Definition Document. Applied only when creating a new Document. On existing Documents, Validation warns if required sections are missing — Body Generation never overwrites existing content.
 _Avoid_: Body scaffolding, content generation, document generation
 
 **Section**:
-A heading in a Document's Markdown body, identified by exact ATX heading level plus exact heading text. A Section is considered present if the heading exists, regardless of whether content follows it. Sections in a Template Block may be marked required with an inline HTML comment whose trimmed content is exactly `required` — `## Heading <!-- required -->`. Validation warns only on missing required Sections in existing Documents.
+A heading in a Document's Markdown body, identified by exact ATX heading level plus exact heading text. A Section is considered present if the heading exists, regardless of whether content follows it. Sections in a Body Block may be marked required with an inline HTML comment whose trimmed content is exactly `required` — `## Heading <!-- required -->`. Validation warns only on missing required Sections in existing Documents.
 _Avoid_: Heading, block, content block
 
-**Templating Result**:
-The pure data structure returned by the Core after a Templating operation — the rendered Markdown body ready to be written by the Integration.
+**Body Generation Result**:
+The pure data structure returned by the Core after a Body Generation operation — the rendered Markdown body ready to be written by the Integration.
 _Avoid_: Template output, rendered template, body
 
-**Template Block**:
-The `## Template` section in a Type Definition Document containing exactly one fenced Markdown block that defines the Markdown body structure for new Documents of that type. Distinct from the `## Schema` block, which governs frontmatter Properties.
+**Body Block**:
+The `## Body` section in a Type Definition Document containing exactly one fenced Markdown block that defines the Markdown body structure for new Documents of that type. Distinct from the `## Schema` block, which governs frontmatter Properties.
 _Avoid_: Body template, content template, document template
 
 **Scaffolding Result**:
@@ -132,7 +132,7 @@ The functional core of the type system — pure functions for Validation, Scaffo
 _Avoid_: Engine, library, shared module
 
 **Parser**:
-A shared Core utility that strictly extracts the schema from a Type Definition Document's fenced `## Schema` block and optional fenced `## Template` block, returning a structured Parse Result with Integration-supplied identity. Not part of the Validation or Scaffolding pipelines — Integrations call it once upfront, then pass the parsed Type Definition Document into Core functions. Keeps parsing logic in one place without coupling it to Validation.
+A shared Core utility that strictly extracts the schema from a Type Definition Document's fenced `## Schema` block and optional fenced `## Body` block, returning a structured Parse Result with Integration-supplied identity. Not part of the Validation or Scaffolding pipelines — Integrations call it once upfront, then pass the parsed Type Definition Document into Core functions. Keeps parsing logic in one place without coupling it to Validation.
 _Avoid_: Extractor, reader, deserializer
 
 **Parse Result**:

@@ -1,7 +1,7 @@
 ---
 _type: "[[plan-doc]]"
 status: "done"
-terms: ["Document", "Type Definition Document", "Property", "Wiki Link", "Scaffolding", "Templating", "Type Reference", "Link Resolution", "Referential Validation", "Core", "Parser", "Resolver", "TypeRegistry", "Integration", "Validation"]
+terms: ["Document", "Type Definition Document", "Property", "Wiki Link", "Scaffolding", "Body Generation", "Type Reference", "Link Resolution", "Referential Validation", "Core", "Parser", "Resolver", "TypeRegistry", "Integration", "Validation"]
 ---
 
 # P6 — Scaffolding
@@ -15,7 +15,7 @@ Implement `scaffold` so the Core can compute missing Property defaults from a pa
 - [D1 — Architecture](../../design/D1-architecture.md) — Core/Integration boundary for Scaffolding
 - [D2 — Type and Schema Contracts](../../design/D2-type-and-schema-contracts.md) — `PropertySchema.default`, `ScaffoldingResult`, and local default validity rules
 - [ADR-0004 — `default` belongs to Scaffolding, not Validation](../../adr/0004-default-is-scaffolding-not-validation.md)
-- [ADR-0009 — Scaffolding and Templating are creation, not repair](../../adr/0009-scaffolding-is-creation-not-repair.md)
+- [ADR-0009 — Scaffolding and Body Generation are creation, not repair](../../adr/0009-scaffolding-is-creation-not-repair.md)
 - [ADR-0005 — Functional Core / Imperative Shell](../../adr/0005-functional-core-imperative-shell.md)
 - [P2 — Shared Core Types](P2-shared-core-types.md) — exported `ScaffoldingResult` and `ParsedTypeDefinitionDocument`
 - [P3 — Parser](P3-parser.md) — parsed schemas already reject invalid defaults
@@ -159,10 +159,10 @@ Unlike Parser and Validation, there is no dedicated `docs/test-cases/scaffolding
 
 - Re-validating schema defaults at scaffold time.
 - Applying the `ScaffoldingResult` back to a Document.
-- Generating body content from Template Blocks.
+- Generating body content from Body Blocks.
 - Introducing a new shared default-validation abstraction unless implementation duplication becomes a real maintenance problem.
 - Adding Integration behavior for reading or writing files.
 
 ## Follow-up
 
-After this phase, continue with Phase 7: Templating. Templating handles Markdown body generation for new Documents; Scaffolding remains frontmatter-only.
+After this phase, continue with Phase 7: Body Generation. Body Generation handles Markdown body generation for new Documents; Scaffolding remains frontmatter-only.

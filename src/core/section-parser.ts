@@ -1,5 +1,5 @@
 /**
- * @quoin-terms Section, Template Block, Parser, Parse Result
+ * @quoin-terms Section, Body Block, Parser, Parse Result
  * @quoin-docs docs/design/D2-type-and-schema-contracts.md
  */
 
@@ -77,7 +77,7 @@ export type SectionParseResult = {
   errors: ParseError[];
 };
 
-export function parseTemplateSections(markdown: string): SectionParseResult {
+export function parseBodySections(markdown: string): SectionParseResult {
   const atx = extractAtxHeadings(markdown);
   const sections: Section[] = [];
   const errors: ParseError[] = [];

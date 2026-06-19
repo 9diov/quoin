@@ -1,12 +1,12 @@
 /**
- * @quoin-terms Scaffolding, Templating, Document, Type Definition Document, Validation
+ * @quoin-terms Scaffolding, Body Generation, Document, Type Definition Document, Validation
  * @quoin-docs docs/design/D2-type-and-schema-contracts.md
  */
 
+import { generateBody } from '../../core/body.js';
 import type { Resolver, TypeRegistry } from '../../core/integration.js';
 import type { ParsedTypeDefinitionDocument } from '../../core/parser.js';
 import { scaffold } from '../../core/scaffold.js';
-import { template } from '../../core/template.js';
 import type { Document } from '../../core/types.js';
 import type { ValidationConfig, ValidationResult } from '../../core/validation.js';
 import { validate } from '../../core/validation.js';
@@ -47,7 +47,7 @@ export function buildCreateCandidate(args: {
     ...baseFrontmatter,
     ...scaffolded.properties,
   };
-  const body = template(args.typeDef).body;
+  const body = generateBody(args.typeDef).body;
   const document: Document = {
     path: args.outputPath,
     frontmatter,

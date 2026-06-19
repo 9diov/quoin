@@ -238,7 +238,7 @@ function conceptType(idPrefix = 'types'): ParsedTypeDefinitionDocument {
         title: { type: 'text', required: true, default: 'Untitled' },
       },
     },
-    templateBlock: {
+    bodyBlock: {
       body: '## Notes\n',
       sections: [{ level: 2, heading: 'Notes', required: false, defaultContent: '' }],
     },

@@ -13,7 +13,7 @@ const CONCEPT_NO_TEMPLATE = `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\np
 
 const CONCEPT_WITH_DEFAULT = `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  status:\n    type: text\n    default: draft\n\`\`\`\n`;
 
-const CONCEPT_WITH_TEMPLATE = `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  title:\n    type: text\n\`\`\`\n\n## Template\n\n\`\`\`markdown\n## Summary\n\nWrite here.\n\`\`\`\n`;
+const CONCEPT_WITH_TEMPLATE = `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  title:\n    type: text\n\`\`\`\n\n## Body\n\n\`\`\`markdown\n## Summary\n\nWrite here.\n\`\`\`\n`;
 
 const CONCEPT_REQUIRED = `---\n_type: type\n---\n\n## Schema\n\n\`\`\`yaml\nproperties:\n  title:\n    type: text\n    required: true\n\`\`\`\n`;
 
@@ -31,7 +31,7 @@ function expectTimingShape(
 }
 
 describe('runCreate', () => {
-  it('creates a frontmatter-only file when the type has no Template Block', async () => {
+  it('creates a frontmatter-only file when the type has no Body Block', async () => {
     const dir = await createTempProject({
       'types/Concept.md': CONCEPT_NO_TEMPLATE,
     });
@@ -79,7 +79,7 @@ describe('runCreate', () => {
     }
   });
 
-  it('writes the template body below the frontmatter', async () => {
+  it('writes the body block below the frontmatter', async () => {
     const dir = await createTempProject({
       'types/Concept.md': CONCEPT_WITH_TEMPLATE,
     });

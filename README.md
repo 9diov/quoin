@@ -23,7 +23,7 @@ npm run cli -- --help
 - **Type Definition Documents** live in `types/*.md` and declare schemas under `## Schema`
 - **Documents** declare their type with a Type Declaration in frontmatter, defaulting to `_type: "[[Concept]]"`
 - **Validation** checks frontmatter Properties and required body Sections
-- **Document initialization** — Scaffolding fills missing frontmatter Properties from schema defaults; Templating generates the initial Markdown body for new Documents from `## Template`. Both are creation-only — they never overwrite existing content.
+- **Document initialization** — Scaffolding fills missing frontmatter Properties from schema defaults; Body Generation generates the initial Markdown body for new Documents from `## Body`. Both are creation-only — they never overwrite existing content.
 
 ## Tech stack
 
@@ -33,8 +33,8 @@ npm run cli -- --help
 
 The system follows a Functional Core / Imperative Shell architecture.
 
-- **Core** is pure TypeScript: Parser, Validation, Scaffolding, Templating, and schema resolution helpers.
-- **Integrations** own I/O: reading Documents, writing Scaffolding and Templating Results, constructing Wiki Link Resolvers, supplying TypeRegistry lookup, and passing Validation Config.
+- **Core** is pure TypeScript: Parser, Validation, Scaffolding, Body Generation, and schema resolution helpers.
+- **Integrations** own I/O: reading Documents, writing Scaffolding and Body Generation Results, constructing Wiki Link Resolvers, supplying TypeRegistry lookup, and passing Validation Config.
 
 Target Integrations:
 
@@ -119,12 +119,12 @@ Supported Constraints:
 - `date` and `datetime` are string-only; Integrations should avoid YAML date coercion before calling Core.
 - External links are ordinary `text` values in this phase; Quoin does not validate URL or Markdown link syntax.
 
-## Template syntax
+## Body syntax
 
-Type Definition Documents may declare a `## Template` block for new Document bodies:
+Type Definition Documents may declare a `## Body` block for new Document bodies:
 
 ````markdown
-## Template
+## Body
 
 ```markdown
 ## Definitions <!-- required -->
@@ -138,7 +138,7 @@ This concept describes...
 ```
 ````
 
-Required Sections are marked with `<!-- required -->`. Section matching is exact heading text plus exact heading level. On existing Documents, Validation warns when required Sections are missing; Templating never overwrites existing content.
+Required Sections are marked with `<!-- required -->`. Section matching is exact heading text plus exact heading level. On existing Documents, Validation warns when required Sections are missing; Body Generation never overwrites existing content.
 
 ## Link semantics
 
