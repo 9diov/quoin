@@ -1,5 +1,5 @@
 /**
- * @quoin-terms Integration, Validation Config, Type Declaration, Referential Validation
+ * @quoin-terms Integration, Validation Config, Type Declaration, Referential Validation, Type Binding
  * @quoin-docs docs/design/D8-obsidian-plugin-integration.md
  */
 

@@ -1,5 +1,5 @@
 /**
- * @quoin-terms Integration, Validation, Document, Type Declaration, TypeRegistry
+ * @quoin-terms Integration, Validation, Document, Type Declaration, TypeRegistry, Type Binding, Effective Type Declaration, Discovery, Ingestion
  * @quoin-docs docs/design/D5-node-cli-integration.md
  */
 

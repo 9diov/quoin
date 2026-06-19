@@ -1,5 +1,5 @@
 /**
- * @quoin-terms Property, Constraint, Collection Type, Doc Reference, Type Reference
+ * @quoin-terms Property, Constraint, Collection Type, Doc Reference, Type Reference, Schema, Primitive Type
  * @quoin-docs docs/design/D2-type-and-schema-contracts.md
  */
 

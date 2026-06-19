@@ -1,5 +1,5 @@
 /**
- * @quoin-terms Document, Property, Type Declaration
+ * @quoin-terms Document, Property, Type Declaration, Frontmatter
  * @quoin-docs docs/design/D2-type-and-schema-contracts.md
  */
 

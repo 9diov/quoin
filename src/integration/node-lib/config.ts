@@ -1,5 +1,5 @@
 /**
- * @quoin-terms Integration, Validation Config, Resolver, Type Declaration
+ * @quoin-terms Integration, Validation Config, Resolver, Type Declaration, Type Binding
  * @quoin-docs docs/design/D5-node-cli-integration.md
  */
 

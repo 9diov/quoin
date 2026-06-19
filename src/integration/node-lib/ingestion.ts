@@ -1,5 +1,5 @@
 /**
- * @quoin-terms Integration, Document, Type Definition Document, Type Declaration
+ * @quoin-terms Integration, Document, Type Definition Document, Type Declaration, Frontmatter, Discovery, Ingestion
  * @quoin-docs docs/design/D5-node-cli-integration.md
  */
 

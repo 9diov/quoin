@@ -1,5 +1,5 @@
 /**
- * @quoin-terms Integration, Resolver, Link Resolution, Markdown Link, Type Declaration
+ * @quoin-terms Integration, Resolver, Link Resolution, Markdown Link, Type Declaration, Type Binding, Effective Type Declaration
  * @quoin-docs docs/design/D8-obsidian-plugin-integration.md, docs/adr/0010-obsidian-resolver-wraps-metadatacache.md
  */
 

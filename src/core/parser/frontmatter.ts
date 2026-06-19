@@ -1,5 +1,5 @@
 /**
- * @quoin-terms Document, Parser, Type Declaration, Type Definition Document
+ * @quoin-terms Document, Parser, Type Declaration, Type Definition Document, Frontmatter
  * @quoin-docs docs/design/D2-type-and-schema-contracts.md
  */
 

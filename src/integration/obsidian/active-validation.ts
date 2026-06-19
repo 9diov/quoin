@@ -1,5 +1,5 @@
 /**
- * @quoin-terms Integration, Validation, Document, Type Declaration, Resolver
+ * @quoin-terms Integration, Validation, Document, Type Declaration, Resolver, Type Binding, Effective Type Declaration
  * @quoin-docs docs/design/D8-obsidian-plugin-integration.md
  */
 

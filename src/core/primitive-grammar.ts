@@ -1,5 +1,5 @@
 /**
- * @quoin-terms Property, Constraint, Parser, Validation
+ * @quoin-terms Property, Constraint, Parser, Validation, Primitive Type
  * @quoin-docs docs/design/D2-type-and-schema-contracts.md
  */
 

@@ -1,5 +1,5 @@
 /**
- * @quoin-terms Parser, Property, Type Definition Document, Parse Result
+ * @quoin-terms Parser, Property, Type Definition Document, Parse Result, Schema
  * @quoin-docs docs/design/D2-type-and-schema-contracts.md
  */
 

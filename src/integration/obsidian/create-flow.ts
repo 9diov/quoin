@@ -1,5 +1,5 @@
 /**
- * @quoin-terms Integration, Scaffolding, Templating, Document, Type Definition Document
+ * @quoin-terms Integration, Scaffolding, Templating, Document, Type Definition Document, Discovery
  * @quoin-docs docs/design/D8-obsidian-plugin-integration.md
  */
 

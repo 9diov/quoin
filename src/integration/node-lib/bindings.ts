@@ -1,5 +1,5 @@
 /**
- * @quoin-terms Integration, Document, Type Declaration, Type Reference
+ * @quoin-terms Integration, Document, Type Declaration, Type Reference, Type Binding, Effective Type Declaration
  * @quoin-docs docs/design/D6-path-glob-type-bindings.md
  */
 

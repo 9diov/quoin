@@ -1,5 +1,5 @@
 /**
- * @quoin-terms Integration, Document, Type Definition Document, Parser, TypeRegistry
+ * @quoin-terms Integration, Document, Type Definition Document, Parser, TypeRegistry, Frontmatter, Discovery, Ingestion
  * @quoin-docs docs/design/D8-obsidian-plugin-integration.md
  */
 

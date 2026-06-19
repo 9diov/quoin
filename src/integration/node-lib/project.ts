@@ -1,5 +1,5 @@
 /**
- * @quoin-terms Integration, Document, Type Definition Document, Resolver, TypeRegistry
+ * @quoin-terms Integration, Document, Type Definition Document, Resolver, TypeRegistry, Discovery, Ingestion
  * @quoin-docs docs/design/D5-node-cli-integration.md
  */
 

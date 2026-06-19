@@ -1,5 +1,5 @@
 /**
- * @quoin-terms Parser, Type Definition Document, Parse Result, Template Block, Type Declaration
+ * @quoin-terms Parser, Type Definition Document, Parse Result, Template Block, Type Declaration, Frontmatter, Schema, Primitive Type
  * @quoin-docs docs/design/D2-type-and-schema-contracts.md
  */
 
