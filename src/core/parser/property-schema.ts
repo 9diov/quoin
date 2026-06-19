@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Property, Constraint, Collection Type, Doc Reference, Type Reference
+ * @quoin-docs docs/design/D2-type-and-schema-contracts.md
+ */
+
 import type {
   ChoiceMember,
   DocReference,

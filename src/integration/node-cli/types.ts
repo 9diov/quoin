@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Type Definition Document, TypeRegistry, Type Reference
+ * @quoin-docs docs/design/D5-node-cli-integration.md
+ */
+
 import type { EffectiveConfig } from '../node-lib/config.js';
 import { serializeEffectiveConfig } from '../node-lib/config.js';
 import { formatTimingHuman } from '../node-lib/timing.js';

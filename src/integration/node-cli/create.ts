@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Scaffolding, Templating, Validation Result
+ * @quoin-docs docs/design/D5-node-cli-integration.md
+ */
+
 import type { EffectiveConfig } from '../node-lib/config.js';
 import { serializeEffectiveConfig } from '../node-lib/config.js';
 import {

@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Validation Config, Type Declaration, Referential Validation
+ * @quoin-docs docs/design/D8-obsidian-plugin-integration.md
+ */
+
 import { isMapping } from '../../core/parser/object.js';
 import { isCanonicalIdentifier } from '../../core/parser/property-schema.js';
 import type { UntypedDocumentBehavior } from '../../core/validation.js';

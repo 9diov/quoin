@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Validation, Resolver, TypeRegistry, Scaffolding
+ * @quoin-docs docs/design/D8-obsidian-plugin-integration.md
+ */
+
 import { Notice, Plugin, type TFile, type WorkspaceLeaf } from 'obsidian';
 import type { ValidationResult } from '../../core/validation.js';
 import {

@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Document, Type Declaration, Type Reference
+ * @quoin-docs docs/design/D6-path-glob-type-bindings.md
+ */
+
 import type { Document } from '../../core/types.js';
 import type { EffectiveTypeDeclaration, TypeBinding } from '../common/bindings.js';
 import { resolveEffectiveTypeDeclaration as resolveSharedEffectiveTypeDeclaration } from '../common/bindings.js';

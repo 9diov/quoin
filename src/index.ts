@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Core, Parser, Validation, Scaffolding, Templating, Integration
+ * @quoin-docs docs/design/D1-architecture.md
+ */
+
 export type {
   ResolveDocReferenceInput,
   ResolveDocReferenceResult,

@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Section, Template Block, Validation Warning
+ * @quoin-docs docs/design/D3-validation-semantics.md
+ */
+
 import type { TemplateBlock } from '../parser.js';
 import { extractAtxHeadings } from '../section-parser.js';
 import type { ValidationWarning } from '../validation.js';

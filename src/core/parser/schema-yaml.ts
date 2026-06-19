@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Parser, Property, Type Definition Document, Parse Result
+ * @quoin-docs docs/design/D2-type-and-schema-contracts.md
+ */
+
 import { parse as parseYaml } from 'yaml';
 
 import type { ParseError, PropertySchema, Schema } from '../parser.js';

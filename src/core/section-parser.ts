@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Section, Template Block, Parser, Parse Result
+ * @quoin-docs docs/design/D2-type-and-schema-contracts.md
+ */
+
 import type { Heading, Html, PhrasingContent, Root } from 'mdast';
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';

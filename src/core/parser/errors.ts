@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Parser, Parse Result, Validation Error
+ * @quoin-docs docs/design/D2-type-and-schema-contracts.md
+ */
+
 import type { ParseError, ParseErrorKind, ParseLocation } from '../parser.js';
 
 export function makeError(

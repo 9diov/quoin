@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Document, Validation
+ * @quoin-docs docs/design/D8-obsidian-plugin-integration.md
+ */
+
 import type { TFile } from 'obsidian';
 
 export function enumerateVaultValidationTargets(

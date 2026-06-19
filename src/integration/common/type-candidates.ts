@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Type Definition Document, Parser, Parse Result
+ * @quoin-docs docs/design/D4-integration-contracts.md
+ */
+
 import type { ParsedTypeDefinitionDocument, ParseError, ParserConfig } from '../../core/parser.js';
 import { parseTypeDefinitionDocument } from '../../core/parser.js';
 

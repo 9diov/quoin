@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Validation, Scaffolding, TypeRegistry
+ * @quoin-docs docs/design/D5-node-cli-integration.md
+ */
+
 import type { EffectiveConfig } from '../node-lib/config.js';
 import { createExitCode, formatCreateHuman, formatCreateJson, runCreate } from './create.js';
 import { formatTypesHuman, formatTypesJson, runTypes } from './types.js';

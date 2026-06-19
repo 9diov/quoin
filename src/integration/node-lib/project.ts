@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Document, Type Definition Document, Resolver, TypeRegistry
+ * @quoin-docs docs/design/D5-node-cli-integration.md
+ */
+
 import type { Resolver, TypeRegistry } from '../../core/integration.js';
 import type { ParsedTypeDefinitionDocument } from '../../core/parser.js';
 

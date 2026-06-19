@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Reserved Property, Integration, Validation Warning
+ * @quoin-docs docs/design/D3-validation-semantics.md
+ */
+
 import type { Schema } from '../parser.js';
 import type { IntegrationName, ValidationWarning } from '../validation.js';
 import { validationWarning } from './errors.js';

@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Document, Property, Type Declaration
+ * @quoin-docs docs/design/D2-type-and-schema-contracts.md
+ */
+
 import { stringify as stringifyYaml } from 'yaml';
 
 export function serializeFrontmatter(frontmatter: Record<string, unknown>): string {

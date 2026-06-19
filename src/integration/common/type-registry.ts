@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms TypeRegistry, Type Reference, Type Declaration, Type Definition Document
+ * @quoin-docs docs/design/D4-integration-contracts.md
+ */
+
 import type {
   TypeDeclarationLookupResult,
   TypeReferenceLookupResult,

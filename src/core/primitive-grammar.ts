@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Property, Constraint, Parser, Validation
+ * @quoin-docs docs/design/D2-type-and-schema-contracts.md
+ */
+
 // Shared grammar checks for primitive value shapes.
 // Used by both Parser (to validate defaults locally) and Validation (to
 // validate runtime document values). Centralised here so a default that

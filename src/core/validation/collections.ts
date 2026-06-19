@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Validation, Collection Type, Doc Reference, Referential Validation
+ * @quoin-docs docs/design/D3-validation-semantics.md
+ */
+
 import type { Resolver, TypeRegistry } from '../integration.js';
 import type { ChoiceMember, DocReference, ListItemType } from '../parser.js';
 import type { ValidationError } from '../validation.js';

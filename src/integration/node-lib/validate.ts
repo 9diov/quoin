@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Validation, Document, Type Declaration, TypeRegistry
+ * @quoin-docs docs/design/D5-node-cli-integration.md
+ */
+
 import type { Stats } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { isAbsolute, join, posix, relative, resolve } from 'node:path';

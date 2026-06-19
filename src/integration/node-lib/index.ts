@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Document, Validation, Scaffolding, TypeRegistry
+ * @quoin-docs docs/design/D5-node-cli-integration.md
+ */
+
 export type { EffectiveTypeDeclaration, TypeBinding } from './bindings.js';
 export type {
   EffectiveConfig,

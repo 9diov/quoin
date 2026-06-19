@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Document, Type Definition Document, Type Declaration
+ * @quoin-docs docs/design/D5-node-cli-integration.md
+ */
+
 import { readFile } from 'node:fs/promises';
 import { join, posix } from 'node:path';
 import fg from 'fast-glob';

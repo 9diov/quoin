@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Validation Error, Validation Warning, Validation Result
+ * @quoin-docs docs/design/D3-validation-semantics.md
+ */
+
 import type {
   ValidationError,
   ValidationErrorKind,

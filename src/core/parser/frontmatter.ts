@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Document, Parser, Type Declaration, Type Definition Document
+ * @quoin-docs docs/design/D2-type-and-schema-contracts.md
+ */
+
 import { parse as parseYaml } from 'yaml';
 
 import type { ParseError } from '../parser.js';

@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Document, Type Declaration, Type Reference
+ * @quoin-docs docs/design/D6-path-glob-type-bindings.md
+ */
+
 import mm from 'micromatch';
 
 import type { Document } from '../../core/types.js';

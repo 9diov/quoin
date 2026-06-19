@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Scaffolding, Templating, Document, Validation
+ * @quoin-docs docs/design/D5-node-cli-integration.md
+ */
+
 import { mkdir, stat, writeFile } from 'node:fs/promises';
 import { dirname, isAbsolute, posix, relative, resolve } from 'node:path';
 import type {

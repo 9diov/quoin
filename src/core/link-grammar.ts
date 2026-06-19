@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Doc Reference, Wiki Link, Markdown Link, External Link, Link Resolution
+ * @quoin-docs docs/design/D9-doc-ref-format-separation.md
+ */
+
 import type { DocRefFormat } from './parser.js';
 
 export function isValidWikiLinkShape(value: unknown): value is string {

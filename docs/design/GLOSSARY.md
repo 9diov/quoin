@@ -1,7 +1,7 @@
 ---
 _type: "[[design-doc]]"
 status: "active"
-terms: ["Document", "Type Definition Document", "Conforms to", "Property", "Doc Reference", "Wiki Link", "Markdown Link", "External Link", "Constraint", "Scaffolding", "Templating", "Section", "Templating Result", "Template Block", "Scaffolding Result", "Collection Type", "Type Reference", "Untyped Document", "Meta-Type Definition Document", "Link Resolution", "Referential Validation", "Validation Config", "Type Declaration", "Core", "Parser", "Parse Result", "Resolver", "Resolve Doc Reference Result", "TypeRegistry", "Integration", "Reserved Property", "Validation", "Validation Result", "Validation Error", "Validation Warning"]
+terms: ["Document", "Type Definition Document", "Conforms to", "Frontmatter", "Property", "Schema", "Primitive Type", "Doc Reference", "Wiki Link", "Markdown Link", "External Link", "Constraint", "Scaffolding", "Templating", "Section", "Templating Result", "Template Block", "Scaffolding Result", "Collection Type", "Type Reference", "Untyped Document", "Meta-Type Definition Document", "Link Resolution", "Referential Validation", "Validation Config", "Type Declaration", "Type Binding", "Effective Type Declaration", "Core", "Parser", "Parse Result", "Discovery", "Ingestion", "Resolver", "Resolve Doc Reference Result", "TypeRegistry", "Integration", "Reserved Property", "Validation", "Validation Result", "Validation Error", "Validation Warning"]
 ---
 
 # Glossary
@@ -20,11 +20,23 @@ _Avoid_: Type file, schema file, type definition
 The relationship between a Document and its Type Definition Document. A Document conforms to a Type Definition Document when its frontmatter satisfies the declared schema.
 _Avoid_: Implements, extends, is typed as
 
+**Frontmatter**:
+The YAML metadata block at the top of a Document. Quoin reads Properties and the system Type Declaration from frontmatter; Integrations are responsible for parsing or obtaining it from their host environment before calling Core.
+_Avoid_: Header, metadata, attributes
+
 **Property**:
 A single key-value entry in a Document's YAML frontmatter that is governed by the schema. Called "fields" in Hugo, Gatsby, and Docusaurus; "variables" in Jekyll/GitHub Pages; "attributes" in VitePress. This project uses "Property" to align with Obsidian and GitBook, the primary integration targets.
 
 Property keys declared in Type Definition Documents must match `[a-z0-9_-]`, be lowercase, and have no leading/trailing hyphens or underscores (except the reserved `_type` key). The Parser rejects schemas that violate this. See D2 for rationale and possible future relaxations.
 _Avoid_: Field, variable, attribute, key
+
+**Schema**:
+The structured set of Property declarations parsed from the fenced YAML block inside a Type Definition Document's `## Schema` section. A Schema governs frontmatter Properties only; body structure is governed by the Template Block and Section rules.
+_Avoid_: Type file, model, validator
+
+**Primitive Type**:
+A built-in Property type whose value is validated directly without nested structure or TypeRegistry lookup. Current Primitive Types are `text`, `number`, `boolean`, `date`, and `datetime`.
+_Avoid_: Scalar type, base type, simple type
 
 **Doc Reference**:
 A Property value that points to another Document — semantically modeled by `type: doc-ref`. Two concrete syntaxes are supported: Wiki Link (`[[Target]]`) and Markdown Link (`[Label](path/to/target.md)`). The `format` schema key narrows the accepted syntax; `referenced-type` constrains the target Document's declared type. The schema shorthands `type: "[[name]]"` and `type: "[](name)"` normalize to `doc-ref` with the corresponding `format` and `referenced-type`.
@@ -107,6 +119,14 @@ The frontmatter entry under the configured Type Declaration key (default `_type`
 A system-level key, not a user-defined Property — it belongs to the type system. The bare literal `type` is reserved as a *value* under this key; it is not reserved as a Type Reference name. A user-authored Type Definition Document whose `name` is `type` is the optional Meta-Type Definition Document.
 _Avoid_: Type annotation, type tag, type marker
 
+**Type Binding**:
+A path-glob rule supplied by an Integration that assigns a Type Reference to matching regular Documents that do not have a frontmatter Type Declaration. Bindings are opt-in, Integration-owned, and frontmatter Type Declarations always take precedence.
+_Avoid_: Type rule, type assignment, glob binding
+
+**Effective Type Declaration**:
+The Type Declaration an Integration uses for a Document after applying frontmatter and Type Binding precedence rules. It is computed before Root Type Declaration dispatch and before Core Validation.
+_Avoid_: Resolved type, declared type, inferred type
+
 **Core**:
 The functional core of the type system — pure functions for Validation, Scaffolding, and schema resolution, plus a shared Parser utility. No I/O, no side effects, no runtime APIs. Follows the Functional Core / Imperative Shell pattern: the Core only transforms data; all I/O is handled by the Integration.
 _Avoid_: Engine, library, shared module
@@ -118,6 +138,14 @@ _Avoid_: Extractor, reader, deserializer
 **Parse Result**:
 The structured result returned by the Parser — either a parsed Type Definition Document or one or more Parse Errors. Parser reports expected authoring errors as data instead of throwing.
 _Avoid_: Parser output, parse response
+
+**Discovery**:
+The Integration-owned process of finding Markdown files and Type Definition Document candidates in a host environment. Discovery determines the candidate universe; Core does not perform discovery.
+_Avoid_: Scanning, crawling, finding files
+
+**Ingestion**:
+The Integration-owned process of turning discovered Markdown files into Core Documents or structured ingestion diagnostics. Ingestion includes reading content, obtaining frontmatter, preserving body text, and reporting host/read/frontmatter failures outside Core Validation.
+_Avoid_: Loading, importing, parsing
 
 **Resolver**:
 A function injected by the Integration into the Core that takes a Doc Reference input (`{ value, format?, sourceDocumentPath }`) and returns a Resolve Doc Reference Result. The Core's only mechanism for accessing Documents outside the one being validated — keeping I/O out of the Core. Format-aware: a `wiki-link` value, a `markdown-link` value, or an unconstrained value where the Integration detects the format. Resolution strategy (e.g. Obsidian's shortest-path matching, Node CLI's basename match for `wiki-link`, or relative-path resolution for `markdown-link`) is baked in at construction time by an Integration factory.

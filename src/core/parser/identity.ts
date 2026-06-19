@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Type Definition Document, Type Reference, Parser
+ * @quoin-docs docs/design/D2-type-and-schema-contracts.md
+ */
+
 import type { ParseError, TypeDefinitionDocumentIdentity } from '../parser.js';
 import { documentError } from './errors.js';
 import { isCanonicalIdentifier } from './property-schema.js';

@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Resolver, Resolve Doc Reference Result, TypeRegistry, Referential Validation
+ * @quoin-docs docs/design/D4-integration-contracts.md
+ */
+
 import type { DocRefFormat, ParsedTypeDefinitionDocument } from './parser.js';
 import type { Document } from './types.js';
 

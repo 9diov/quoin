@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Scaffolding, Scaffolding Result, Property, Type Definition Document
+ * @quoin-docs docs/design/D2-type-and-schema-contracts.md
+ */
+
 import type { ParsedTypeDefinitionDocument } from './parser.js';
 
 export type ScaffoldingResult = {

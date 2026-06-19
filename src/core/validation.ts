@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Validation, Validation Config, Validation Result, Document, Type Definition Document
+ * @quoin-docs docs/design/D3-validation-semantics.md
+ */
+
 import type { Resolver, TypeRegistry } from './integration.js';
 import type { ParsedTypeDefinitionDocument } from './parser.js';
 import type { Document } from './types.js';

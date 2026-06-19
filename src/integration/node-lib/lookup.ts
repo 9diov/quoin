@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Resolver, TypeRegistry, Link Resolution, Type Reference
+ * @quoin-docs docs/design/D4-integration-contracts.md, docs/design/D10-node-cli-markdown-link-resolution.md
+ */
+
 import { basename as nativeBasename, posix } from 'node:path';
 import type {
   ResolveDocReferenceInput,

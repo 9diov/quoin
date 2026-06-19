@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Validation Config, Type Declaration
+ * @quoin-docs docs/design/D8-obsidian-plugin-integration.md
+ */
+
 import { Notice, PluginSettingTab, Setting } from 'obsidian';
 
 import type QuoinPlugin from './main.js';

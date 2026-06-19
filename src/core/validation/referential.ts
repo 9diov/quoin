@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Referential Validation, TypeRegistry, Type Reference, Type Declaration
+ * @quoin-docs docs/design/D4-integration-contracts.md
+ */
+
 import type { TypeRegistry } from '../integration.js';
 import type { Document } from '../types.js';
 import type { ValidationError } from '../validation.js';

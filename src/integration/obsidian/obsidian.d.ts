@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Document, TypeRegistry
+ * @quoin-docs docs/design/D8-obsidian-plugin-integration.md
+ */
+
 declare module 'obsidian' {
   export type Command = {
     id: string;

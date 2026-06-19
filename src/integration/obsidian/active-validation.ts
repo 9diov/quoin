@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Validation, Document, Type Declaration, Resolver
+ * @quoin-docs docs/design/D8-obsidian-plugin-integration.md
+ */
+
 import type { App, TFile } from 'obsidian';
 
 import type { TypeRegistry } from '../../core/integration.js';

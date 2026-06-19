@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Scaffolding, Templating, Document, Type Definition Document, Validation
+ * @quoin-docs docs/design/D2-type-and-schema-contracts.md
+ */
+
 import type { Resolver, TypeRegistry } from '../../core/integration.js';
 import type { ParsedTypeDefinitionDocument } from '../../core/parser.js';
 import { scaffold } from '../../core/scaffold.js';

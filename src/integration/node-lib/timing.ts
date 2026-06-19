@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Validation
+ * @quoin-docs docs/plan/P30-cli-timing-output.md
+ */
+
 import { performance } from 'node:perf_hooks';
 
 export type TimingPhase = { name: string; ms: number };

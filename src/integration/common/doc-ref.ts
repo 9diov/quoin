@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Doc Reference, Wiki Link, Markdown Link, Link Resolution, Resolver
+ * @quoin-docs docs/design/D9-doc-ref-format-separation.md
+ */
+
 import { parseMarkdownLink } from '../../core/link-grammar.js';
 import type { DocRefFormat } from '../../core/parser.js';
 

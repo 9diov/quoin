@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Validation, Property, Constraint, Doc Reference, Referential Validation
+ * @quoin-docs docs/design/D3-validation-semantics.md
+ */
+
 import type { Resolver, TypeRegistry } from '../integration.js';
 import { isValidMarkdownLinkShape, isValidWikiLinkShape } from '../link-grammar.js';
 import type { DocReference, PropertySchema, PropertyTypeName } from '../parser.js';

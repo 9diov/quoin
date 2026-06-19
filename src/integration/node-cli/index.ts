@@ -1,5 +1,10 @@
 #!/usr/bin/env node
 
+/**
+ * @quoin-terms Integration, Validation, Scaffolding, TypeRegistry
+ * @quoin-docs docs/design/D5-node-cli-integration.md
+ */
+
 import { resolve } from 'node:path';
 import { Command } from 'commander';
 import {

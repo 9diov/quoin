@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Validation Result, Parse Result
+ * @quoin-docs docs/design/D5-node-cli-integration.md
+ */
+
 import type { OutputFormat } from '../node-lib/config.js';
 
 const ENABLED = Symbol('outputEnabled');

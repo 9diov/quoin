@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Parser, Property, Constraint, Scaffolding
+ * @quoin-docs docs/design/D2-type-and-schema-contracts.md
+ */
+
 import {
   detectDocRefFormat,
   isValidMarkdownLinkShape,

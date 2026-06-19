@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Doc Reference, Link Resolution, Resolver, Resolve Doc Reference Result
+ * @quoin-docs docs/design/D9-doc-ref-format-separation.md
+ */
+
 import type { Resolver } from '../integration.js';
 import { detectDocRefFormat } from '../link-grammar.js';
 import type { DocRefFormat } from '../parser.js';

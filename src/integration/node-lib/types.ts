@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Type Definition Document, TypeRegistry, Type Reference
+ * @quoin-docs docs/design/D5-node-cli-integration.md
+ */
+
 import type {
   ParsedTypeDefinitionDocument,
   ParseError,

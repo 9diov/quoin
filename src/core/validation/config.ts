@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Validation Config, Untyped Document, Referential Validation, Integration
+ * @quoin-docs docs/design/D3-validation-semantics.md
+ */
+
 import type { IntegrationName, UntypedDocumentBehavior, ValidationConfig } from '../validation.js';
 
 export type ResolvedConfig = {

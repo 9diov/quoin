@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Scaffolding, Templating, Document, Type Definition Document
+ * @quoin-docs docs/design/D8-obsidian-plugin-integration.md
+ */
+
 import {
   type App,
   FuzzySuggestModal,

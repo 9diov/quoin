@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Validation, Property, Constraint
+ * @quoin-docs docs/design/D3-validation-semantics.md
+ */
+
 import type { PrimitiveTypeName } from '../parser.js';
 import { isCanonicalDate, isIso8601WithTimezone } from '../primitive-grammar.js';
 import type { ValidationError } from '../validation.js';

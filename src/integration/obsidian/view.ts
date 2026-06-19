@@ -1,3 +1,8 @@
+/**
+ * @quoin-terms Integration, Validation Result, TypeRegistry, Document
+ * @quoin-docs docs/design/D8-obsidian-plugin-integration.md
+ */
+
 import { ItemView, type WorkspaceLeaf } from 'obsidian';
 
 import type { ActiveFileValidationState } from './active-validation.js';
