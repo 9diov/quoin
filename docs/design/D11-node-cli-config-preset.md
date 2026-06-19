@@ -1,6 +1,7 @@
 ---
 _type: "[[design-doc]]"
 status: "draft"
+terms: ["Document", "Integration", "Resolver", "Scaffolding", "Type Declaration", "Validation Config"]
 ---
 
 # D11 — Node CLI Config Preset

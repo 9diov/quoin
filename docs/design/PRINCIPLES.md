@@ -1,6 +1,7 @@
 ---
 _type: "[[design-doc]]"
 status: "active"
+terms: ["Core", "Document", "Integration", "Parser", "Referential Validation", "Resolver", "Scaffolding", "Templating", "Type Declaration", "Type Definition Document", "TypeRegistry", "Validation"]
 ---
 
 # Design Principles

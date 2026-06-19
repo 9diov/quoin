@@ -1,6 +1,7 @@
 ---
 _type: "[[design-doc]]"
 status: "active"
+terms: ["Core", "Document", "Integration", "Markdown Link", "Parser", "Referential Validation", "Reserved Property", "Resolver", "Scaffolding", "Templating", "Type Declaration", "Type Definition Document", "TypeRegistry", "Untyped Document", "Validation", "Validation Config", "Validation Result", "Wiki Link"]
 ---
 
 # D8 — Obsidian Plugin Integration

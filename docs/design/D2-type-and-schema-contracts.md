@@ -1,6 +1,7 @@
 ---
 _type: "[[design-doc]]"
 status: "active"
+terms: ["Collection Type", "Constraint", "Doc Reference", "Document", "External Link", "Markdown Link", "Parse Result", "Parser", "Property", "Scaffolding", "Section", "Template Block", "Type Declaration", "Type Definition Document", "Type Reference", "Validation", "Wiki Link"]
 ---
 
 # D2 — Type and Schema Contracts

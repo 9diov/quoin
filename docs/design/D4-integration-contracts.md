@@ -1,6 +1,7 @@
 ---
 _type: "[[design-doc]]"
 status: "active"
+terms: ["Core", "Doc Reference", "Document", "Integration", "Markdown Link", "Resolve Doc Reference Result", "Resolver", "Type Declaration", "Type Definition Document", "Type Reference", "TypeRegistry", "Validation Config", "Wiki Link"]
 ---
 
 # D4 — Integration Contracts

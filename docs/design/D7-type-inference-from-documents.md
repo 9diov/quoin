@@ -1,6 +1,7 @@
 ---
 _type: "[[design-doc]]"
 status: "active"
+terms: ["Collection Type", "Doc Reference", "Document", "Parser", "Property", "Scaffolding", "Section", "Template Block", "Type Definition Document", "Type Reference", "Validation", "Wiki Link"]
 ---
 
 # D7 — Type Inference from Documents

@@ -1,6 +1,7 @@
 ---
 _type: "[[design-doc]]"
 status: "draft"
+terms: ["Doc Reference", "Document", "Integration", "Link Resolution", "Markdown Link", "Referential Validation", "Resolve Doc Reference Result", "Resolver", "TypeRegistry", "Validation Config", "Wiki Link"]
 ---
 
 # D10 — Node CLI Markdown-Link Resolution

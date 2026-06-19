@@ -1,6 +1,7 @@
 ---
 _type: "[[design-doc]]"
 status: "active"
+terms: ["Core", "Document", "Integration", "Markdown Link", "Parse Result", "Parser", "Resolver", "Scaffolding", "Template Block", "Templating", "Type Declaration", "Type Definition Document", "TypeRegistry", "Validation", "Validation Config", "Validation Result", "Wiki Link"]
 ---
 
 # D5 — Node CLI Integration

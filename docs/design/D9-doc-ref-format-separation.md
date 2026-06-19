@@ -1,6 +1,7 @@
 ---
 _type: "[[design-doc]]"
 status: "draft"
+terms: ["Collection Type", "Doc Reference", "Document", "External Link", "Integration", "Link Resolution", "Markdown Link", "Parser", "Property", "Referential Validation", "Resolve Doc Reference Result", "Resolver", "Type Declaration", "Type Definition Document", "Type Reference", "TypeRegistry", "Validation", "Wiki Link"]
 ---
 
 # D9 — Doc Reference Format Separation

@@ -1,6 +1,7 @@
 ---
 _type: "[[design-doc]]"
 status: "active"
+terms: ["Core", "Document", "Integration", "Type Declaration", "Type Definition Document", "TypeRegistry", "Untyped Document", "Validation", "Validation Config"]
 ---
 
 # D6 — Path-Glob Type Bindings

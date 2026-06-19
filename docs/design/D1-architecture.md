@@ -1,6 +1,7 @@
 ---
 _type: "[[design-doc]]"
 status: "active"
+terms: ["Core", "Document", "Integration", "Parser", "Parse Result", "Resolver", "Reserved Property", "Scaffolding", "Scaffolding Result", "Template Block", "Templating", "Templating Result", "Type Declaration", "Type Definition Document", "Type Reference", "TypeRegistry", "Validation", "Validation Config", "Validation Result"]
 related:
   - "[D2 — Type and Schema Contracts](D2-type-and-schema-contracts.md)"
   - "[D3 — Validation Semantics](D3-validation-semantics.md)"

@@ -1,6 +1,7 @@
 ---
 _type: "[[design-doc]]"
 status: "active"
+terms: ["Collection Type", "Constraint", "Doc Reference", "Document", "Link Resolution", "Parser", "Property", "Referential Validation", "Reserved Property", "Resolver", "Section", "Template Block", "Type Declaration", "Type Definition Document", "Type Reference", "TypeRegistry", "Validation", "Validation Config", "Validation Error", "Validation Result", "Validation Warning", "Wiki Link"]
 ---
 
 # D3 — Validation Semantics
