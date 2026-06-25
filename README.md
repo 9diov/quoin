@@ -157,3 +157,6 @@ Required Sections are marked with `<!-- required -->`. Section matching is exact
 - [Integration contracts](docs/design/D4-integration-contracts.md)
 - [Node CLI integration](docs/design/D5-node-cli-integration.md)
 - [ADRs](docs/adr/)
+
+## Related projects
+* https://github.com/platers/obsidian-linter
