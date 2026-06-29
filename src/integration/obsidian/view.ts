@@ -54,6 +54,10 @@ export class QuoinSidebarView extends ItemView {
     return 'Quoin';
   }
 
+  getIcon(): string {
+    return 'check-circle';
+  }
+
   async onOpen(): Promise<void> {
     this.plugin.registerSidebarView(this);
     this.render();
