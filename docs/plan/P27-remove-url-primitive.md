@@ -1,6 +1,6 @@
 ---
 _type: "[[plan-doc]]"
-status: "proposed"
+status: "done"
 terms: ["Document", "Property", "Wiki Link", "Markdown Link", "External Link", "Constraint", "Section", "Type Reference", "Link Resolution", "Referential Validation", "Validation Config", "Core", "Parser", "Resolver", "Integration", "Validation"]
 ---
 

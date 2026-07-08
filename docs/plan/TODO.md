@@ -19,15 +19,6 @@ terms: ["Property", "Scaffolding", "Body Generation", "Section", "Validation Con
 
 ## To do
 
-* [ ] (Implementation) Add timing output to Node CLI commands per [P30](P30-cli-timing-output.md)
-  Output: `timing.ts`, updated `validate.ts` / `create.ts` / `types.ts`, updated snapshots
-
-* [ ] (Implementation) Land the property-based testing first iteration described in [P18](P18-property-based-testing-first-iteration.md)
-  Output: `test/property/**`, `fast-check` dev dependencies
-* [x] (Implementation) Normalize Body Block / Body Generation terminology per [P33](P33-rename-template-to-body.md)
-  Output: GLOSSARY, design docs, source identifiers, error codes, fixtures, tests all updated; `src/core/body.ts`, `generateBody()`, `BodyGenerationResult`
-* [ ] (Implementation) Remove the misleading `url` primitive described in [P27](P27-remove-url-primitive.md)
-  Output: docs, core/parser/validation config, integrations, tests, and fixtures updated to treat external links as `text`
 * [ ] (Design) Design the future `repair()` capability referenced in [D1](../design/D1-architecture.md)
   Output: repair design doc
 * [ ] (Planning) Break `infer` implementation into numbered execution plans
@@ -74,3 +65,11 @@ terms: ["Property", "Scaffolding", "Body Generation", "Section", "Validation Con
   Output: `src/integration/node-cli/**`, `test/integration/node-cli/**`
 * [x] (Implementation) Package Quoin as an installable CLI/library
   Output: `package.json`, `tsconfig.build.json`, `scripts/fix-cli-bin.mjs`, `scripts/package-smoke-test.mjs`
+* [x] (Implementation) Add timing output to Node CLI commands per [P30](P30-cli-timing-output.md)
+  Output: `timing.ts`, updated `validate.ts` / `create.ts` / `types.ts`, updated snapshots
+* [x] (Implementation) Land the property-based testing first iteration described in [P18](P18-property-based-testing-first-iteration.md)
+  Output: `test/property/**`, `fast-check` dev dependencies
+* [x] (Implementation) Normalize Body Block / Body Generation terminology per [P33](P33-rename-template-to-body.md)
+  Output: GLOSSARY, design docs, source identifiers, error codes, fixtures, tests all updated; `src/core/body.ts`, `generateBody()`, `BodyGenerationResult`
+* [x] (Implementation) Remove the misleading `url` primitive described in [P27](P27-remove-url-primitive.md)
+  Output: docs, core/parser/validation config, integrations, tests, and fixtures updated to treat external links as `text`
